@@ -103,7 +103,10 @@ void
 log_command_history()
 {
 #ifdef LOG_COMMANDS
+    if (command_history && stream_length(command_history))
     errlog("COMMAND HISTORY:\n%s", stream_contents(command_history));
+    else
+	errlog("NO COMMAND HISTORY\n");
 #endif
 }
 
