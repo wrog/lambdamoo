@@ -115,7 +115,8 @@ void
 log_command_history(void)
 {
 #ifdef LOG_COMMANDS
-    errlog("COMMAND HISTORY:\n%s", stream_contents(command_history));
+    errlog("COMMAND HISTORY:\n%s",
+	   command_history ? stream_contents(command_history) : " (none)\n");
 #endif
 }
 
