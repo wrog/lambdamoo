@@ -43,6 +43,7 @@
 #include "structures.h"
 #include "sym_table.h"
 #include "utils.h"
+#include "utf-ctype.h"
 #include "version.h"
 
 static Stmt    	       *prog_start;
@@ -780,7 +781,10 @@ start_over:
     do {
 	c = lex_getc();
 	if (c == '\n') lineno++;
-    } while (isspace(c));
+    } while (c != EOF && my_isspace(c));
+
+    if (c == EOF)
+        return c;
 
     if (c == '/') {
 	c = lex_getc();
@@ -818,7 +822,7 @@ start_over:
 	return 0;
     }
 
-    if (isdigit(c) ||
+    if (my_isdigit(c) ||
 	(c == '.'  &&  language_version >= DBV_Float)) {
 
 	Var pn = parse_number(
@@ -849,11 +853,11 @@ start_over:
 	return 0;
     }
 
-    if (isalpha(c) || c == '_') {
+    if (my_is_xid_start(c) || c == '_') {
 	Keyword	       *k;
 
 	stream_add_char(token_stream, c);
-	while (isalnum(c = lex_getc()) || c == '_')
+	while (my_is_xid_cont(c = lex_getc()) || c == '_')
 	    stream_add_char(token_stream, c);
 	lex_ungetc(c);
 
