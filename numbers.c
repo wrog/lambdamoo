@@ -521,7 +521,7 @@ bf_abs(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 		    else if (errno != 0  ||  !IS_REAL(d))		      \
 			return make_error_pack(E_FLOAT);		      \
 		    else						      \
-			return make_var_pack(new_float(d));		      \
+			return make_float_pack(d);			      \
 		}
 
 MATH_FUNC(sqrt)
@@ -556,7 +556,7 @@ bf_trunc(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
     else if (errno != 0 || !IS_REAL(d))
 	return make_error_pack(E_FLOAT);
     else
-	return make_var_pack(new_float(d));
+	return make_float_pack(d);
 }
 
 static package
@@ -577,17 +577,14 @@ bf_atan(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_
     else if (errno != 0 || !IS_REAL(d))
 	return make_error_pack(E_FLOAT);
     else
-	return make_var_pack(new_float(d));
+	return make_float_pack(d);
 }
 
 static package
 bf_time(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r;
-    r.type = TYPE_INT;
-    r.v.num = time(0);
     free_var(arglist);
-    return make_var_pack(r);
+    return make_int_pack(time(0));
 }
 
 static package
