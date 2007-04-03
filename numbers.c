@@ -528,11 +528,19 @@ MATH_FUNC(acos)
 MATH_FUNC(sinh)
 MATH_FUNC(cosh)
 MATH_FUNC(tanh)
+MATH_FUNC(asinh)
+MATH_FUNC(acosh)
+MATH_FUNC(atanh)
 MATH_FUNC(exp)
 MATH_FUNC(log)
 MATH_FUNC(log10)
 MATH_FUNC(ceil)
 MATH_FUNC(floor)
+MATH_FUNC(expm1)
+MATH_FUNC(log1p)
+MATH_FUNC(erf)
+MATH_FUNC(erfc)
+MATH_FUNC(lgamma)
 
 static package
 bf_trunc(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
@@ -576,10 +584,80 @@ bf_atan(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_
 }
 
 static package
+bf_j(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    double d;
+
+    d = arglist.v.list[2].v.fnum;
+    errno = 0;
+    switch ( arglist.v.list[1].v.num ) {
+    case 0:
+	d = j0(d);
+	break;
+    case 1:
+	d = j1(d);
+	break;
+    default:
+	d = jn(d, arglist.v.list[1].v.num);
+	break;
+    }
+    free_var(arglist);
+    if (errno == EDOM)
+	return make_error_pack(E_INVARG);
+    else if (errno != 0 || !IS_REAL(d))
+	return make_error_pack(E_FLOAT);
+    else
+	return make_float_pack(d);
+}
+
+static package
+bf_y(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    double d;
+
+    d = arglist.v.list[2].v.fnum;
+    errno = 0;
+    switch ( arglist.v.list[1].v.num ) {
+    case 0:
+	d = y0(d);
+	break;
+    case 1:
+	d = y1(d);
+	break;
+    default:
+	d = jn(d, arglist.v.list[1].v.num);
+	break;
+    }
+    free_var(arglist);
+    if (errno == EDOM)
+	return make_error_pack(E_INVARG);
+    else if (errno != 0 || !IS_REAL(d))
+	return make_error_pack(E_FLOAT);
+    else
+	return make_float_pack(d);
+}
+
+static package
 bf_time(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     free_var(arglist);
     return make_int_pack(time(0));
+}
+
+static package
+bf_ftime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    double t;
+    struct timeval tv;
+
+    free_var(arglist);
+
+    gettimeofday(&tv, NULL);
+
+    /* Use division since 1.0e-6 isn't representable in exact binary */
+    t = (double)tv.tv_sec + (double)tv.tv_usec/1.0e+6;
+
+    return make_float_pack(t);
 }
 
 static package
@@ -889,7 +967,8 @@ register_numbers(void)
     register_function("abs", 1, 1, bf_abs, TYPE_NUMERIC);
     register_function("random", 0, 1, bf_random, TYPE_INT);
     register_function("time", 0, 0, bf_time);
-    register_function("ctime", 0, 1, bf_ctime, TYPE_INT);
+    register_function("ftime", 0, 0, bf_ftime);
+    register_function("ctime", 0, 2, bf_ctime, TYPE_INT, TYPE_STR);
     register_function("floatstr", 2, 3, bf_floatstr,
 		      TYPE_FLOAT, TYPE_INT, TYPE_ANY);
 
@@ -903,12 +982,22 @@ register_numbers(void)
     register_function("sinh", 1, 1, bf_sinh, TYPE_FLOAT);
     register_function("cosh", 1, 1, bf_cosh, TYPE_FLOAT);
     register_function("tanh", 1, 1, bf_tanh, TYPE_FLOAT);
+    register_function("asinh", 1, 1, bf_asinh, TYPE_FLOAT);
+    register_function("acosh", 1, 1, bf_acosh, TYPE_FLOAT);
+    register_function("atanh", 1, 1, bf_atanh, TYPE_FLOAT);
     register_function("exp", 1, 1, bf_exp, TYPE_FLOAT);
     register_function("log", 1, 1, bf_log, TYPE_FLOAT);
     register_function("log10", 1, 1, bf_log10, TYPE_FLOAT);
     register_function("ceil", 1, 1, bf_ceil, TYPE_FLOAT);
     register_function("floor", 1, 1, bf_floor, TYPE_FLOAT);
     register_function("trunc", 1, 1, bf_trunc, TYPE_FLOAT);
+    register_function("expm1", 1, 1, bf_expm1, TYPE_FLOAT);
+    register_function("log1p", 1, 1, bf_log1p, TYPE_FLOAT);
+    register_function("erf", 1, 1, bf_erf, TYPE_FLOAT);
+    register_function("erfc", 1, 1, bf_erfc, TYPE_FLOAT);
+    register_function("lgamma", 1, 1, bf_lgamma, TYPE_FLOAT);
+    register_function("j", 2, 2, bf_j, TYPE_INT, TYPE_FLOAT);
+    register_function("y", 2, 2, bf_y, TYPE_INT, TYPE_FLOAT);
 }
 
 char rcsid_numbers[] = "$Id$";
