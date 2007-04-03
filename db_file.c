@@ -395,9 +395,8 @@ static int
 read_db_file(void)
 {
     Objid oid;
-    int nobjs, nprogs, nusers;
+    Num i, nobjs, nprogs, nusers, vnum, dummy;
     Var user_list;
-    int i, vnum, dummy;
     db_verb_handle h;
     Program *program;
 

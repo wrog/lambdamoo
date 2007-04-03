@@ -36,14 +36,14 @@
 #include "bf_register.h"
 
 static int
-parse_number(const char *str, int *result, int try_floating_point)
+parse_number(const char *str, Num *result, int try_floating_point)
 {
     char *p;
 
-    *result = strtol(str, &p, 10);
+    *result = (Num) strtoimax(str, &p, 10);
     if (try_floating_point &&
 	(p == str || *p == '.' || *p == 'e' || *p == 'E'))
-	*result = (int) strtod(str, &p);
+	*result = (Num) strtod(str, &p);
     if (p == str)
 	return 0;
     while (*p) {
@@ -57,7 +57,7 @@ parse_number(const char *str, int *result, int try_floating_point)
 static int
 parse_object(const char *str, Objid * result)
 {
-    int number;
+    Num number;
 
     while (*str && *str == ' ')
 	str++;
@@ -96,7 +96,7 @@ parse_float(const char *str, double *result)
 }
 
 enum error
-become_integer(Var in, int *ret, int called_from_tonum)
+become_integer(Var in, Num *ret, int called_from_tonum)
 {
     switch (in.type) {
     case TYPE_INT:
@@ -117,7 +117,7 @@ become_integer(Var in, int *ret, int called_from_tonum)
     case TYPE_FLOAT:
 	if (*in.v.fnum < (double) INT_MIN || *in.v.fnum > (double) INT_MAX)
 	    return E_FLOAT;
-	*ret = (int) *in.v.fnum;
+	*ret = (Num) *in.v.fnum;
 	break;
     case TYPE_LIST:
 	return E_TYPE;
@@ -228,14 +228,14 @@ do_equals(Var lhs, Var rhs)
 }
 
 int
-compare_integers(int a, int b)
+compare_integers(Num a, Num b)
 {
     if (a < b)
 	return -1;
-    else if (a == b)
-	return 0;
-    else
+    else if (a > b)
 	return 1;
+    else
+	return 0;
 }
 
 Var
@@ -330,7 +330,7 @@ do_power(Var lhs, Var rhs)
     Var ans;
 
     if (lhs.type == TYPE_INT) {	/* integer exponentiation */
-	int a = lhs.v.num, b, r;
+	Num a = lhs.v.num, b, r;
 
 	if (rhs.type != TYPE_INT)
 	    goto type_error;

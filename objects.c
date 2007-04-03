@@ -187,7 +187,7 @@ static package
 bf_toobj(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
-    int i;
+    Num i;
     enum error e;
 
     r.type = TYPE_OBJ;

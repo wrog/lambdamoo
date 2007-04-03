@@ -69,7 +69,7 @@ static void	check_loop_name(const char *, enum loop_exit_kind);
 %union {
   Stmt	       *stmt;
   Expr	       *expr;
-  int		integer;
+  Num		integer;
   Objid		object;
   double       *real;
   char	       *string;
@@ -827,7 +827,7 @@ start_over:
     }
 
     if (isdigit(c) || (c == '.'  &&  language_version >= DBV_Float)) {
-	int	n = 0;
+	Num	n = 0;
 	int	type = tINTEGER;
 
 	while (isdigit(c)) {

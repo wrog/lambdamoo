@@ -44,11 +44,11 @@
 
 /* the following globals are the guts of the virtual machine: */
 static activation *activ_stack = 0;
-static int max_stack_size = 0;
+static Num max_stack_size = 0;
 static unsigned top_activ_stack;	/* points to top-of-stack
 					   (last-occupied-slot),
 					   not next-empty-slot */
-static int root_activ_vector;	/* root_activ_vector == MAIN_VECTOR
+static Num root_activ_vector;	/* root_activ_vector == MAIN_VECTOR
 				   iff root activation is main
 				   vector */
 
@@ -98,7 +98,7 @@ static Var *rt_stack_quick;
 #define RT_STACK_QUICKSIZE	15
 
 static void
-alloc_rt_stack(activation * a, int size)
+alloc_rt_stack(activation * a, Num size)
 {
     Var *res;
 

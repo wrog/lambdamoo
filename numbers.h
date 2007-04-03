@@ -21,10 +21,10 @@
 #include "structures.h"
 
 extern Var new_float(double);
-extern enum error become_integer(Var, int *, int);
+extern enum error become_integer(Var, Num *, int);
 
 extern int do_equals(Var, Var);
-extern int compare_integers(int, int);
+extern int compare_integers(Num, Num);
 extern Var compare_numbers(Var, Var);
 
 extern Var do_add(Var, Var);
