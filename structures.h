@@ -22,10 +22,41 @@
 
 #include "config.h"
 
-#define MAXINT	((int32_t) 2147483647L)
-#define MAXOBJ	((Objid) MAXINT)
 
-typedef int32_t Objid;
+/***********
+ * Numbers
+ */
+
+/* This will move to options.h */
+#define INT_TYPE_BITSIZE 32
+
+typedef int32_t   Num;
+typedef uint32_t UNum;
+#define PRIdN	PRId32
+#define SCNdN	SCNd32
+#define NUM_MAX	INT32_MAX
+#define NUM_MIN	INT32_MIN
+
+#if HAVE_INT64_T
+/*
+ *  I was originally going to insist 'Num' be called something else,
+ *  but I decided to let that go.  This is your pennance:    --wrog
+ */
+#  define HAVE_UNUMNUM_T 1
+typedef  int64_t   NumNum;
+typedef uint64_t  UNumNum;
+#endif
+
+
+/***********
+ * Objects
+ *
+ * Note:  It's a pretty hard assumption in MOO that integers and objects
+ * are the same data type.
+ */
+
+typedef Num     Objid;
+#define OBJ_MAX	NUM_MAX
 
 /*
  * Special Objid's
@@ -34,6 +65,11 @@ typedef int32_t Objid;
 #define NOTHING		-1
 #define AMBIGUOUS	-2
 #define FAILED_MATCH	-3
+
+
+/***********
+ * Errors
+ */
 
 /* Do not reorder or otherwise modify this list, except to add new elements at
  * the end, since the order here defines the numeric equivalents of the error
@@ -44,6 +80,11 @@ enum error {
     E_NONE, E_TYPE, E_DIV, E_PERM, E_PROPNF, E_VERBNF, E_VARNF, E_INVIND,
     E_RECMOVE, E_MAXREC, E_RANGE, E_ARGS, E_NACC, E_INVARG, E_QUOTA, E_FLOAT
 };
+
+
+/****************
+ * General Types
+ */
 
 /* Types which have external data should be marked with the TYPE_COMPLEX_FLAG
  * so that free_var/var_ref/var_dup can recognize them easily.  This flag is
@@ -78,6 +119,10 @@ typedef enum {
 } var_type;
 
 
+/*********
+ * Vars
+ */
+
 typedef struct Var Var;
 
 /* Experimental.  On the Alpha, DEC cc allows us to specify certain
@@ -99,7 +144,7 @@ typedef struct Var Var;
 struct Var {
     union {
 	const char *str;	/* STR */
-	int32_t num;		/* NUM, CATCH, FINALLY */
+	Num num;		/* NUM, CATCH, FINALLY */
 	Objid obj;		/* OBJ */
 	enum error err;		/* ERR */
 	Var *list;		/* LIST */
