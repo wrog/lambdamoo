@@ -25,8 +25,8 @@
 
 extern void set_log_file(FILE *);
 
-extern void oklog(const char *,...);
-extern void errlog(const char *,...);
+extern void oklog(const char *,...) FORMAT(printf,1,2);
+extern void errlog(const char *,...) FORMAT(printf,1,2);
 extern void log_perror(const char *);
 
 extern void reset_command_history(void);

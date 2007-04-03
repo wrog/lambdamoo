@@ -20,8 +20,13 @@
 
 #include <float.h>
 #include <math.h>
+#include <limits.h>
 
-#define IS_REAL(x)	(-DBL_MAX <= (x) && (x) <= DBL_MAX)
+#define IS_REAL(x)	(-HUGE_VAL < (x) && (x) < HUGE_VAL)
+
+#ifndef DECIMAL_DIG
+# define DECIMAL_DIG (DBL_DIG+4)
+#endif
 
 #endif		/* !My_Math_H */
 

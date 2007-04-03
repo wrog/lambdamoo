@@ -198,7 +198,7 @@ emit_extended_byte(Byte b, State * state)
 static int
 add_known_fixup(Fixup f, State * state)
 {
-    int i;
+    unsigned int i;
 
     if (state->num_fixups == state->max_fixups) {
 	unsigned new_max = 2 * state->max_fixups;
@@ -450,7 +450,7 @@ static void
 enter_loop(int id, Fixup top_label, unsigned top_stack,
 	   int bottom_label, unsigned bottom_stack, State * state)
 {
-    int i;
+    unsigned int i;
     Loop *loop;
 
     if (state->num_loops == state->max_loops) {
@@ -1113,11 +1113,11 @@ max(unsigned a, unsigned b)
 }
 
 static unsigned
-ref_size(unsigned max)
+ref_size(unsigned rmax)
 {
-    if (max <= 256)
+    if (rmax <= 256)
 	return 1;
-    else if (max <= 256 * 256)
+    else if (rmax <= 256 * 256)
 	return 2;
     else
 	return 4;

@@ -1373,7 +1373,7 @@ write_forked_task(forked_task ft)
 {
     int lineno = find_line_number(ft.program, ft.f_index, 0);
 
-    dbio_printf("0 %d %d %d\n", lineno, ft.start_time, ft.id);
+    dbio_printf("0 %d %ld %d\n", lineno, (long)ft.start_time, ft.id);
     write_activ_as_pi(ft.a);
     write_rt_env(ft.program->var_names, ft.rt_env, ft.program->num_var_names);
     dbio_write_forked_program(ft.program, ft.f_index);
@@ -1382,7 +1382,7 @@ write_forked_task(forked_task ft)
 static void
 write_suspended_task(suspended_task st)
 {
-    dbio_printf("%d %d ", st.start_time, st.the_vm->task_id);
+    dbio_printf("%ld %d ", (long)st.start_time, st.the_vm->task_id);
     dbio_write_var(st.value);
     write_vm(st.the_vm);
 }
