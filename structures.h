@@ -22,10 +22,10 @@
 
 #include "config.h"
 
-#define MAXINT	((int32) 2147483647L)
+#define MAXINT	((int32_t) 2147483647L)
 #define MAXOBJ	((Objid) MAXINT)
 
-typedef int32 Objid;
+typedef int32_t Objid;
 
 /*
  * Special Objid's
@@ -97,7 +97,7 @@ typedef struct Var Var;
 struct Var {
     union {
 	const char *str;	/* STR */
-	int32 num;		/* NUM, CATCH, FINALLY */
+	int32_t num;		/* NUM, CATCH, FINALLY */
 	Objid obj;		/* OBJ */
 	enum error err;		/* ERR */
 	Var *list;		/* LIST */

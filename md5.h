@@ -49,19 +49,16 @@
 
 #include "config.h"
 
-typedef unsigned char uint8;
-typedef unsigned32 uint32;
-
 /* MD5 context. */
 typedef struct {
-    uint32 state[4];		/* state (ABCD) */
-    uint32 count[2];		/* number of bits, modulo 2^64 (lsb first) */
-    uint8 buffer[64];		/* input buffer */
+    uint32_t state[4];		/* state (ABCD) */
+    uint32_t count[2];		/* number of bits, modulo 2^64 (lsb first) */
+    uint8_t buffer[64];		/* input buffer */
 } md5ctx_t;
 
 void md5_Init(md5ctx_t * context);
-void md5_Update(md5ctx_t * context, uint8 * buf, int len);
-void md5_Final(md5ctx_t * context, uint8 digest[16]);
+void md5_Update(md5ctx_t * context, uint8_t * buf, int len);
+void md5_Final(md5ctx_t * context, uint8_t digest[16]);
 
 #endif		/* !MD5_h */
 

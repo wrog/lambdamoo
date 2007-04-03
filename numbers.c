@@ -653,7 +653,7 @@ bf_ctime(Var arglist, Byte next, void *vdata, Objid progr)
  *
  *     Current assumption is that this *is* the case in the 64-bit
  *     world and *not* the case in the 32-bit world.  Compilation
- *     will fail on 32-bit environments where u_int64_t is
+ *     will fail on 32-bit environments where uint64_t is
  *     not defined.  Conversely, bf_random() on 64-bit environments
  *     may be unnecessarily slow if 128-bit integers are available.
  */
@@ -662,8 +662,8 @@ bf_ctime(Var arglist, Byte next, void *vdata, Objid progr)
 
 
 #ifdef INTNUM_AND_OBJID_ARE_64_BITS
-typedef int64 Intnum;
-typedef unsigned64 Unsignednum;
+typedef int64_t Intnum;
+typedef uint64_t Unsignednum;
 #define INTNUM_MAX INT64_MAX
 
 /* Assume lack of 128-bit integer type */
@@ -673,14 +673,14 @@ typedef unsigned64 Unsignednum;
 #  endif
 
 #else
-typedef int32 Intnum;
-typedef unsigned32 Unsignednum;
+typedef int32_t Intnum;
+typedef uint32_t Unsignednum;
 #define INTNUM_MAX INT32_MAX
 
-/* Assume support for u_int64_t otherwise uncomment */
+/* Assume support for uint64_t otherwise uncomment */
 /* #define WIDER_INTEGERS_NOT_AVAILABLE */
 #  ifndef WIDER_INTEGERS_NOT_AVAILABLE
-typedef u_int64_t Unsignednum_Wide;
+typedef uint64_t Unsignednum_Wide;
 #  endif
 
 #endif
