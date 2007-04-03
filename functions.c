@@ -369,7 +369,8 @@ make_float_pack(double v)
     package p;
 
     p.kind = BI_RETURN;
-    p.u.ret = new_float(v);
+    p.u.ret.type = TYPE_FLOAT;
+    p.u.ret.v.fnum = v;
 
     return p;
 }

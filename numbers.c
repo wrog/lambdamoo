@@ -115,9 +115,9 @@ become_integer(Var in, Num *ret, int called_from_tonum)
 	*ret = in.v.err;
 	break;
     case TYPE_FLOAT:
-	if (*in.v.fnum < (double) INT_MIN || *in.v.fnum > (double) INT_MAX)
+        if (!IS_REAL(in.v.fnum))
 	    return E_FLOAT;
-	*ret = (Num) *in.v.fnum;
+	*ret = (Num) in.v.fnum;
 	break;
     case TYPE_LIST:
 	return E_TYPE;
@@ -145,7 +145,7 @@ become_float(Var in, double *ret)
 	*ret = (double) in.v.err;
 	break;
     case TYPE_FLOAT:
-	*ret = *in.v.fnum;
+	*ret = in.v.fnum;
 	break;
     case TYPE_LIST:
 	return E_TYPE;
@@ -153,18 +153,6 @@ become_float(Var in, double *ret)
 	errlog("BECOME_FLOAT: Impossible var type: %d\n", (int) in.type);
     }
     return E_NONE;
-}
-
-Var
-new_float(double d)
-{
-    Var v;
-
-    v.type = TYPE_FLOAT;
-    v.v.fnum = mymalloc(sizeof(double), M_FLOAT);
-    *v.v.fnum = d;
-
-    return v;
 }
 
 #if COERCION_IS_EVER_IMPLEMENTED_AND_DESIRED
@@ -224,7 +212,7 @@ do_equals(Var lhs, Var rhs)
     if (lhs.type != rhs.type)
 	return 0;
     else
-	return *lhs.v.fnum == *rhs.v.fnum;
+	return lhs.v.fnum == rhs.v.fnum;
 }
 
 int
@@ -248,17 +236,20 @@ compare_numbers(Var a, Var b)
 	ans.v.err = E_TYPE;
     } else if (a.type == TYPE_INT) {
 	ans.type = TYPE_INT;
-	ans.v.num = compare_integers(a.v.num, b.v.num);
-    } else {
-	double aa = *a.v.fnum, bb = *b.v.fnum;
-
-	ans.type = TYPE_INT;
-	if (aa < bb)
+	if (a.v.num < b.v.num)
 	    ans.v.num = -1;
-	else if (aa == bb)
-	    ans.v.num = 0;
-	else
+	else if (a.v.num > b.v.num)
 	    ans.v.num = 1;
+	else
+	    ans.v.num = 0;
+    } else {
+	ans.type = TYPE_INT;
+	if (a.v.fnum < b.v.fnum)
+	    ans.v.num = -1;
+	else if (a.v.fnum > b.v.fnum)
+	    ans.v.num = 1;
+	else
+	    ans.v.num = 0;
     }
 
     return ans;
@@ -277,13 +268,15 @@ compare_numbers(Var a, Var b)
 			ans.type = TYPE_INT;			\
 			ans.v.num = a.v.num op b.v.num;		\
 		    } else {					\
-			double d = *a.v.fnum op *b.v.fnum;	\
+			double d = a.v.fnum op b.v.fnum;	\
 								\
 			if (!IS_REAL(d)) {			\
 			    ans.type = TYPE_ERR;		\
 			    ans.v.err = E_FLOAT;		\
-			} else					\
-			    ans = new_float(d);			\
+			} else {				\
+			    ans.type = TYPE_FLOAT;		\
+			    ans.v.fnum = d;			\
+			}					\
 		    }						\
 								\
 		    return ans;					\
@@ -306,14 +299,16 @@ SIMPLE_BINARY(multiply, *)
 			ans.type = TYPE_INT;			\
 			ans.v.num = a.v.num iop b.v.num;	\
 		    } else if (a.type == TYPE_FLOAT		\
-			       && *b.v.fnum != 0.0) {		\
+			       && b.v.fnum != 0.0) {		\
 			double d = fexpr;			\
 								\
 			if (!IS_REAL(d)) {			\
 			    ans.type = TYPE_ERR;		\
 			    ans.v.err = E_FLOAT;		\
-			} else					\
-			    ans = new_float(d);			\
+			} else {				\
+			    ans.type = TYPE_FLOAT;		\
+			    ans.v.fnum = d;			\
+		        }					\
 		    } else {					\
 		        ans.type = TYPE_ERR;			\
 			ans.v.err = E_DIV;			\
@@ -322,8 +317,8 @@ SIMPLE_BINARY(multiply, *)
 		    return ans;					\
 		}
 
-DIVISION_OP(divide, /, *a.v.fnum / *b.v.fnum)
-DIVISION_OP(modulus, %, fmod(*a.v.fnum, *b.v.fnum))
+DIVISION_OP(divide, /, a.v.fnum / b.v.fnum)
+DIVISION_OP(modulus, %, fmod(a.v.fnum, b.v.fnum))
 Var
 do_power(Var lhs, Var rhs)
 {				/* LHS ^ RHS */
@@ -371,18 +366,20 @@ do_power(Var lhs, Var rhs)
 	    d = (double) rhs.v.num;
 	    break;
 	case TYPE_FLOAT:
-	    d = *rhs.v.fnum;
+	    d = rhs.v.fnum;
 	    break;
 	default:
 	    goto type_error;
 	}
 	errno = 0;
-	d = pow(*lhs.v.fnum, d);
+	d = pow(lhs.v.fnum, d);
 	if (errno != 0 || !IS_REAL(d)) {
 	    ans.type = TYPE_ERR;
 	    ans.v.err = E_FLOAT;
-	} else
-	    ans = new_float(d);
+	} else {
+	    ans.type = TYPE_FLOAT;
+	    ans.v.fnum = d;
+	}
     } else
 	goto type_error;
 
@@ -418,15 +415,14 @@ bf_tofloat(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUS
     Var r;
     enum error e;
 
-    r = new_float(0.0);
-    e = become_float(arglist.v.list[1], r.v.fnum);
+    r.type = TYPE_FLOAT;
+    e = become_float(arglist.v.list[1], &r.v.fnum);
 
     free_var(arglist);
-    if (e == E_NONE)
-	return make_var_pack(r);
+    if (e != E_NONE)
+	return make_error_pack(e);
 
-    free_var(r);
-    return make_error_pack(e);
+    return make_var_pack(r);
 }
 
 static package
@@ -447,7 +443,7 @@ bf_min(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 	for (i = 2; i <= nargs; i++)
 	    if (arglist.v.list[i].type != TYPE_FLOAT)
 		bad_types = 1;
-	    else if (*arglist.v.list[i].v.fnum < *r.v.fnum)
+	    else if (arglist.v.list[i].v.fnum < r.v.fnum)
 		r = arglist.v.list[i];
     }
 
@@ -477,7 +473,7 @@ bf_max(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 	for (i = 2; i <= nargs; i++)
 	    if (arglist.v.list[i].type != TYPE_FLOAT)
 		bad_types = 1;
-	    else if (*arglist.v.list[i].v.fnum > *r.v.fnum)
+	    else if (arglist.v.list[i].v.fnum > r.v.fnum)
 		r = arglist.v.list[i];
     }
 
@@ -499,7 +495,7 @@ bf_abs(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 	if (r.v.num < 0)
 	    r.v.num = -r.v.num;
     } else
-	*r.v.fnum = fabs(*r.v.fnum);
+	r.v.fnum = fabs(r.v.fnum);
 
     free_var(arglist);
     return make_var_pack(r);
@@ -510,15 +506,14 @@ bf_abs(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 		bf_ ## name(Var arglist, Byte next UNUSED_,		      \
 			    void *vdata UNUSED_, Objid progr UNUSED_)	      \
 		{							      \
-		    double	d;					      \
+		    double d;						      \
 									      \
-		    d = *arglist.v.list[1].v.fnum;			      \
 		    errno = 0;						      \
-		    d = name(d);					      \
+		    d = name (arglist.v.list[1].v.fnum);		      \
 		    free_var(arglist);					      \
 		    if (errno == EDOM)					      \
 		        return make_error_pack(E_INVARG);		      \
-		    else if (errno != 0  ||  !IS_REAL(d))		      \
+		    else if (errno != 0 || !IS_REAL(d))			      \
 			return make_error_pack(E_FLOAT);		      \
 		    else						      \
 			return make_float_pack(d);			      \
@@ -544,7 +539,7 @@ bf_trunc(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
 {
     double d;
 
-    d = *arglist.v.list[1].v.fnum;
+    d = arglist.v.list[1].v.fnum;
     errno = 0;
     if (d < 0.0)
 	d = ceil(d);
@@ -564,10 +559,10 @@ bf_atan(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_
 {
     double d, dd;
 
-    d = *arglist.v.list[1].v.fnum;
+    d = arglist.v.list[1].v.fnum;
     errno = 0;
     if (arglist.v.list[0].v.num >= 2) {
-	dd = *arglist.v.list[2].v.fnum;
+	dd = arglist.v.list[2].v.fnum;
 	d = atan2(d, dd);
     } else
 	d = atan(d);
@@ -833,7 +828,7 @@ bf_random(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 static package
 bf_floatstr(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* (float, precision [, sci-notation]) */
-    double d = *arglist.v.list[1].v.fnum;
+    double d = arglist.v.list[1].v.fnum;
     Num prec = arglist.v.list[2].v.num;
     int use_sci = (arglist.v.list[0].v.num >= 3
 		   && is_true(arglist.v.list[3]));

@@ -1257,7 +1257,7 @@ do {    						    	\
 		    ans.type = TYPE_INT;
 		    ans.v.num = -arg.v.num;
 		} else if (arg.type == TYPE_FLOAT)
-		    ans = new_float(-*arg.v.fnum);
+		    ans.v.fnum = -arg.v.fnum;
 		else {
 		    free_var(arg);
 		    PUSH_ERROR(E_TYPE);

@@ -148,7 +148,7 @@ struct Var {
 	Objid obj;		/* OBJ */
 	enum error err;		/* ERR */
 	Var *list;		/* LIST */
-	double *fnum;		/* FLOAT */
+	double fnum;		/* FLOAT */
     } v;
     var_type type;
 };

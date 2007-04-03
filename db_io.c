@@ -176,7 +176,7 @@ dbio_read_var(void)
 	r.v.num = dbio_read_num();
 	break;
     case _TYPE_FLOAT:
-	r = new_float(dbio_read_float());
+	r.v.fnum = dbio_read_float();
 	break;
     case _TYPE_LIST:
 	l = dbio_read_num();
@@ -330,7 +330,7 @@ dbio_write_var(Var v)
 	dbio_write_num(v.v.num);
 	break;
     case TYPE_FLOAT:
-	dbio_write_float(*v.v.fnum);
+	dbio_write_float(v.v.fnum);
 	break;
     case TYPE_LIST:
 	dbio_write_num(v.v.list[0].v.num);

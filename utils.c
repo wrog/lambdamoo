@@ -154,9 +154,7 @@ complex_free_var(Var v)
 	    myfree(v.v.list, M_LIST);
 	}
 	break;
-    case TYPE_FLOAT:
-	if (delref(v.v.fnum) == 0)
-	    myfree(v.v.fnum, M_FLOAT);
+    default:
 	break;
     }
 }
@@ -171,8 +169,7 @@ complex_var_ref(Var v)
     case TYPE_LIST:
 	addref(v.v.list);
 	break;
-    case TYPE_FLOAT:
-	addref(v.v.fnum);
+    default:
 	break;
     }
     return v;
@@ -195,8 +192,7 @@ complex_var_dup(Var v)
 	}
 	v.v.list = newlist.v.list;
 	break;
-    case TYPE_FLOAT:
-	v = new_float(*v.v.fnum);
+    default:
 	break;
     }
     return v;
@@ -215,8 +211,7 @@ var_refcount(Var v)
     case TYPE_LIST:
 	return refcount(v.v.list);
 	break;
-    case TYPE_FLOAT:
-	return refcount(v.v.fnum);
+    default:
 	break;
     }
     return 1;
@@ -226,7 +221,7 @@ int
 is_true(Var v)
 {
     return ((v.type == TYPE_INT && v.v.num != 0)
-	    || (v.type == TYPE_FLOAT && *v.v.fnum != 0.0)
+	    || (v.type == TYPE_FLOAT && v.v.fnum != 0.0)
 	    || (v.type == TYPE_STR && v.v.str && *v.v.str != '\0')
 	    || (v.type == TYPE_LIST && v.v.list[0].v.num != 0));
 }
