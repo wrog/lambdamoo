@@ -140,7 +140,7 @@ complex_free_var(Var v)
 {
     int i;
 
-    switch ((int) v.type) {
+    switch (v.type) {
     case TYPE_STR:
 	if (v.v.str)
 	    free_str(v.v.str);
@@ -164,7 +164,7 @@ complex_free_var(Var v)
 Var
 complex_var_ref(Var v)
 {
-    switch ((int) v.type) {
+    switch (v.type) {
     case TYPE_STR:
 	addref(v.v.str);
 	break;
@@ -184,7 +184,7 @@ complex_var_dup(Var v)
     int i;
     Var newlist;
 
-    switch ((int) v.type) {
+    switch (v.type) {
     case TYPE_STR:
 	v.v.str = str_dup(v.v.str);
 	break;
@@ -208,7 +208,7 @@ complex_var_dup(Var v)
 int
 var_refcount(Var v)
 {
-    switch ((int) v.type) {
+    switch (v.type) {
     case TYPE_STR:
 	return refcount(v.v.str);
 	break;

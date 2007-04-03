@@ -63,67 +63,9 @@ dbio_scanf(const char *format,...)
 {
     va_list args;
     int count;
-    const char *ptr;
 
     va_start(args, format);
-    /* The following line would be nice, but unfortunately those darlings on
-     * the ANSI C committee apparently didn't feel it worthwhile to include
-     * support for functions wrapping `scanf' *even though* they included
-     * symmetric such support for functions wrapping `printf'.  (*sigh*)
-     * Fortunately, we only use a small fraction of the full functionality of
-     * scanf in the server, so it's not unbearably unpleasant to have to
-     * reimplement it here.
-     */
-    /*  count = vfscanf(input, format, args);  */
-
-    count = 0;
-    for (ptr = format; *ptr; ptr++) {
-	int c, n, *ip;
-	unsigned *up;
-	char *cp;
-
-	if (isspace(*ptr)) {
-	    do
-		c = fgetc(input);
-	    while (isspace(c));
-	    ungetc(c, input);
-	} else if (*ptr != '%') {
-	    do
-		c = fgetc(input);
-	    while (isspace(c));
-
-	    if (c == EOF)
-		return count ? count : EOF;
-	    else if (c != *ptr) {
-		ungetc(c, input);
-		return count;
-	    }
-	} else
-	    switch (*++ptr) {
-	    case 'd':
-		ip = va_arg(args, int *);
-		n = fscanf(input, "%d", ip);
-		goto finish;
-	    case 'u':
-		up = va_arg(args, unsigned *);
-		n = fscanf(input, "%u", up);
-		goto finish;
-	    case 'c':
-		cp = va_arg(args, char *);
-		n = fscanf(input, "%c", cp);
-	      finish:
-		if (n == 1)
-		    count++;
-		else if (n == 0)
-		    return count;
-		else		/* n == EOF */
-		    return count ? count : EOF;
-		break;
-	    default:
-		panic("DBIO_SCANF: Unsupported directive!");
-	    }
-    }
-
+    count = vfscanf(input, format, args);
     va_end(args);
 
     return count;

@@ -48,7 +48,7 @@ int log_report_progress_cktime(void)
 }
 
 static void
-do_log(const char *fmt, va_list args, const char *prefix)
+do_log(const char *prefix, const char *fmt, va_list args)
 {
     FILE *f;
 
@@ -73,7 +73,7 @@ oklog(const char *fmt,...)
     va_list args;
 
     va_start(args, fmt);
-    do_log(fmt, args, "");
+    do_log("", fmt, args);
     va_end(args);
 }
 
@@ -83,7 +83,7 @@ errlog(const char *fmt,...)
     va_list args;
 
     va_start(args, fmt);
-    do_log(fmt, args, "*** ");
+    do_log("*** ", fmt, args);
     va_end(args);
 }
 
