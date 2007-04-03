@@ -121,6 +121,10 @@
 #  endif
 #endif
 
+#ifndef HAVE_INT64_T
+#  error This platform does not have 64-bit integers?
+#endif
+
 #ifndef HAVE_INT128_T
 #  ifdef HAVE___INT128
      typedef __int128           int128_t;

@@ -28,23 +28,23 @@
  */
 
 /* This will move to options.h */
-#define INT_TYPE_BITSIZE 32
+#define INT_TYPE_BITSIZE 64
 
-typedef int32_t   Num;
-typedef uint32_t UNum;
-#define PRIdN	PRId32
-#define SCNdN	SCNd32
-#define NUM_MAX	INT32_MAX
-#define NUM_MIN	INT32_MIN
+typedef int64_t   Num;
+typedef uint64_t UNum;
+#define PRIdN	PRId64
+#define SCNdN	SCNd64
+#define NUM_MAX	INT64_MAX
+#define NUM_MIN	INT64_MIN
 
-#if HAVE_INT64_T
+#if HAVE_INT128_T
 /*
  *  I was originally going to insist 'Num' be called something else,
  *  but I decided to let that go.  This is your pennance:    --wrog
  */
 #  define HAVE_UNUMNUM_T 1
-typedef  int64_t   NumNum;
-typedef uint64_t  UNumNum;
+typedef  int128_t   NumNum;
+typedef uint128_t  UNumNum;
 #endif
 
 
