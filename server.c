@@ -138,10 +138,10 @@ static int
 start_listener(slistener * l)
 {
     if (network_listen(l->nlistener)) {
-	oklog("LISTEN: #%d now listening on %s\n", l->oid, l->name);
+	oklog("LISTEN: #%"PRIdN" now listening on %s\n", l->oid, l->name);
 	return 1;
     } else {
-	errlog("LISTEN: Can't start #%d listening on %s!\n", l->oid, l->name);
+	errlog("LISTEN: Can't start #%"PRIdN" listening on %s!\n", l->oid, l->name);
 	return 0;
     }
 }
@@ -150,7 +150,7 @@ static void
 free_slistener(slistener * l)
 {
     network_close_listener(l->nlistener);
-    oklog("UNLISTEN: #%d no longer listening on %s\n", l->oid, l->name);
+    oklog("UNLISTEN: #%"PRIdN" no longer listening on %s\n", l->oid, l->name);
 
     *(l->prev) = l->next;
     if (l->next)
@@ -360,9 +360,9 @@ object_name(Objid oid)
 	s = new_stream(30);
 
     if (valid(oid))
-	stream_printf(s, "%s (#%d)", db_object_name(oid), oid);
+	stream_printf(s, "%s (#%"PRIdN")", db_object_name(oid), oid);
     else
-	stream_printf(s, "#%d", oid);
+	stream_printf(s, "#%"PRIdN"", oid);
 
     return reset_stream(s);
 }
@@ -495,7 +495,7 @@ main_loop(void)
 			: (now - h->last_activity_time
 			   > DEFAULT_CONNECT_TIMEOUT))) {
 		    call_notifier(h->player, h->listener, "user_disconnected");
-		    oklog("TIMEOUT: #%d on %s\n",
+		    oklog("TIMEOUT: #%"PRIdN" on %s\n",
 			  h->player,
 			  network_connection_name(h->nhandle));
 		    if (h->print_messages)
@@ -505,7 +505,7 @@ main_loop(void)
 		    network_close(h->nhandle);
 		    free_shandle(h);
 		} else if (h->connection_time != 0 && !valid(h->player)) {
-		    oklog("RECYCLED: #%d on %s\n",
+		    oklog("RECYCLED: #%"PRIdN" on %s\n",
 			  h->player,
 			  network_connection_name(h->nhandle));
 		    if (h->print_messages)
@@ -652,7 +652,7 @@ read_stdin_verbcode(Stream *s, Var *code)
 static void
 emergency_notify(Objid player, const char *line)
 {
-    printf("#%d <- %s\n", player, line);
+    printf("#%"PRIdN" <- %s\n", player, line);
 }
 
 static int
@@ -681,7 +681,7 @@ emergency_mode(void)
 	    Objid first_valid = -1;
 
 	    if (wizard >= 0)
-		printf("** Object #%d is not a wizard...\n", wizard);
+		printf("** Object #%"PRIdN" is not a wizard...\n", wizard);
 
 	    for (wizard = 0; wizard <= db_last_used_objid(); wizard++)
 		if (is_wizard(wizard))
@@ -692,16 +692,16 @@ emergency_mode(void)
 	    if (!is_wizard(wizard)) {
 		if (first_valid < 0) {
 		    first_valid = db_create_object();
-		    printf("** No objects in database; created #%d.\n",
+		    printf("** No objects in database; created #%"PRIdN".\n",
 			   first_valid);
 		}
 		wizard = first_valid;
 		db_set_object_flag(wizard, FLAG_WIZARD);
-		printf("** No wizards in database; wizzed #%d.\n", wizard);
+		printf("** No wizards in database; wizzed #%"PRIdN".\n", wizard);
 	    }
-	    printf("** Now running emergency commands as #%d ...\n", wizard);
+	    printf("** Now running emergency commands as #%"PRIdN" ...\n", wizard);
 	}
-	printf("\nMOO (#%d)%s: ", wizard, debug ? "" : "[!d]");
+	printf("\nMOO (#%"PRIdN")%s: ", wizard, debug ? "" : "[!d]");
 	line = read_stdin_line(s);
 
 	if (!line)
@@ -763,7 +763,7 @@ emergency_mode(void)
 	    } else {
 		int i;
 
-		printf("** %d errors during parsing:\n",
+		printf("** %"PRIdN" errors during parsing:\n",
 		       errors.v.list[0].v.num);
 		for (i = 1; i <= errors.v.list[0].v.num; i++)
 		    printf("  %s\n", errors.v.list[i].v.str);
@@ -801,7 +801,7 @@ emergency_mode(void)
 		    } else {
 			int i;
 
-			printf("** %d errors during parsing:\n",
+			printf("** %"PRIdN" errors during parsing:\n",
 			       errors.v.list[0].v.num);
 			for (i = 1; i <= errors.v.list[0].v.num; i++)
 			    printf("  %s\n", errors.v.list[i].v.str);
@@ -851,7 +851,7 @@ emergency_mode(void)
 		    printf("** Object number expected after 'wizard'\n");
 		else {
 		    wizard = wix;
-		    printf("** Attempting to switch to wizard #%d...\n",
+		    printf("** Attempting to switch to wizard #%"PRIdN"...\n",
 			   wizard);
 		}
 	    } else {
@@ -1022,7 +1022,7 @@ server_new_connection(server_listener sl, network_handle nh, int outbound)
 	task_suspend_input(h->tasks);
     }
 
-    oklog("%s: #%d on %s\n",
+    oklog("%s: #%"PRIdN" on %s\n",
 	  outbound ? "CONNECT" : "ACCEPT",
 	  h->player, network_connection_name(nh));
 
@@ -1200,7 +1200,7 @@ write_active_connections(void)
     }
 
     for (h = all_shandles; h; h = h->next)
-	dbio_printf("%d %d\n", h->player, h->listener);
+	dbio_printf("%"PRIdN" %"PRIdN"\n", h->player, h->listener);
 }
 
 int
@@ -1232,7 +1232,7 @@ read_active_connections(void)
 	Var v;
 
 	if (have_listeners) {
-	    if (dbio_scanf("%d %d\n", &who, &listener) != 2) {
+	    if (dbio_scanf("%"SCNdN" %"SCNdN"\n", &who, &listener) != 2) {
 		errlog("READ_ACTIVE_CONNECTIONS: Bad conn/listener pair.\n");
 		return 0;
 	    }

@@ -113,7 +113,7 @@ read_object(void)
     Verbdef *v, **prevv;
     int nprops;
 
-    if (dbio_scanf("#%d", &oid) != 1 || oid != db_last_used_objid() + 1)
+    if (dbio_scanf("#%"SCNdN, &oid) != 1 || oid != db_last_used_objid() + 1)
 	return 0;
     dbio_read_line(s, sizeof(s));
 
@@ -179,12 +179,12 @@ write_object(Objid oid)
     int nverbdefs, nprops;
 
     if (!valid(oid)) {
-	dbio_printf("#%d recycled\n", oid);
+	dbio_printf("#%"PRIdN" recycled\n", oid);
 	return;
     }
     o = dbpriv_find_object(oid);
 
-    dbio_printf("#%d\n", oid);
+    dbio_printf("#%"PRIdN"\n", oid);
     dbio_write_string(o->name);
     dbio_write_string("");	/* placeholder for old handles string */
     dbio_write_num(o->flags);
@@ -233,7 +233,7 @@ validate_hierarchies(void)
 #   define MAYBE_LOG_PROGRESS					\
     {								\
         if (log_report_progress()) {				\
-	    oklog("VALIDATE: Done through #%d ...\n", oid);	\
+	    oklog("VALIDATE: Done through #%"PRIdN" ...\n", oid);	\
 	}							\
     }
 
@@ -251,7 +251,7 @@ validate_hierarchies(void)
 	    {								\
 	        if (o->field != NOTHING					\
 		    && !dbpriv_find_object(o->field)) {			\
-		    errlog("VALIDATE: #%d.%s = #%d <invalid> ... fixed.\n", \
+		    errlog("VALIDATE: #%"PRIdN".%s = #%"PRIdN" <invalid> ... fixed.\n", \
 			   oid, name, o->field);			\
 		    o->field = NOTHING;				  	\
 		}							\
@@ -289,7 +289,7 @@ validate_hierarchies(void)
 		    faster = dbpriv_find_object(faster)->field;	\
 		    slower = dbpriv_find_object(slower)->field;	\
 		    if (faster == slower) {			\
-			errlog("VALIDATE: Cycle in `%s' chain of #%d\n", \
+			errlog("VALIDATE: Cycle in `%s' chain of #%"PRIdN"\n", \
 			       name, oid);			\
 			broken = 1;				\
 			break;					\
@@ -330,7 +330,7 @@ validate_hierarchies(void)
 		    okid = dbpriv_find_object(oidkid);		\
 		    if (okid->up != oid) {			\
 			errlog(					\
-			    "VALIDATE: #%d erroneously on #%d's %s list.\n", \
+			    "VALIDATE: #%"PRIdN" erroneously on #%"PRIdN"'s %s list.\n", \
 			    oidkid, oid, down_name);		\
 			broken = 1;				\
 		    }						\
@@ -358,7 +358,7 @@ validate_hierarchies(void)
 	    {								\
 		/* If oid is unclaimed, up must be NOTHING */		\
 		if ((o->flags & (1<<(FLAG))) && o->up != NOTHING) {	\
-		    errlog("VALIDATE: #%d not in %s (#%d)'s %s list.\n", \
+		    errlog("VALIDATE: #%"PRIdN" not in %s (#%"PRIdN")'s %s list.\n", \
 			   oid, up_name, o->up, down_name);		\
 		    broken = 1;						\
 		}							\
@@ -387,7 +387,7 @@ fmt_verb_name(void *data)
     if (!s)
 	s = new_stream(40);
 
-    stream_printf(s, "#%d:%s", db_verb_definer(*h), db_verb_names(*h));
+    stream_printf(s, "#%"PRIdN":%s", db_verb_definer(*h), db_verb_names(*h));
     return reset_stream(s);
 }
 
@@ -415,7 +415,7 @@ read_db_file(void)
      * suppressed assignments are not counted in determining the returned value
      * of `scanf'...
      */
-    if (dbio_scanf("%d\n%d\n%d\n%d\n",
+    if (dbio_scanf("%"SCNdN"\n%"SCNdN"\n%"SCNdN"\n%"SCNdN"\n",
 		   &nobjs, &nprogs, &dummy, &nusers) != 4) {
 	errlog("READ_DB_FILE: Bad header\n");
 	return 0;
@@ -427,44 +427,44 @@ read_db_file(void)
     }
     dbpriv_set_all_users(user_list);
 
-    oklog("LOADING: Reading %d objects...\n", nobjs);
+    oklog("LOADING: Reading %"PRIdN" objects...\n", nobjs);
     for (i = 1; i <= nobjs; i++) {
 	if (!read_object()) {
-	    errlog("READ_DB_FILE: Bad object #%d.\n", i - 1);
+	    errlog("READ_DB_FILE: Bad object #%"PRIdN".\n", i - 1);
 	    return 0;
 	}
 	if (i == nobjs || log_report_progress())
-	    oklog("LOADING: Done reading %d objects ...\n", i);
+	    oklog("LOADING: Done reading %"PRIdN" objects ...\n", i);
     }
 
     if (!validate_hierarchies()) {
 	errlog("READ_DB_FILE: Errors in object hierarchies.\n");
 	return 0;
     }
-    oklog("LOADING: Reading %d MOO verb programs...\n", nprogs);
+    oklog("LOADING: Reading %"PRIdN" MOO verb programs...\n", nprogs);
     for (i = 1; i <= nprogs; i++) {
-	if (dbio_scanf("#%d:%d\n", &oid, &vnum) != 2) {
-	    errlog("READ_DB_FILE: Bad program header, i = %d.\n", i);
+	if (dbio_scanf("#%"SCNdN":%"SCNdN"\n", &oid, &vnum) != 2) {
+	    errlog("READ_DB_FILE: Bad program header, i = %"PRIdN".\n", i);
 	    return 0;
 	}
 	if (!valid(oid)) {
-	    errlog("READ_DB_FILE: Verb for non-existant object: #%d:%d.\n",
+	    errlog("READ_DB_FILE: Verb for non-existant object: #%"PRIdN":%"PRIdN".\n",
 		   oid, vnum);
 	    return 0;
 	}
 	h = db_find_indexed_verb(oid, vnum + 1);	/* DB file is 0-based. */
 	if (!h.ptr) {
-	    errlog("READ_DB_FILE: Unknown verb index: #%d:%d.\n", oid, vnum);
+	    errlog("READ_DB_FILE: Unknown verb index: #%"PRIdN":%"PRIdN".\n", oid, vnum);
 	    return 0;
 	}
 	program = dbio_read_program(dbio_input_version, fmt_verb_name, &h);
 	if (!program) {
-	    errlog("READ_DB_FILE: Unparsable program #%d:%d.\n", oid, vnum);
+	    errlog("READ_DB_FILE: Unparsable program #%"PRIdN":%"PRIdN".\n", oid, vnum);
 	    return 0;
 	}
 	db_set_verb_program(h, program);
 	if (i == nprogs || log_report_progress())
-	    oklog("LOADING: Done reading %d verb programs...\n", i);
+	    oklog("LOADING: Done reading %"PRIdN" verb programs...\n", i);
     }
 
     oklog("LOADING: Reading forked and suspended tasks...\n");
@@ -505,15 +505,15 @@ write_db_file(const char *reason)
 
     TRY {
 	dbio_printf(header_format_string, current_db_version);
-	dbio_printf("%d\n%d\n%d\n%d\n",
+	dbio_printf("%"PRIdN"\n%d\n%d\n%"PRIdN"\n",
 		    max_oid + 1, nprogs, 0, user_list.v.list[0].v.num);
 	for (i = 1; i <= user_list.v.list[0].v.num; i++)
 	    dbio_write_objid(user_list.v.list[i].v.obj);
-	oklog("%s: Writing %d objects...\n", reason, max_oid + 1);
+	oklog("%s: Writing %"PRIdN" objects...\n", reason, max_oid + 1);
 	for (oid = 0; oid <= max_oid; oid++) {
 	    write_object(oid);
 	    if (oid == max_oid || log_report_progress())
-		oklog("%s: Done writing %d objects...\n", reason, oid + 1);
+		oklog("%s: Done writing %"PRIdN" objects...\n", reason, oid + 1);
 	}
 	oklog("%s: Writing %d MOO verb programs...\n", reason, nprogs);
 	for (i = 0, oid = 0; oid <= max_oid; oid++)
@@ -522,7 +522,7 @@ write_db_file(const char *reason)
 
 		for (v = dbpriv_find_object(oid)->verbdefs; v; v = v->next) {
 		    if (v->program) {
-			dbio_printf("#%d:%d\n", oid, vcount);
+			dbio_printf("#%"PRIdN":%d\n", oid, vcount);
 			dbio_write_program(v->program);
 			if (++i == nprogs || log_report_progress())
 			    oklog("%s: Done writing %d verb programs...\n",

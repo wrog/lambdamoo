@@ -101,7 +101,7 @@ proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
     } else
 	*canon = var_ref(desc);
 
-    stream_printf(st, "port %d", canon->v.num);
+    stream_printf(st, "port %"PRIdN, canon->v.num);
     *name = reset_stream(st);
 
     *fd = s;
