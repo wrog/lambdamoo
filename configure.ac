@@ -89,15 +89,6 @@ AC_PROGRAM_EGREP(yes, [
    AC_DEFINE(_POSIX_SOURCE))])
 
 dnl ***************************************************************************
-dnl 	MOO_MALLOC_H
-dnl Define NEED_MALLOC_H if `malloc()' is not declared in <stdlib.h> and
-dnl <malloc.h> exists.
-define(MOO_MALLOC_H, [
-echo checking whether stdlib.h declares malloc and friends
-MOO_FUNC_DECL_CHECK(stdlib.h, malloc, ,
-	AC_HEADER_CHECK(malloc.h, AC_DEFINE(NEED_MALLOC_H)))])
-
-dnl ***************************************************************************
 dnl	MOO_FUNC_DECL_CHECK(header, func,
 dnl			    if-declared [, if-not-declared[, extra-hdr]])
 dnl Do `if-declared' is `func' is declared in `header', and if-not-declared
@@ -185,12 +176,12 @@ do
   trfrom='[a-z]' trto='[A-Z]'
   var=HAVE_`echo $func | tr "$trfrom" "$trto"`
   changequote([,])dnl
-  AC_FUNC_CHECK($func, AC_DEFINE($var), [
+  AC_FUNC_CHECK($func, AC_DEFINE_UNQUOTED($var), [
     SAVELIBS="$LIBS"
     for lib in $2
     do
       LIBS="$LIBS $lib"
-      AC_FUNC_CHECK($func, [AC_DEFINE($var)
+      AC_FUNC_CHECK($func, [AC_DEFINE_UNQUOTED($var)
 			 break],
 		    LIBS="$SAVELIBS")
     done
@@ -225,29 +216,6 @@ done
 ])
 
 dnl ***************************************************************************
-dnl	MOO_CONST
-dnl Check whether or not the C compiler can cope with simple uses of the ANSI C
-dnl `const' keyword, defining `const' as the empty string if it can't.
-define(MOO_CONST, [
-echo checking for a working const keyword
-cat << EOF > conftest.c
-#ifdef __GNUC__
-#define const __const__
-#endif
-int foo(const char *x) { return 17 + (x - x); }
-int bar() { int x = foo("foo"); return x; }
-EOF
-if $CC -c conftest.c > conftest.out 2>&1; then
-  if test -s conftest.out; then
-    AC_DEFINE(const,)
-  fi
-else
-  AC_DEFINE(const,)
-fi
-rm -f conftest*
-])
-
-dnl ***************************************************************************
 dnl	MOO_ANSI_C
 dnl Check whether or not the C compiler handles ANSI C (i.e., allows function
 dnl prototypes and the `void *' type) and try to make it do so by adding
@@ -260,7 +228,7 @@ do
 SAVECC="$CC"
 CC="$CC $opt"
 AC_TEST_PROGRAM([
-int main(int argc, char *argv) { void *ptr; exit(0); }
+int main(int argc, char **argv) { void *ptr; return 0; }
 ],
 [have_ansi=1
 break],
@@ -274,6 +242,22 @@ exit 1
 fi
 ])
 
+dnl --------------------------------------------------------------------------
+dnl MOO_ADD_CFLAGS()
+dnl
+dnl Attempt to add the given option to CFLAGS, if it doesn't break compilation
+dnl --------------------------------------------------------------------------
+AC_DEFUN([MOO_ADD_CFLAGS],
+[AC_MSG_CHECKING([if $CC accepts $1])
+ pa_add_cflags__old_cflags="$CFLAGS"
+ CFLAGS="$CFLAGS $1"
+ AC_TRY_LINK([#include <stdio.h>],
+ [printf("Hello, World!\n");],
+ AC_MSG_RESULT([yes]),
+ AC_MSG_RESULT([no])
+ CFLAGS="$pa_add_cflags__old_cflags")])
+
+
 dnl ***************************************************************************
 dnl Start of actual configuration tests
 dnl ***************************************************************************
@@ -286,6 +270,7 @@ AC_ARG_VAR([GPERF],
 
 AC_PROG_CC
 AC_GCC_TRADITIONAL
+AC_GNU_SOURCE
 AC_PROGRAM_EGREP(yes, [
 #if __GNUC__==2
   yes
@@ -303,19 +288,39 @@ AC_SCO_INTL
 MOO_AUX
 MOO_HPUX
 MOO_ANSI_C
-MOO_CONST
-CPP=""
-AC_PROG_CPP
-MOO_MALLOC_H
+MOO_ADD_CFLAGS(-Wall)
+MOO_ADD_CFLAGS(-W)
+MOO_ADD_CFLAGS(-Wwrite-strings)
+MOO_ADD_CFLAGS(-Wpointer-arith)
+MOO_ADD_CFLAGS(-Wbad-function-cast)
+MOO_ADD_CFLAGS(-Wcast-equal)
+MOO_ADD_CFLAGS(-Wstrict-prototypes)
+MOO_ADD_CFLAGS(-Wmissing-prototypes)
+MOO_ADD_CFLAGS(-Wmissing-declarations)
+MOO_ADD_CFLAGS(-Wnested-externs)
+MOO_ADD_CFLAGS(-Winline)
+MOO_ADD_CFLAGS(-Wwrite-strings)
+dnl MOO_ADD_CFLAGS(-Wundef)
+dnl MOO_ADD_CFLAGS(-Wshadow)
+dnl MOO_ADD_CFLAGS(-Wsign-compare)
+MOO_ADD_CFLAGS(-pipe)
+MOO_ADD_CFLAGS(-O3)
+AC_C_CONST
+AC_C_INLINE
+AC_C_RESTRICT
+AC_SYS_LARGEFILE
+AC_HEADER_CHECK(malloc.h, AC_DEFINE(NEED_MALLOC_H))
 AC_HEADER_CHECK(sys/bsdtypes.h, AC_DEFINE(NEED_BSDTYPES_H))
 AC_HEADER_CHECK(sys/select.h, AC_DEFINE(NEED_SELECT_H))
 AC_HEADER_CHECK(memory.h, AC_DEFINE(NEED_MEMORY_H))
+AC_HEADER_CHECK(inttypes.h, AC_DEFINE(NEED_INTTYPES_H))
+AC_HEADER_CHECK(stdint.h, AC_DEFINE(NEED_STDINT_H))
 AC_PID_T
 AC_MODE_T
 AC_SIZE_T
 AC_STRUCT_TM
 AC_TIMEZONE
-MOO_HAVE_FUNC_LIBS(sqrt, -lm /lib/libm.a "-static -lm")
+MOO_HAVE_FUNC_LIBS(atan2 asinh expm1 erfc j1, -lm /lib/libm.a "-static -lm")
 MOO_HAVE_FUNC_LIBS(mkfifo waitpid sigemptyset, -lposix /lib/libposix.a)
 MOO_HAVE_FUNC_LIBS(accept, "-lsocket -lnsl" -lsocket -linet)
 MOO_HAVE_FUNC_LIBS(t_open, -lnsl -lnsl_s)
@@ -323,11 +328,18 @@ MOO_HAVE_FUNC_LIBS(crypt, -lcrypt -lcrypt_d)
 AC_HAVE_HEADERS(unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h)
 AC_HAVE_FUNCS(remove rename poll select strerror strftime strtoul matherr)
 AC_HAVE_FUNCS(random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse)
+AC_HAVE_FUNCS(strtoimax)
 MOO_NDECL_FUNCS(ctype.h, tolower)
 MOO_NDECL_FUNCS(fcntl.h, fcntl)
 MOO_NDECL_FUNCS(netinet/in.h, htonl)
 dnl *** this next should really be some variety of AC_CHECK_TYPE
 dnl *** but this is just a grep test anyway   --wrog
+AC_CHECK_TYPES(long long)
+AC_CHECK_TYPES(uint8_t)
+AC_CHECK_TYPES(int32_t)
+AC_CHECK_TYPES(int64_t)
+AC_CHECK_TYPES([int128_t])
+AC_CHECK_TYPES([__int128])
 MOO_NDECL_VARS(netinet/in.h, in_addr_t)
 MOO_NDECL_FUNCS(sys/ioctl.h, ioctl)
 MOO_NDECL_FUNCS(poll.h, poll)

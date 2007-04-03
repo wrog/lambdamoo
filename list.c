@@ -930,14 +930,14 @@ static const char *
 hash_bytes(const char *input, int length)
 {
     md5ctx_t context;
-    uint8 result[16];
+    uint8_t result[16];
     int i;
     const char digits[] = "0123456789ABCDEF";
     char *hex = str_dup("12345678901234567890123456789012");
     const char *answer = hex;
 
     md5_Init(&context);
-    md5_Update(&context, (uint8 *) input, length);
+    md5_Update(&context, (uint8_t *) input, length);
     md5_Final(&context, result);
     for (i = 0; i < 16; i++) {
 	*hex++ = digits[result[i] >> 4];

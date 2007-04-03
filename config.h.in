@@ -36,6 +36,8 @@
 #undef _MINIX
 #undef _POSIX_1_SOURCE
 #undef _HPUX_SOURCE
+#undef _XOPEN_SOURCE
+#undef _GNU_SOURCE
 
 /* The following symbols describe whether or not certain functions are declared
  * in header files on your system and, if so, where.  If, on your system, the
@@ -235,6 +237,28 @@
  */
 
 #undef POSIX_NONBLOCKING_WORKS
+
+/*
+ * Tests for C99 integer types
+ */
+#undef HAVE_LONG_LONG
+#undef HAVE_UINT8_T
+#undef HAVE_INT32_T
+#undef HAVE_INT64_T
+
+#undef HAVE_STRTOIMAX
+
+#undef NEED_STDINT_H
+#undef NEED_INTTYPES_H
+
+/*
+ * 128-bit ints are not yet part of the standard but probably will be
+ * at some point.  __int128 is a GNU extension that Clang also
+ * recognizes.
+ */
+#undef HAVE_INT128_T
+#undef HAVE___INT128
+
 
 /* continue on to the part that ./configure should not be touching */
 #include "config_epilog.h"

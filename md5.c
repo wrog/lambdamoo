@@ -68,7 +68,7 @@
 #define S43 15
 #define S44 21
 
-static uint8 PADDING[64] =
+static uint8_t PADDING[64] =
 {
     0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -94,61 +94,61 @@ static uint8 PADDING[64] =
  */
 #define FF(a, b, c, d, x, s, ac)			\
     {							\
-	(a) += F((b), (c), (d)) + (x) + (uint32)(ac);	\
+	(a) += F((b), (c), (d)) + (x) + (uint32_t)(ac);	\
 	(a) = ROTATE_LEFT((a), (s));			\
 	(a) += (b);					\
     }
 
 #define GG(a, b, c, d, x, s, ac)			\
     {							\
-	(a) += G((b), (c), (d)) + (x) + (uint32)(ac);	\
+	(a) += G((b), (c), (d)) + (x) + (uint32_t)(ac);	\
 	(a) = ROTATE_LEFT((a), (s));			\
 	(a) += (b);					\
     }
 
 #define HH(a, b, c, d, x, s, ac)			\
     {							\
-	(a) += H((b), (c), (d)) + (x) + (uint32)(ac);	\
+	(a) += H((b), (c), (d)) + (x) + (uint32_t)(ac);	\
 	(a) = ROTATE_LEFT((a), (s));			\
 	(a) += (b);					\
     }
 
 #define II(a, b, c, d, x, s, ac)			\
     {							\
-	(a) += I((b), (c), (d)) + (x) + (uint32)(ac);	\
+	(a) += I((b), (c), (d)) + (x) + (uint32_t)(ac);	\
 	(a) = ROTATE_LEFT((a), (s));			\
 	(a) += (b);					\
     }
 
 /*
- * Encodes input (uint32) into output (uint8). Assumes len is a multiple of 4.
+ * Encodes input (uint32_t) into output (uint8_t). Assumes len is a multiple of 4.
  */
 static void
-md5_Encode(uint8 * output, uint32 * input, int len)
+md5_Encode(uint8_t * output, uint32_t * input, int len)
 {
     unsigned int i, j;
 
     for (i = 0, j = 0; j < len; i++, j += 4) {
-	output[j] = (uint8) (input[i] & 0xff);
-	output[j + 1] = (uint8) ((input[i] >> 8) & 0xff);
-	output[j + 2] = (uint8) ((input[i] >> 16) & 0xff);
-	output[j + 3] = (uint8) ((input[i] >> 24) & 0xff);
+	output[j] = (uint8_t) (input[i] & 0xff);
+	output[j + 1] = (uint8_t) ((input[i] >> 8) & 0xff);
+	output[j + 2] = (uint8_t) ((input[i] >> 16) & 0xff);
+	output[j + 3] = (uint8_t) ((input[i] >> 24) & 0xff);
     }
 }
 
 /*
- * Decodes input (uint8) into output (uint32). Assumes len is a multiple of 4.
+ * Decodes input (uint8_t) into output (uint32_t). Assumes len is a multiple of 4.
  */
 static void
-md5_Decode(uint32 * output, uint8 * input, int len)
+md5_Decode(uint32_t * output, uint8_t * input, int len)
 {
     unsigned int i, j;
 
     for (i = 0, j = 0; j < len; i++, j += 4) {
-	output[i] = ((uint32) input[j]) |
-	    (((uint32) input[j + 1]) << 8) |
-	    (((uint32) input[j + 2]) << 16) |
-	    (((uint32) input[j + 3]) << 24);
+	output[i] = ((uint32_t) input[j]) |
+	    (((uint32_t) input[j + 1]) << 8) |
+	    (((uint32_t) input[j + 2]) << 16) |
+	    (((uint32_t) input[j + 3]) << 24);
     }
 }
 
@@ -156,9 +156,9 @@ md5_Decode(uint32 * output, uint8 * input, int len)
  * MD5 basic transformation. Transforms state based on block.
  */
 static void
-md5_Transform(uint32 state[4], uint8 block[64])
+md5_Transform(uint32_t state[4], uint8_t block[64])
 {
-    uint32 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
+    uint32_t a = state[0], b = state[1], c = state[2], d = state[3], x[16];
 
     md5_Decode(x, block, 64);
 
@@ -263,7 +263,7 @@ md5_Init(md5ctx_t * context)
  * processing another message block, and updating the context.
  */
 void
-md5_Update(md5ctx_t * context, uint8 * buf, int len)
+md5_Update(md5ctx_t * context, uint8_t * buf, int len)
 {
     unsigned int i, index, partLen;
 
@@ -271,9 +271,9 @@ md5_Update(md5ctx_t * context, uint8 * buf, int len)
     index = (unsigned int) ((context->count[0] >> 3) & 0x3F);
 
     /* Update number of bits */
-    if ((context->count[0] += ((uint32) len << 3)) < ((uint32) len << 3))
+    if ((context->count[0] += ((uint32_t) len << 3)) < ((uint32_t) len << 3))
 	context->count[1]++;
-    context->count[1] += ((uint32) len >> 29);
+    context->count[1] += ((uint32_t) len >> 29);
 
     partLen = 64 - index;
 
@@ -299,9 +299,9 @@ md5_Update(md5ctx_t * context, uint8 * buf, int len)
  * the message digest and zeroizing the context.
  */
 void
-md5_Final(md5ctx_t * context, uint8 digest[16])
+md5_Final(md5ctx_t * context, uint8_t digest[16])
 {
-    uint8 bits[8];
+    uint8_t bits[8];
     unsigned int index, padLen;
 
     /* Save number of bits */
