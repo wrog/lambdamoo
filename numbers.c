@@ -587,17 +587,24 @@ bf_ctime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
 {
     Var r;
     time_t c;
-    char buffer[50];
+    char buffer[128];
+    int has_time     = (arglist.v.list[0].v.num >= 1);
+    int has_timezone = (arglist.v.list[0].v.num >= 2);
+    char *current_timezone = NULL;
 
-    if (arglist.v.list[0].v.num == 1) {
-	c = arglist.v.list[1].v.num;
-    } else {
-	c = time(0);
+    c = has_time ? (time_t)arglist.v.list[1].v.num : time(0);
+
+    if (has_timezone) {
+	current_timezone = getenv("TZ");
+	if ( current_timezone )
+	    current_timezone = str_dup(current_timezone);
+	setenv("TZ", arglist.v.list[2].v.str, 1);
+	tzset();
     }
 
     {				/* Format the time, including a timezone name */
 #if HAVE_STRFTIME
-	strftime(buffer, 50, "%a %b %d %H:%M:%S %Y %Z", localtime(&c));
+	strftime(buffer, 128, "%a %b %d %H:%M:%S %Y %Z", localtime(&c));
 #else
 #  if HAVE_TM_ZONE
 	struct tm *t = localtime(&c);
@@ -613,6 +620,16 @@ bf_ctime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
 	strncpy(buffer + 25, tzname, 3);
 	buffer[28] = '\0';
 #endif
+    }
+
+    if (has_timezone) {
+	if (current_timezone) {
+	    setenv("TZ", current_timezone, 1);
+	    free_str(current_timezone);
+	} else {
+	    unsetenv("TZ");
+	}
+	tzset();
     }
 
     if (buffer[8] == '0')
