@@ -385,7 +385,7 @@ stream_add_moobinary_from_raw_bytes(Stream *s,
     for (i = 0; i < buflen; i++) {
 	unsigned char c = buffer[i];
 
-	if (c != '~' && (isgraph(c) || c == ' '))
+	if (c >= 32 && c < 126)
 	    stream_add_char(s, c);
 	else
 	    stream_printf(s, "~%02x", (int) c);
@@ -413,9 +413,13 @@ moobinary_to_raw_bytes(const char *binary, int *buflen)
 	    char cc = 0;
 
 	    for (i = 1; i <= 2; i++) {
-		c = toupper(*ptr++);
-		if (('0' <= c && c <= '9') || ('A' <= c && c <= 'F'))
-		    cc = cc * 16 + (c <= '9' ? c - '0' : c - 'A' + 10);
+		/* The | 0x20 changes upper case to lower case for the
+		   characters we are interested in here... */
+		c = *ptr++ | 0x20;
+		if ('0' <= c && c <= '9')
+		    cc = (cc << 4) + (c - '0');
+		else if ('a' <= c && c <= 'f')
+		    cc = (cc << 4) + (c - 'a' + 10);
 		else
 		    return 0;
 	    }
