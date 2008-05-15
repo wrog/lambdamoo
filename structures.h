@@ -111,8 +111,8 @@ typedef enum {
     /* add new elements here */
 
     TYPE_STR   = (_TYPE_STR   | TYPE_COMPLEX_FLAG),
-    TYPE_FLOAT = (_TYPE_FLOAT | TYPE_COMPLEX_FLAG),
     TYPE_LIST  = (_TYPE_LIST  | TYPE_COMPLEX_FLAG),
+    TYPE_FLOAT = (_TYPE_FLOAT),
 
     TYPE_ANY     = -1,	/* wildcard for use in declaring built-ins */
     TYPE_NUMERIC = -2	/* wildcard for (integer or float) */
