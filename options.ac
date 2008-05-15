@@ -63,6 +63,7 @@ dnl These only ever get used in #ifdef/#ifndef:
 dnl
  [[LOG_COMMANDS],         [bool], no,  [log player commands]],
  [[UNFORKED_CHECKPOINTS], [bool], no,  [do checkpoints in the foreground]],
+ [[DEBUG_LOG_TRACEBACKS], [bool], no,  [print tracebacks to the server log]],
  [[INPUT_APPLY_BACKSPACE],[bool], yes, [BKSP/DEL edits nonbinary connections]],
  [[IGNORE_PROP_PROTECTED],[bool], yes, [ignore builtin property protection]],
  [[BYTECODE_REDUCE_REF],  [bool], no,  [do bytecode refcount optimization]],
