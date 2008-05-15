@@ -180,6 +180,9 @@ output_to_list(const char *line)
 static Var
 error_backtrace_list(const char *msg)
 {
+#ifdef DEBUG_LOG_TRACEBACKS
+    print_error_backtrace(msg, output_to_log);
+#endif
     backtrace_list = new_list(0);
     print_error_backtrace(msg, output_to_list);
     return backtrace_list;
