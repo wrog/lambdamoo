@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include "utf.h"
 
+#include "exceptions.h"
+
 #if UNICODE_STRINGS
 
 /*
@@ -179,6 +181,106 @@ put_utf(char **pp, uint32_t v)
     *pp = p;
 
     return 0;
+}
+
+Num
+utf_byte_index(const char *s0, Num ci)
+{
+ /* Num ci0 = ci;       */
+    const char *s = s0;
+    if (ci <= 1)
+	return ci;
+
+    do {/*  s - s0 + 1 == (1-based) index of the
+	 *  first byte of character (ci0 - ci + 1)
+	 */
+	--ci;
+    } while (get_utf(&s) && ci > 1);
+
+    return s - s0 + ci;
+}
+
+void
+utf_byte_range(const char *s0, Num cis[2])
+{
+    const char *s = s0;
+
+    /* Visit cis in non-decreasing order */
+    int o = -(cis[0] > cis[1]);   /*      0 or -1      */
+    int step = o | 1;		  /*      1 or -1      */
+    Num *cidone = cis + 1 + step; /*  cis+2 or  cis    */
+    cis += 1 - step;		  /*  cis   or  cis+2  */
+
+    while (cis[o] <= 0) {
+	cis += step;
+	if (cis == cidone) return;
+    }
+
+    Num cn = 1;
+    do {/* s == start of char #cn
+	 * cn <= all remaining cis (cis[o] is smallest)
+	 */
+	while (cis[o] == cn) {
+	    cis[o] = (s - s0) + 1;
+	    cis += step;
+	    if (cis == cidone) return;
+	}
+	cn++;
+    } while (get_utf(&s));
+
+    do {
+	cis[o] += (s - s0) - cn + 1;
+	cis += step;
+    } while (cis != cidone);
+}
+
+/* requires 1 <= bi <= strlen(s0)+2;
+   s0[bi] (bi as a 1-based byte index,
+   meaning s0[bi-1] in C terms,
+   is assumed to be a character start but never dereferenced.  */
+Num
+utf_char_index(const char *s0, Num bi)
+{
+    if (is_utf8_cont_byte(s0[0])) {
+	/* protect against backwards overruns. */
+	panic("UTF_CHAR_INDEX given malformed utf8");
+    }
+    Num ci = 1;
+    const char *s = s0 + bi - 1;
+    while (s > s0) {
+	/* s is at the start of a character;
+	   ci + number of chars before s
+	   == char index of bi) */
+	while (is_utf8_cont_byte(*--s));
+	++ci;
+    }
+    return ci;
+}
+
+size_t
+memo_strlen_utf(const char *s)
+{
+    size_t i = 0;
+    while (get_utf(&s)) {
+        i++;
+    }
+    return i;
+}
+
+size_t
+clearance_utf(const uint8_t c)
+{
+    if (c <= 0x7f)
+        return 1;
+    if (c <= 0xbf)
+        return 1;
+    if (c <= 0xdf)
+        return 2;
+    if (c <= 0xef)
+        return 3;
+    if (c <= 0xf7)
+        return 4;
+    return 1;
 }
 
 #endif /* UNICODE_STRINGS */

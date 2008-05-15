@@ -38,6 +38,9 @@ extern uint32_t my_toupper(uint32_t);
 extern int      my_isspace(uint32_t);
 #endif
 
+#if UNICODE_STRINGS
+extern int my_is_printable(uint32_t);
+#else
 inline int
 my_is_printable(uint32_t x)
 {
@@ -49,6 +52,7 @@ my_is_printable(uint32_t x)
 	    &&
 	    ((x & 0x60) || (x == '\t')));
 }
+#endif
 /*  Unlike with the other my_* functions here, which are intended to
  *  follow the respective Unicode classifications, "printable" here
  *  does NOT.  It actually refers to the set of code points (character
