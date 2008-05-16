@@ -35,6 +35,7 @@
 #include "structures.h"
 #include "unparse.h"
 #include "utf.h"
+#include "utf-ctype.h"
 #include "utils.h"
 
 Var
@@ -1078,6 +1079,72 @@ bf_encode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
     return p;
 }
 
+static package
+bf_tochar(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    enum error e = E_NONE;
+    Var v = arglist.v.list[1];
+    int ucs;
+
+    switch (v.type) {
+    case TYPE_INT:
+	ucs = (v.v.num <= 0x10ffff ? v.v.num : 0);
+	break;
+    case TYPE_STR:
+	ucs = my_char_lookup(v.v.str);
+	break;
+    default:
+	e = E_TYPE;
+    }
+    free_var(arglist);
+
+    if (e == E_NONE && !(my_is_printable(ucs)))
+	e = E_INVARG;
+
+    if (e != E_NONE)
+	return make_error_pack(e);
+
+    Stream *s = new_stream(0);
+    stream_add_utf(s, ucs);
+    const char *charstr = str_dup(reset_stream(s));
+    free_stream(s);
+    return make_string_pack(charstr);
+}
+
+static inline uint32_t
+single_char_first_argument(Var arglist)
+{
+    const char *s = arglist.v.list[1].v.str;
+    uint32_t ucs = get_utf(&s);
+    return *s ? 0 : ucs;
+}
+
+static package
+bf_charname(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    uint32_t ucs = single_char_first_argument(arglist);
+    free_var(arglist);
+    if (!ucs)
+        return make_error_pack(E_INVARG);
+
+    const char *name = my_char_name(ucs);
+    if (!name)
+	return make_error_pack(E_INVARG);
+
+    return make_string_pack(name);
+}
+
+static package
+bf_ord(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    uint32_t ucs = single_char_first_argument(arglist);
+    free_var(arglist);
+    if (!ucs)
+        return make_error_pack(E_INVARG);
+
+    return make_int_pack(ucs);
+}
+
 void
 register_list(void)
 {
@@ -1115,6 +1182,9 @@ register_list(void)
     register_function("strcmp", 2, 2, bf_strcmp, TYPE_STR, TYPE_STR);
     register_function("strsub", 3, 4, bf_strsub,
 		      TYPE_STR, TYPE_STR, TYPE_STR, TYPE_ANY);
+    register_function("tochar", 1, 1, bf_tochar, TYPE_ANY);
+    register_function("charname", 1, 1, bf_charname, TYPE_STR);
+    register_function("ord", 1, 1, bf_ord, TYPE_STR);
 }
 
 
