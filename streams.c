@@ -87,6 +87,15 @@ stream_delete_char(Stream * s)
 }
 
 void
+stream_add_float(Stream *s, double n, int prec)
+{
+    size_t here = s->current;
+    stream_printf(s, "%.*g", prec, n);
+    if (!strpbrk(s->buffer + here, ".e"))
+        stream_add_string(s, ".0");   /* make it look floating */
+}
+
+void
 stream_add_bytes(Stream * s, const char *bytes, size_t len)
 {
     (void)grew(s, len);

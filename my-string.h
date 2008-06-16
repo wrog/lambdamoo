@@ -32,6 +32,7 @@ extern char *strcat(char *, const char *);
 extern int strcmp(const char *, const char *);
 extern int strncmp(const char *, const char *, size_t);
 extern char *strchr(const char *, int);
+extern char *strpbrk(const char *, const char *);
 extern char *strerror(int);
 
 /* We don't need to declare these because we're only using our own string.h
