@@ -733,6 +733,9 @@ void
 db_shutdown(void)
 {
     dump_database(DUMP_SHUTDOWN);
+
+    free_str(input_db_name);
+    free_str(dump_db_name);
 }
 
 char rcsid_db_file[] = "$Id$";
