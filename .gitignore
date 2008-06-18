@@ -1,0 +1,13 @@
+Makefile
+configure
+autom4te.cache
+config.h
+config.log
+config.status
+y.tab.h
+*.o
+moo
+*.db
+\#*\#
+.\#*
+*.bak
