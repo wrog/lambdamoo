@@ -49,7 +49,7 @@ typedef struct {
 
     unsigned cached_lineno;
     unsigned cached_lineno_pc;
-    unsigned cached_lineno_vec;
+    int cached_lineno_vec;
 } Program;
 
 #define MAIN_VECTOR 	-1	/* As opposed to an index into fork_vectors */
