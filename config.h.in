@@ -266,6 +266,11 @@
 #undef HAVE_INT128_T
 #undef HAVE___INT128
 
+/*
+ * need endianness for iconv
+ */
+#undef WORDS_BIGENDIAN
+
 
 /* continue on to the part that ./configure should not be touching */
 #include "config_epilog.h"

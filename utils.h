@@ -84,6 +84,16 @@ extern void stream_add_moobinary_from_raw_bytes(
     Stream *, const char *buffer, size_t buflen);
 extern const char *moobinary_to_raw_bytes(const char *binary, size_t *rawlen);
 
+/* Given a stream and a buffer of characters encoded as bytes using
+ * fromcode, write the characters to the stream using tocode,
+ * fromcode and tocode being encodings the iconv library
+ * knows about.  Return nonzero if successful.
+ */
+extern int stream_add_recoded_chars(Stream *s,
+				    const char *inbuf, size_t inbytesleft,
+				    const char *fromcode,
+				    const char *tocode);
+
 #endif		/* !Utils_H */
 
 /*

@@ -18,6 +18,8 @@
 #include "my-ctype.h"
 #include "my-stdio.h"
 #include "my-string.h"
+#include <iconv.h>
+#include <errno.h>
 
 #include "config.h"
 #include "db.h"
@@ -430,6 +432,42 @@ moobinary_to_raw_bytes(const char *binary, size_t *buflen)
     *buflen = stream_length(s);
     return reset_stream(s);
 }
+
+int
+stream_add_recoded_chars(Stream *s,
+			 const char *inbuf, size_t inbytesleft,
+			 const char *fromcode, const char *tocode)
+{
+    iconv_t cd;
+    char *outbuf;
+    size_t outbytesleft;
+    int ret;
+
+    cd = iconv_open(tocode, fromcode);
+    if (cd == (iconv_t) -1)
+	return 0;
+
+    do {
+	stream_beginfill(s, inbytesleft * 2,
+			 &outbuf, &outbytesleft);
+	ret = (size_t) -1 !=
+	    iconv(cd, (char **)&inbuf, &inbytesleft,
+		  &outbuf, &outbytesleft);
+
+	stream_endfill(s, outbytesleft);
+    }
+    while (!ret && errno == E2BIG);
+    /* E2BIG = remaining output buffer too small => try again
+     * die on all other errors, including
+     *   EILSEQ: invalid input sequence
+     *   EINVAL: incomplete input sequence
+     */
+
+    iconv_close(cd);
+
+    return ret;
+}
+
 
 char rcsid_utils[] = "$Id$";
 

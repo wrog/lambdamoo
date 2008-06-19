@@ -1145,6 +1145,182 @@ bf_ord(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
     return make_int_pack(ucs);
 }
 
+#if !UNICODE_STRINGS
+static inline int
+stream_add_utf32(Stream *s, uint32_t ch)
+{
+    if ((ch > 0x10ffff) ||
+	(ch - 0xd800) <= (0xdfff-0xd800))
+	return -1;
+    stream_add_bytes(s, (const char *)&ch, 4);
+    return 0;
+}
+static inline int
+stream_add_char_for_ec(Stream *s, uint32_t ch)
+{ return stream_add_utf32(s, ch); }
+
+static void
+stream_add_string_for_ec(Stream *s, const char *str)
+{
+    unsigned char *c = str;
+    for( ; *c; ++c)
+	if (stream_add_utf32(s, *c) == -1)
+	    return -1;
+}
+
+#  ifdef WORDS_BIGENDIAN
+#    define BF_ENCODE_ENCODING "UTF-32BE"
+#  else
+#    define BF_ENCODE_ENCODING "UTF-32LE"
+#  endif
+
+#else /* UNICODE_STRINGS */
+
+static inline int
+stream_add_char_for_ec(Stream *s, uint32_t ch)
+{ return stream_add_utf(s, ch); }
+
+static inline void
+stream_add_string_for_ec(Stream *s, const char *str)
+{ return stream_add_string(s, str); }
+
+#  define BF_ENCODE_ENCODING "UTF-8"
+
+#endif
+
+static int
+encode_chars(Stream *s, Var v)
+{
+    int i;
+
+    switch (v.type) {
+    case TYPE_INT:
+	if (stream_add_char_for_ec(s, v.v.num) == -1)
+	    return 0;
+	break;
+
+    case TYPE_STR:
+	stream_add_string_for_ec(s, v.v.str);
+	break;
+
+    case TYPE_LIST:
+	for (i = 1; i <= v.v.list[0].v.num; ++i) {
+	    if (!encode_chars(s, v.v.list[i]))
+		return 0;
+	}
+	break;
+
+    default:
+	return 0;
+    }
+
+    return 1;
+}
+
+static package
+bf_encode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    package p;
+    size_t length;
+    Stream *s = new_stream(100);
+    Stream *s2 = new_stream(100);
+    if (!(encode_chars(s, arglist.v.list[1]) &&
+	  (length = stream_length(s),
+	   stream_add_recoded_chars(s2, reset_stream(s), length,
+				    BF_ENCODE_ENCODING, arglist.v.list[2].v.str))))
+	p = make_error_pack(E_INVARG);
+    else {
+	Var r;
+	stream_add_moobinary_from_raw_bytes(
+	    s, stream_contents(s2), stream_length(s2));
+	r.type = TYPE_STR;
+	r.v.str = str_dup(reset_stream(s));
+	p = make_var_pack(r);
+    }
+    free_stream(s);
+    free_stream(s2);
+    free_var(arglist);
+    return p;
+}
+
+static package
+bf_decode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+{
+    int nargs = arglist.v.list[0].v.num;
+    int fully = (nargs >= 3 && is_true(arglist.v.list[3]));
+    package p;
+    Stream *s32 = new_stream(100);
+    {
+	size_t eblength = 0;
+	const char *ebytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str,
+						    &eblength);
+	const char *encoding = arglist.v.list[2].v.str;
+
+	if (!(ebytes &&
+	      stream_add_recoded_chars(s32, ebytes, eblength, encoding,
+#ifdef WORDS_BIGENDIAN
+ "UTF-32BE"
+#else
+ "UTF-32LE"
+#endif
+				       ))) {
+	    p = make_error_pack(E_INVARG);
+	    goto oops;
+	}
+    }
+    size_t dlength = stream_length(s32) / sizeof(uint32_t);
+    uint32_t *dchars = (uint32_t *) reset_stream(s32);
+
+    /* UTF-32(BE|LE) are not supposed to produce BOMs, but
+     * I'm not certain, and this is harmless, so...  --wrog
+     */
+    if (dlength && *dchars == 0xFEFF /* BOM */)
+	++dchars, --dlength;
+
+    Var r;
+    if (fully) {
+	size_t i;
+
+	r = new_list(dlength);
+
+	for (i = 1; i <= dlength; ++i) {
+	    r.v.list[i].type = TYPE_INT;
+	    r.v.list[i].v.num = *dchars++;
+	}
+    }
+    else {
+	Stream *s = new_stream(dlength + dlength / 2);
+
+	r = new_list(0);
+	for (;;) {
+	    Var elt;
+	    int done;
+	    uint32_t c;
+
+	    if (!(done = !dlength--) && my_is_printable(c = *dchars++)) {
+		stream_add_utf(s, c);
+		continue;
+	    }
+	    if (stream_length(s)) {
+		elt.type = TYPE_STR;
+		elt.v.str = str_dup(reset_stream(s));
+		r = listappend(r, elt);
+	    }
+	    if (done)
+		break;
+	    elt.type = TYPE_INT;
+	    elt.v.num = c;
+	    r = listappend(r, elt);
+	}
+	free_stream(s);
+    }
+    p = make_var_pack(r);
+ oops:
+    free_stream(s32);
+    free_var(arglist);
+    return p;
+}
+
 void
 register_list(void)
 {
@@ -1185,6 +1361,10 @@ register_list(void)
     register_function("tochar", 1, 1, bf_tochar, TYPE_ANY);
     register_function("charname", 1, 1, bf_charname, TYPE_STR);
     register_function("ord", 1, 1, bf_ord, TYPE_STR);
+    register_function("encode_chars", 2, 2, bf_encode_chars,
+		      TYPE_ANY, TYPE_STR);
+    register_function("decode_chars", 2, 3, bf_decode_chars,
+		      TYPE_STR, TYPE_STR, TYPE_ANY);
 }
 
 
