@@ -604,7 +604,9 @@ bf_ctime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
 
     {				/* Format the time, including a timezone name */
 #if HAVE_STRFTIME
-	strftime(buffer, 128, "%a %b %d %H:%M:%S %Y %Z", localtime(&c));
+	if (strftime(buffer, sizeof(buffer), "%a %b %d %H:%M:%S %Y %Z",
+		     localtime(&c)) == 0)
+	    *buffer = 0;
 #else
 #  if HAVE_TM_ZONE
 	struct tm *t = localtime(&c);
@@ -632,12 +634,16 @@ bf_ctime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
 	tzset();
     }
 
+    free_var(arglist);
+
+    if (*buffer == 0)
+	return make_error_pack(E_INVARG);
+
     if (buffer[8] == '0')
 	buffer[8] = ' ';
     r.type = TYPE_STR;
     r.v.str = str_dup(buffer);
 
-    free_var(arglist);
     return make_var_pack(r);
 }
 
