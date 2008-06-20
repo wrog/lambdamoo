@@ -71,15 +71,15 @@ dbio_scanf(const char *format,...)
     return count;
 }
 
-int
+int64_t
 dbio_read_num(void)
 {
-    char s[20];
+    char s[22];
     char *p;
-    int i;
+    long long i;
 
-    fgets(s, 20, input);
-    i = strtol(s, &p, 10);
+    fgets(s, sizeof(s), input);
+    i = strtoll(s, &p, 10);
     if (isspace(*s) || *p != '\n')
 	errlog("DBIO_READ_NUM: Bad number: \"%s\" at file pos. %ld\n",
 	       s, ftell(input));
@@ -279,9 +279,9 @@ dbio_printf(const char *format,...)
 }
 
 void
-dbio_write_num(int n)
+dbio_write_num(int64_t n)
 {
-    dbio_printf("%d\n", n);
+    dbio_printf("%"PRId64"\n", n);
 }
 
 void

@@ -39,7 +39,7 @@ extern void dbio_read_line(char *s, int n);
 
 extern int dbio_scanf(const char *format,...) FORMAT(scanf,1,2);
 
-extern int dbio_read_num(void);
+extern int64_t dbio_read_num(void);
 extern Objid dbio_read_objid(void);
 extern double dbio_read_float(void);
 
@@ -85,7 +85,7 @@ extern Program *dbio_read_program(DB_Version version,
 
 extern void dbio_printf(const char *format,...) FORMAT(printf,1,2);
 
-extern void dbio_write_num(int);
+extern void dbio_write_num(int64_t);
 extern void dbio_write_objid(Objid);
 extern void dbio_write_float(double);
 
