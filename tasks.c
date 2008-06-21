@@ -1479,6 +1479,7 @@ read_task_queue(void)
 	    errlog("READ_TASK_QUEUE: Bad activation, count = %d.\n", count);
 	    return 0;
 	}
+	a.temp.type = TYPE_NONE;
 	if (!read_rt_env(&old_names, &old_rt_env, &old_size)) {
 	    errlog("READ_TASK_QUEUE: Bad env, count = %d.\n", count);
 	    return 0;
