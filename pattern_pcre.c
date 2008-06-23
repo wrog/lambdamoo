@@ -311,7 +311,9 @@ int rmatch_callout(pcre_callout_block *block)
 {
     rmatch_data_t *rmatch = block->callout_data;
 
-    if (!rmatch->valid || block->start_match > rmatch->ovec[0]) {
+    if (!rmatch->valid || block->current_position > rmatch->ovec[1] ||
+	(block->current_position == rmatch->ovec[1] &&
+	 block->start_match < rmatch->ovec[0])) {
 	/* make a copy of the offsets vector so the last such vector found can
 	   be returned as the rightmost match */
 
