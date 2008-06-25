@@ -54,6 +54,9 @@ const char *translate(const char *moopat)
      * namely, the inclusion of _ in \w and its absence in %w.
      */
 
+    /* wrap entire expression so we can add a callout at the end */
+    stream_add_string(s, "(?:");
+
     while ((c = get_utf(&moopat))) {
 	switch (state) {
 	case st_base:
@@ -220,7 +223,7 @@ const char *translate(const char *moopat)
     }
 
     /* add callout at end of pattern for rmatch */
-    stream_add_string(s, "(?C)");
+    stream_add_string(s, ")(?C)");
 
     /* don't let a trailing % get away without a syntax error */
     if (state == st_esc)
