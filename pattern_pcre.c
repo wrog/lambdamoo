@@ -175,7 +175,7 @@ const char *translate(const char *moopat)
 	    case '7':
 	    case '8':
 	    case '9':
-		stream_printf(s, "\\g{%d}", c - '0');
+		stream_printf(s, "\\%d(?#)", c - '0');
 		break;
 
 # define P_WORD          "[^\\W_]"
