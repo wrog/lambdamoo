@@ -97,7 +97,7 @@ restart:
 	touch restart
 
 configure: configure.in
-	WANT_AUTOCONF=2.1 autoconf
+	autoconf
 
 config.status: configure
 	env CC= YACC= ./configure --no-create

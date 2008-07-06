@@ -57,43 +57,59 @@
 #undef NEED_BSDTYPES_H
 #undef NEED_SELECT_H
 
-#undef NDECL_TOLOWER		/* <ctype.h>      */
-#undef NDECL_FCNTL		/* <fcntl.h>      */
-#undef NDECL_HTONL		/* <netinet/in.h> */
-#undef NDECL_IN_ADDR_T		/* <netinet/in.h> */
-#undef NDECL_IOCTL		/* <sys/ioctl.h>  */
-#undef NDECL_POLL		/* <poll.h>	  */
-#undef NDECL_KILL		/* <signal.h>	  */
-#undef NDECL_SIGEMPTYSET	/* <signal.h>	  */
-#undef NDECL_SIGPROCMASK	/* <signal.h>	  */
-#undef NDECL_SIGRELSE		/* <signal.h>	  */
-#undef NDECL_ACCEPT		/* <sys/socket.h> */
-#undef NDECL_BIND		/* <sys/socket.h> */
-#undef NDECL_SHUTDOWN		/* <sys/socket.h> */
-#undef NDECL_FSTAT		/* <sys/stat.h>	  */
-#undef NDECL_FCLOSE		/* <stdio.h>	  */
-#undef NDECL_PERROR		/* <stdio.h>	  */
-#undef NDECL_REMOVE		/* <stdio.h>	  */
-#undef NDECL_VFPRINTF		/* <stdio.h>	  */
-#undef NDECL_RANDOM		/* <stdlib.h>	  */
-#undef NDECL_SRANDOM		/* <stdlib.h>	  */
-#undef NDECL_STRTOD		/* <stdlib.h>	  */
-#undef NDECL_STRTOL		/* <stdlib.h>	  */
-#undef NDECL_STRTOUL		/* <stdlib.h>	  */
-#undef NDECL_BZERO		/* <string.h>	  */
-#undef NDECL_MEMCPY		/* <string.h>	  */
-#undef NDECL_MEMSET		/* <string.h>	  */
-#undef NDECL_STRERROR		/* <string.h>	  */
-#undef NDECL_GETITIMER		/* <sys/time.h>	  */
-#undef NDECL_SETITIMER		/* <sys/time.h>	  */
-#undef NDECL_SELECT		/* <sys/time.h>	  */
-#undef NDECL_STRFTIME		/* <time.h>	  */
-#undef NDECL_TIME		/* <time.h>	  */
-#undef NDECL_TZNAME		/* <time.h>	  */
-#undef NDECL_T_OPEN		/* <tiuser.h>	  */
-#undef NDECL_T_ERRLIST		/* <tiuser.h>	  */
-#undef NDECL_FORK		/* <unistd.h>	  */
-#undef NDECL_WAITPID		/* <sys/wait.h>	  */
+		/* <ctype.h>      */
+#undef NDECL_TOLOWER
+		/* <fcntl.h>      */
+#undef NDECL_FCNTL
+		/* <netinet/in.h> */
+#undef NDECL_HTONL
+#undef NDECL_IN_ADDR_T
+		/* <sys/ioctl.h>  */
+#undef NDECL_IOCTL
+		/* <poll.h>	  */
+#undef NDECL_POLL
+		/* <signal.h>	  */
+#undef NDECL_KILL
+#undef NDECL_SIGEMPTYSET
+#undef NDECL_SIGPROCMASK
+#undef NDECL_SIGRELSE
+		/* <sys/socket.h> */
+#undef NDECL_ACCEPT
+#undef NDECL_BIND
+#undef NDECL_SHUTDOWN
+		/* <sys/stat.h>	  */
+#undef NDECL_FSTAT
+		/* <stdio.h>	  */
+#undef NDECL_FCLOSE
+#undef NDECL_PERROR
+#undef NDECL_REMOVE
+#undef NDECL_VFPRINTF
+		/* <stdlib.h>	  */
+#undef NDECL_RANDOM
+#undef NDECL_SRANDOM
+#undef NDECL_STRTOD
+#undef NDECL_STRTOL
+#undef NDECL_STRTOUL
+		/* <string.h>	  */
+#undef NDECL_BZERO
+#undef NDECL_MEMCPY
+#undef NDECL_MEMSET
+#undef NDECL_STRERROR
+		/* <sys/time.h>	  */
+#undef NDECL_GETITIMER
+#undef NDECL_SETITIMER
+#undef NDECL_SELECT
+		/* <time.h>	  */
+#undef NDECL_STRFTIME
+#undef NDECL_TIME
+#undef NDECL_TZNAME
+		/* <tiuser.h>	  */
+#undef NDECL_T_OPEN
+#undef NDECL_T_ERRLIST
+		/* <unistd.h>	  */
+#undef NDECL_FORK
+		/* <sys/wait.h>	  */
+#undef NDECL_WAITPID
 
 /* Some systems declare bzero() in <stdlib.h> instead of in <string.h>. */
 

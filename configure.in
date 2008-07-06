@@ -94,8 +94,14 @@ dnl Define NEED_MALLOC_H if `malloc()' is not declared in <stdlib.h> and
 dnl <malloc.h> exists.
 define(MOO_MALLOC_H, [
 echo checking whether stdlib.h declares malloc and friends
+dont_need_malloc_h=1
 MOO_FUNC_DECL_CHECK(stdlib.h, malloc, ,
-	AC_CHECK_HEADER(malloc.h, AC_DEFINE(NEED_MALLOC_H)))])
+	dont_need_malloc_h=
+)
+if test -z "$dont_need_malloc_h"; then
+	AC_CHECK_HEADER(malloc.h, AC_DEFINE(NEED_MALLOC_H))
+fi
+])
 
 dnl ***************************************************************************
 dnl	MOO_FUNC_DECL_CHECK(header, func,
@@ -173,32 +179,30 @@ $2
 ])
 
 dnl ***************************************************************************
-dnl	MOO_HAVE_FUNC_LIBS(func1 func2 ..., lib1 "lib2a lib2b" lib3 ...)
-dnl For each `func' in turn, if `func' is defined using the current LIBS value,
-dnl leave LIBS alone.  Otherwise, try adding each of the given libs to LIBS in
-dnl turn, stopping when one of them succeeds in providing `func'.  Define
-dnl HAVE_func if `func' is eventually found.
+dnl	MOO_HAVE_FUNC_LIBS(func, lib1 "lib2a lib2b" lib3 ...)
+dnl This used to iterate over multiple func, but that code couldn't be
+dnl compatible across autoconf 2.13 and 2.61.
 define(MOO_HAVE_FUNC_LIBS, [
-for func in $1
-do
-  changequote(,)dnl
-  trfrom='[a-z]' trto='[A-Z]'
-  var=HAVE_`echo $func | tr "$trfrom" "$trto"`
-  changequote([,])dnl
-  eval "ac_cv_func_${func}=no"
-  AC_CHECK_FUNC_ID(${func}, 0, AC_DEFINE_UNQUOTED($var), [
-    SAVELIBS="$LIBS"
-    let i=0
-    for lib in $2
-    do
-      let i++
-      LIBS="$LIBS $lib"
-      AC_CHECK_FUNC_ID(${func}, ${i}, [AC_DEFINE_UNQUOTED($var)
-			 break],
-		    LIBS="$SAVELIBS")
-    done
-    ])
+AC_PREREQ([2.13])
+AC_CACHE_CHECK([for library containing $1], [ac_cv_search_$1],
+[ac_func_search_save_LIBS="$LIBS"
+ac_cv_search_$1="no"
+AC_TRY_LINK_FUNC([$1], [ac_cv_search_$1="none required"])
+test "$ac_cv_search_$1" = "no" && for i in $2; do
+LIBS="$i $5 $ac_func_search_save_LIBS"
+AC_TRY_LINK_FUNC([$1],
+[ac_cv_search_$1="$i"
+break])
 done
+LIBS="$ac_func_search_save_LIBS"])
+if test "$ac_cv_search_$1" != "no"; then
+  test "$ac_cv_search_$1" = "none required" || LIBS="$LIBS $ac_cv_search_$1"
+  var=HAVE_`echo $1 | tr '[a-z]' '[A-Z]'`
+  AC_DEFINE_UNQUOTED($var)
+  $3
+else :
+  $4
+fi
 ])
 
 dnl ***************************************************************************
@@ -314,7 +318,9 @@ AC_TYPE_SIZE_T
 AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
 MOO_HAVE_FUNC_LIBS(sqrt, -lm /lib/libm.a "-static -lm")
-MOO_HAVE_FUNC_LIBS(mkfifo waitpid sigemptyset, -lposix /lib/libposix.a)
+MOO_HAVE_FUNC_LIBS(mkfifo, -lposix /lib/libposix.a)
+MOO_HAVE_FUNC_LIBS(waitpid, -lposix /lib/libposix.a)
+MOO_HAVE_FUNC_LIBS(sigemptyset, -lposix /lib/libposix.a)
 MOO_HAVE_FUNC_LIBS(accept, "-lsocket -lnsl" -lsocket -linet)
 MOO_HAVE_FUNC_LIBS(t_open, -lnsl -lnsl_s)
 MOO_HAVE_FUNC_LIBS(crypt, -lcrypt -lcrypt_d)

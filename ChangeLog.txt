@@ -2455,4 +2455,4 @@ Version 1.8.3, in progress
 
 Version X, in progress
 **** Changes relevant to server hackers:
--- configure script is now generated with autoconf 2.13
+-- configure script is now generated with autoconf 2.13 or 2.5x+
