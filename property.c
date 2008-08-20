@@ -69,7 +69,7 @@ bf_prop_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
     db_prop_handle h;
     Var r;
     unsigned flags;
-    char *s;
+    char perms[4], *s;
 
     if (!valid(oid)) {
 	free_var(arglist);
@@ -87,7 +87,7 @@ bf_prop_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
     r.v.list[1].type = TYPE_OBJ;
     r.v.list[1].v.obj = db_property_owner(h);
     r.v.list[2].type = TYPE_STR;
-    r.v.list[2].v.str = s = str_dup("xxx");
+    s = perms;
     flags = db_property_flags(h);
     if (flags & PF_READ)
 	*s++ = 'r';
@@ -96,6 +96,7 @@ bf_prop_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
     if (flags & PF_CHOWN)
 	*s++ = 'c';
     *s = '\0';
+    r.v.list[2].v.str = str_dup(perms);
 
     return make_var_pack(r);
 }
