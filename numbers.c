@@ -632,26 +632,205 @@ bf_ctime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
     return make_var_pack(r);
 }
 
+
+/* Find an unsigned type that can hold RANDOM() results and Nums */
+#if RAND_MAX <= NUM_MAX
+#  define URNUM_BITS INT_TYPE_BITSIZE
+typedef UNum URNum;
+#  if HAVE_UNUMNUM_T
+#    define HAVE_URNUM2_T 1
+typedef UNumNum URNum2;
+#  endif
+
+#elif RAND_MAX == INT32_MAX
+#  define URNUM_BITS 32
+typedef uint32_t URNum;
+#  if HAVE_INT64_T
+#    define HAVE_URNUM2_T 1
+typedef uint64_t URNum2;
+#  endif
+
+#elif RAND_MAX == INT64_MAX
+#  define URNUM_BITS 64
+typedef uint64_t URNum;
+#  if HAVE_INT128_T
+#    define HAVE_URNUM2_T 1
+typedef uint128_t URNum2;
+#  endif
+
+#else
+#  error weird RAND_MAX that I cannot cope with
+#endif
+
+
+
+#ifndef HAVE_URNUM2_T
+/* Number of bits to shift V left in order to make
+ * the high-order bit be 1 (assume V nonzero) */
+static inline char
+rlg2 (URNum v)
+{
+    /* See "Using de Bruijn Sequences to Index 1 in a Computer Word"
+     * by Leiserson, Prokop, Randall; MIT LCS, 1998
+     */
+    static const char evil[] = {
+#  if URNUM_BITS == 64
+	63, 5,62, 4,24,10,61, 3,32,15,23, 9,45,29,60, 2,
+	12,34,31,14,52,50,22, 8,48,37,44,28,41,20,59, 1,
+	6, 25,11,33,16,46,30,13,35,53,51,49,38,42,21, 7,
+	26,17,47,36,54,39,43,27,18,55,40,19,56,57,58, 0,
+#  elif URNUM_BITS == 32
+	31,22,30,21,18,10,29, 2,20,17,15,13, 9, 6,28, 1,
+	23,19,11, 3,16,14, 7,24,12, 4, 8,25, 5,26,27, 0,
+#  elif URNUM_BITS == 16
+	15, 3,14, 2, 8, 6,13, 1, 4, 9, 7, 5,10,11,12, 0,
+#  endif
+    };
+
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+#  if URNUM_BITS > 16
+    v |= v >> 16;
+#    if URNUM_BITS > 32
+    v |= v >> 32;
+    return evil[(URNum)(v * 0x03F566ED27179461ULL) >> 58];
+#    else
+    return evil[(URNum)(v * 0x07C4ACDDULL) >> 27];
+#    endif
+#  else
+    return evil[(URNum)(v * 0x0F59ULL) >> 12];
+#  endif
+}
+#endif
+
+/* (a * b + c) % m, guarding against overflow; assumes m > 0 */
+static inline URNum
+muladdmod(URNum a, URNum b, URNum c, URNum m)
+{
+#ifdef HAVE_URNUM2_T
+    return (URNum)((a * (URNum2)b + c) % m);
+#else
+#  define HALFWORD (URNUM_BITS/2)
+#  define LO(x) ((x) & ((1ULL<<HALFWORD)-1))
+#  define HI(x) ((x)>>HALFWORD)
+
+    URNum lo = LO(a) * LO(b) + LO(c);
+    URNum hi;
+    {
+	URNum mi1 = HI(a) * LO(b) + HI(c) + HI(lo);
+	URNum mi2 = LO(a) * HI(b) + LO(mi1);
+	hi = HI(a) * HI(b) + HI(mi1) + HI(mi2);
+	lo = (LO(lo) + (LO(mi2)<<HALFWORD)) % m;
+    }
+    if (hi != 0) {
+	int d_sh = rlg2(hi);
+	int sh;
+	for (sh = 2*HALFWORD - d_sh;
+	     hi <<= d_sh, hi %= m, hi != 0;
+	     sh -= d_sh) {
+
+	    d_sh = rlg2(hi);
+	    if (d_sh >= sh) {
+		hi <<= sh;
+		hi %= m;
+		break;
+	    }
+	}
+    }
+    return (lo + hi) % m;
+#  undef HALFWORD
+#  undef HI
+#  undef LO
+#endif
+}
+
 static package
 bf_random(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    int nargs = arglist.v.list[0].v.num;
-    int num = (nargs >= 1 ? arglist.v.list[1].v.num : 1);
+    Num nargs = arglist.v.list[0].v.num;
+    Num num = (nargs >= 1 ? arglist.v.list[1].v.num : NUM_MAX);
+    Var r;
+    URNum e;
+    URNum rnd;
 
     free_var(arglist);
 
     if (num <= 0)
 	return make_error_pack(E_INVARG);
-    else {
-	Var r;
 
-	r.type = TYPE_INT;
-	if (nargs == 0)
-	    r.v.num = RANDOM();
-	else
-	    r.v.num = RANDOM() % num + 1;
+    const Num range_l = /* RANGE % num */
+	((NUM_MAX > RAND_MAX ? RAND_MAX : (RAND_MAX - num)) + 1) % num;
+
+    r.type = TYPE_INT;
+
+#if ((RAND_MAX <= 0) || 0!=(RAND_MAX & (RAND_MAX+1)))
+#   error RAND_MAX+1 is not a positive power of 2 ??
+#endif
+
+#if (NUM_MAX > RAND_MAX)
+    /* num >= RANGE possible; launch general algorithm */
+
+#   define RANGE       ((URNum)RAND_MAX+1)
+#   define OR_ZERO(n)  (n)
+
+    rnd = 0;
+    e = 1;
+#else
+    /* num >= RANGE not possible (num/RANGE == 0 always);
+       unroll first loop iteration */
+
+#   define OR_ZERO(n)  0
+
+    rnd = RANDOM();
+    e = range_l;
+
+    if (rnd >= e) {
+	r.v.num = 1 + rnd % num;
 	return make_var_pack(r);
     }
+#endif
+
+    for (;;) {
+	/* INVARIANT: rnd is uniform over [0..e-1] */
+	URNum rnd_next = RANDOM();
+
+#if RAND_MAX < NUM_MAX
+	/* while (e*RANGE < num) ... */
+	while (e < (num/RANGE) ||
+	       ((e == num/RANGE) && (num%RANGE != 0))) {
+	    rnd = rnd*RANGE + rnd_next;
+	    e *= RANGE;
+	    rnd_next = RANDOM();
+	    /* I expect the compiler to turn all of these
+	     * [/%*]RANGE operations into bitwise ops.
+	     */
+	}
+#endif
+	/* INVARIANTS:
+	 *   e*RANGE >= num
+	 *   rnd is uniform over [0..e-1]
+	 *   rnd*RANGE + rnd_next is uniform over [0..e*RANGE-1]
+	 */
+	if (rnd > OR_ZERO(num/RANGE)) {
+	    /* (rnd-1)*RANGE >= (num/RANGE)*RANGE == num - num%RANGE
+	     * rnd*RANGE >= num + (RANGE - num%RANGE) > num > (e*RANGE)%num
+	     */
+	    r.v.num = 1 + muladdmod(rnd, range_l, rnd_next, num);
+	    break;
+	}
+	rnd = OR_ZERO(rnd*RANGE) + rnd_next;
+	e = muladdmod(e, range_l, 0, num);
+
+	if (rnd >= e) {
+	    r.v.num = 1 + rnd % num;
+	    break;
+	}
+    }
+    return make_var_pack(r);
+#undef RANGE
+#undef OR_ZERO
 }
 
 static package
