@@ -77,7 +77,7 @@ validate_verb_info(Var v, Objid * owner, unsigned *flags, const char **names)
 {
     const char *s;
 
-    if (!(v.type = TYPE_LIST
+    if (!(v.type == TYPE_LIST
 	  && v.v.list[0].v.num == 3
 	  && v.v.list[1].type == TYPE_OBJ
 	  && v.v.list[2].type == TYPE_STR
@@ -155,7 +155,7 @@ static enum error
 validate_verb_args(Var v, db_arg_spec * dobj, db_prep_spec * prep,
 		   db_arg_spec * iobj)
 {
-    if (!(v.type = TYPE_LIST
+    if (!(v.type == TYPE_LIST
 	  && v.v.list[0].v.num == 3
 	  && v.v.list[1].type == TYPE_STR
 	  && v.v.list[2].type == TYPE_STR
