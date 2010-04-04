@@ -1375,7 +1375,7 @@ register_task_queue(task_enumerator enumerator)
 static void
 write_forked_task(forked_task ft)
 {
-    int lineno = find_line_number(ft.program, ft.f_index, 0);
+    unsigned lineno = find_line_number(ft.program, ft.f_index, 0);
 
     dbio_printf("0 %d %ld %d\n", lineno, (long)ft.start_time, ft.id);
     write_activ_as_pi(ft.a);

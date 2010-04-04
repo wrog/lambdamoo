@@ -967,8 +967,8 @@ find_hot_node(Stmt * stmt)
     return 0;
 }
 
-int
-find_line_number(Program * prog, int vector, int pc)
+unsigned
+find_line_number(Program * prog, int vector, unsigned pc)
 {
     Stmt *tree;
 
