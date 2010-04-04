@@ -955,11 +955,13 @@ static void
 flush_input(tqueue * tq, int show_messages)
 {
     if (tq->first_input) {
-	Stream *s = new_stream(100);
+	Stream *s = 0;
 	task *t;
 
-	if (show_messages)
+	if (show_messages) {
 	    notify(tq->player, ">> Flushing the following pending input:");
+	    s = new_stream(100);
+	}
 	while ((t = dequeue_input_task(tq, DQ_FIRST)) != 0) {
 	    /* TODO*** flush only non-TASK_OOB tasks ??? */
 	    if (show_messages) {
@@ -968,8 +970,10 @@ flush_input(tqueue * tq, int show_messages)
 	    }
 	    free_task(t, 1);
 	}
-	if (show_messages)
+	if (show_messages) {
 	    notify(tq->player, ">> (Done flushing)");
+	    free_stream(s);
+	}
     } else if (show_messages)
 	notify(tq->player, ">> No pending input to flush...");
 }
