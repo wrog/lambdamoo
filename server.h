@@ -159,7 +159,7 @@ extern int get_server_option(Objid oid, const char *name, Var * r);
    Changes to cached options must be followed by load_server_options()
    in order to have any effect.  Three categories of cached options
    (1)  "protect_<bi-function>" cached in bf_table (functions.c).
-   (2)  "protect_<bi-property>" cached here. (***TODO***)
+   (2)  "protect_<bi-property>" cached here.
    (3)  SERVER_OPTIONS_CACHED_MISC cached here.
 
  * Each of the entries in SERVER_OPTIONS_CACHED_MISC
@@ -176,6 +176,13 @@ extern int get_server_option(Objid oid, const char *name, Var * r);
 
 /* List of all category (2) and (3) cached server options */
 enum Server_Option {
+
+# define _BP_DEF(PROPERTY,property)		\
+      SVO_PROTECT_##PROPERTY = BP_##PROPERTY,	\
+
+    BUILTIN_PROPERTIES(_BP_DEF)
+
+# undef _BP_DEF
 
 # define _SVO_DEF(SVO_MISC_OPTION,_1,_2,_3,_4)	\
       SVO_MISC_OPTION,				\

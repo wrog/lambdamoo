@@ -65,7 +65,7 @@ dnl
  [[UNFORKED_CHECKPOINTS], [bool], no,  [do checkpoints in the foreground]],
  [[DEBUG_LOG_TRACEBACKS], [bool], no,  [print tracebacks to the server log]],
  [[INPUT_APPLY_BACKSPACE],[bool], yes, [BKSP/DEL edits nonbinary connections]],
- [[IGNORE_PROP_PROTECTED],[bool], yes, [ignore builtin property protection]],
+ [[IGNORE_PROP_PROTECTED],[bool], no,  [ignore builtin property protection]],
  [[BYTECODE_REDUCE_REF],  [bool], no,  [do bytecode refcount optimization]],
  [[STRING_INTERNING],     [bool], yes, [do interning of identical strings]],
  [[MEMO_STRLEN],          [bool], no,  [memoize string lengths]],

@@ -488,6 +488,14 @@ load_server_options(void)
 
     load_server_protect_function_flags();
 
+# define _BP_DO(PROPERTY, property)				\
+      _server_int_option_cache[SVO_PROTECT_##PROPERTY]		\
+	  = server_flag_option("protect_" #property, 0);	\
+
+    BUILTIN_PROPERTIES(_BP_DO);
+
+# undef _BP_DO
+
 # define _SVO_DO(SVO_MISC_OPTION, misc_option,			\
 		 kind, DEFAULT, CANONICALIZE)			\
       value = server_##kind##_option(#misc_option, DEFAULT);	\
