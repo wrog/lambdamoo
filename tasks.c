@@ -1597,7 +1597,7 @@ find_verb_for_programming(Objid player, const char *verbref,
     if (!h.ptr)
 	*message = "That object does not have that verb definition.";
     else if (!db_verb_allows(h, player, VF_WRITE)
-	     || (server_flag_option("protect_set_verb_code")
+	     || (server_flag_option("protect_set_verb_code", 0)
 		 && !is_wizard(player))) {
 	*message = "Permission denied.";
 	h.ptr = 0;

@@ -938,14 +938,14 @@ set_server_cmdline(const char *line)
 }
 
 int
-server_flag_option(const char *name)
+server_flag_option(const char *name, int defallt)
 {
     Var v;
 
     if (get_server_option(SYSTEM_OBJECT, name, &v))
 	return is_true(v);
     else
-	return 0;
+	return defallt;
 }
 
 int

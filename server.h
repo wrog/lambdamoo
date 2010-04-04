@@ -119,10 +119,11 @@ extern void set_server_cmdline(const char *line);
 
 #include "structures.h"
 
-extern int server_flag_option(const char *name);
-				/* Return true iff both $server_options and
-				 * $server_options.NAME exist and the latter
-				 * has a true MOO value.
+extern int server_flag_option(const char *name, int defallt);
+				/* If both $server_options and
+				 * $server_options.NAME exist, then return true
+				 * iff the latter has a true MOO value.
+				 * Otherwise, return DEFALLT.
 				 */
 
 extern int server_int_option(const char *name, int defallt);
