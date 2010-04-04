@@ -202,7 +202,7 @@ call_bi_func(unsigned n, Var arglist, Byte func_pc,
 	/*
 	 * Check permissions, if protected
 	 */
-	/* if (caller() != SYSTEM_OBJECT && server_flag_option(f->protect_str)) { */
+	/* if (caller() != SYSTEM_OBJECT && server_flag_option(f->protect_str, 0)) { */
 	if (caller() != SYSTEM_OBJECT && f->protected) {
 	    /* Try calling #0:bf_FUNCNAME(@ARGS) instead */
 	    enum error e = call_verb2(SYSTEM_OBJECT, f->verb_str, arglist, 0);
@@ -472,7 +472,8 @@ load_server_protect_flags(void)
     int i;
 
     for (i = 0; i < top_bf_table; i++) {
-	bf_table[i].protected = server_flag_option(bf_table[i].protect_str);
+	bf_table[i].protected
+	    = server_flag_option(bf_table[i].protect_str, 0);
     }
     oklog("Loaded protect cache for %d builtins\n", i);
 }

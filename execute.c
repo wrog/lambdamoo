@@ -689,7 +689,7 @@ bi_prop_protected(enum bi_prop prop, Objid progr)
 	panic("Can't happen in BI_PROP_PROTECTED!");
     }
 
-    return server_flag_option(pname);
+    return server_flag_option(pname, 0);
 }
 #endif				/* IGNORE_PROP_PROTECTED */
 
