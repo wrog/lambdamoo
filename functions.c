@@ -478,10 +478,25 @@ load_server_protect_function_flags(void)
     oklog("Loaded protect cache for %d builtin functions\n", i);
 }
 
+Num _server_int_option_cache[SVO__CACHE_SIZE];
+
 void
 load_server_options(void)
 {
+    /* uncomment when SERVER_OPTIONS_CACHED_MISC is nonempty */
+    /* Num value; */
+
     load_server_protect_function_flags();
+
+# define _SVO_DO(SVO_MISC_OPTION, misc_option,			\
+		 kind, DEFAULT, CANONICALIZE)			\
+      value = server_##kind##_option(#misc_option, DEFAULT);	\
+      CANONICALIZE;						\
+      _server_int_option_cache[SVO_MISC_OPTION] = value;	\
+
+    SERVER_OPTIONS_CACHED_MISC(_SVO_DO, value);
+
+# undef _SVO_DO
 }
 
 static package
