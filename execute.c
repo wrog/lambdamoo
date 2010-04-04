@@ -209,6 +209,7 @@ suspend_task(package p)
 }
 
 static int raise_error(package p, enum outcome *outcome);
+static void abort_task(enum abort_reason reason);
 
 static int
 unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
@@ -334,7 +335,7 @@ unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 		    a->bi_func_data = p.u.call.data;
 		    return 0;
 		case BI_KILL:
-		    (void) unwind_stack(FIN_ABORT, zero, 0);
+		    abort_task(ABORT_KILL);
 		    if (outcome)
 			*outcome = OUTCOME_ABORTED;
 		    return 1;
@@ -506,20 +507,38 @@ raise_error(package p, enum outcome *outcome)
 }
 
 static void
-abort_task(int is_ticks)
+abort_task(enum abort_reason reason)
 {
     Var value;
-    const char *msg = (is_ticks ? "Task ran out of ticks"
-		       : "Task ran out of seconds");
+    const char *msg;
+    const char *htag;
 
-    value = new_list(3);
-    value.v.list[1].type = TYPE_STR;
-    value.v.list[1].v.str = str_dup(is_ticks ? "ticks" : "seconds");
-    value.v.list[2] = make_stack_list(activ_stack, 0, top_activ_stack, 1,
-				      root_activ_vector, 1);
-    value.v.list[3] = error_backtrace_list(msg);
-    save_handler_info("handle_task_timeout", value);
-    (void) unwind_stack(FIN_ABORT, zero, 0);
+    switch(reason) {
+    default:
+	panic("Bad abort_reason");
+
+    case ABORT_TICKS:
+	msg  = "Task ran out of ticks";
+	htag = "ticks";
+	goto save_hinfo;
+
+    case ABORT_SECONDS:
+	msg = "Task ran out of seconds";
+	htag = "seconds";
+
+    save_hinfo:
+	value = new_list(3);
+	value.v.list[1].type = TYPE_STR;
+	value.v.list[1].v.str = str_dup(htag);
+	value.v.list[2] = make_stack_list(activ_stack, 0, top_activ_stack, 1,
+					  root_activ_vector, 1);
+	value.v.list[3] = error_backtrace_list(msg);
+	save_handler_info("handle_task_timeout", value);
+	/* FALLS THROUGH */
+
+    case ABORT_KILL:
+	(void) unwind_stack(FIN_ABORT, zero, 0);
+    }
 }
 
 /**** activation manipulation ****/
@@ -774,12 +793,12 @@ do {    						    	\
 	if (COUNT_TICK(op)) {
 	    if (--ticks_remaining <= 0) {
 		STORE_STATE_VARIABLES();
-		abort_task(1);
+		abort_task(ABORT_TICKS);
 		return OUTCOME_ABORTED;
 	    }
 	    if (task_timed_out) {
 		STORE_STATE_VARIABLES();
-		abort_task(0);
+		abort_task(ABORT_SECONDS);
 		return OUTCOME_ABORTED;
 	    }
 	}
@@ -1640,7 +1659,7 @@ do {    						    	\
 			break;
 		    case BI_KILL:
 			STORE_STATE_VARIABLES();
-			(void) unwind_stack(FIN_ABORT, zero, 0);
+			abort_task(ABORT_KILL);
 			return OUTCOME_ABORTED;
 		    }
 		}
