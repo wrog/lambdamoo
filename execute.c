@@ -657,33 +657,16 @@ bi_prop_protected(enum bi_prop prop, Objid progr)
 	return 0;
 
     switch (prop) {
-    case BP_NAME:
-	pname = "protect_name";
-	break;
-    case BP_OWNER:
-	pname = "protect_owner";
-	break;
-    case BP_PROGRAMMER:
-	pname = "protect_programmer";
-	break;
-    case BP_WIZARD:
-	pname = "protect_wizard";
-	break;
-    case BP_R:
-	pname = "protect_r";
-	break;
-    case BP_W:
-	pname = "protect_w";
-	break;
-    case BP_F:
-	pname = "protect_f";
-	break;
-    case BP_LOCATION:
-	pname = "protect_location";
-	break;
-    case BP_CONTENTS:
-	pname = "protect_contents";
-	break;
+
+# define _CASE_BP(PROPERTY,property)		\
+    case BP_##PROPERTY:				\
+	pname = "protect_" #property;		\
+	break;					\
+
+      BUILTIN_PROPERTIES(_CASE_BP)
+
+# undef _CASE_BP
+
     default:
 	panic("Can't happen in BI_PROP_PROTECTED!");
     }

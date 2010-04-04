@@ -264,12 +264,22 @@ extern int db_for_all_propdefs(Objid,
 				 * if the references are to be persistent.
 				 */
 
+#define BUILTIN_PROPERTIES(DEFINE)		\
+    DEFINE(NAME,name)				\
+    DEFINE(OWNER,owner)				\
+    DEFINE(PROGRAMMER,programmer)		\
+    DEFINE(WIZARD,wizard)			\
+    DEFINE(R,r)					\
+    DEFINE(W,w)					\
+    DEFINE(F,f)					\
+    DEFINE(LOCATION,location)			\
+    DEFINE(CONTENTS,contents)
+
 enum bi_prop {
-    BP_NONE = 0,
-    BP_NAME, BP_OWNER,
-    BP_PROGRAMMER, BP_WIZARD,
-    BP_R, BP_W, BP_F,
-    BP_LOCATION, BP_CONTENTS
+    BP_NONE = 0
+#define _BP_DO(P,p) , BP_##P
+    BUILTIN_PROPERTIES(_BP_DO)
+#undef _BP_DO
 };
 
 typedef struct {
