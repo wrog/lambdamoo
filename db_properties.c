@@ -411,13 +411,13 @@ db_find_property(Objid oid, const char *name, Var * value)
 	    ptable[i].hash = str_hash(ptable[i].name);
 	ptable_init = 1;
     }
+    h.definer = NOTHING;
     for (i = 0; i < Arraysize(ptable); i++) {
 	if (ptable[i].hash == hash && !mystrcasecmp(name, ptable[i].name)) {
 	    static Objid ret;
 
 	    ret = oid;
 	    h.built_in = ptable[i].prop;
-	    h.definer = NOTHING;
 	    h.ptr = &ret;
 	    if (value)
 		get_bi_value(h, value);
