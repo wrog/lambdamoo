@@ -2090,7 +2090,7 @@ bf_kill_task(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
     if (e != E_NONE)
 	return make_error_pack(e);
     else if (id == current_task_id)
-	return make_kill_pack();
+	return make_abort_pack(ABORT_KILL);
 
     return no_var_pack();
 }
