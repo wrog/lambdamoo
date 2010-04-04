@@ -22,7 +22,7 @@
 #include "program.h"
 
 extern Stmt *decompile_program(Program * program, int vector);
-extern int find_line_number(Program * program, int vector, int pc);
+extern unsigned find_line_number(Program * program, int vector, unsigned pc);
 
 #endif		/* !DeCompile_H */
 
