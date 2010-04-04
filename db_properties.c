@@ -372,33 +372,9 @@ db_find_property(Objid oid, const char *name, Var * value)
 	enum bi_prop prop;
 	int hash;
     } ptable[] = {
-	{
-	    "name", BP_NAME, 0
-	},
-	{
-	    "owner", BP_OWNER, 0
-	},
-	{
-	    "programmer", BP_PROGRAMMER, 0
-	},
-	{
-	    "wizard", BP_WIZARD, 0
-	},
-	{
-	    "r", BP_R, 0
-	},
-	{
-	    "w", BP_W, 0
-	},
-	{
-	    "f", BP_F, 0
-	},
-	{
-	    "location", BP_LOCATION, 0
-	},
-	{
-	    "contents", BP_CONTENTS, 0
-	}
+#define _ENTRY(P,p) { #p, BP_##P, 0 },
+      BUILTIN_PROPERTIES(_ENTRY)
+#undef _ENTRY
     };
     static int ptable_init = 0;
     int i, n;
