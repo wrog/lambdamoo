@@ -648,31 +648,7 @@ rangeset_check(int end, int from, int to)
 #ifdef IGNORE_PROP_PROTECTED
 #define bi_prop_protected(prop, progr) (0)
 #else
-static int
-bi_prop_protected(enum bi_prop prop, Objid progr)
-{
-    const char *pname = 0;	/* silence warning */
-
-    if (is_wizard(progr))
-	return 0;
-
-    switch (prop) {
-
-# define _CASE_BP(PROPERTY,property)		\
-    case BP_##PROPERTY:				\
-	pname = "protect_" #property;		\
-	break;					\
-
-      BUILTIN_PROPERTIES(_CASE_BP)
-
-# undef _CASE_BP
-
-    default:
-	panic("Can't happen in BI_PROP_PROTECTED!");
-    }
-
-    return server_flag_option(pname, 0);
-}
+#define bi_prop_protected(prop, progr) ((!is_wizard(progr)) && server_flag_option_cached(prop))
 #endif				/* IGNORE_PROP_PROTECTED */
 
 /**
