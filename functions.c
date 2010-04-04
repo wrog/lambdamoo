@@ -431,7 +431,7 @@ bf_function_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 }
 
 static void
-load_server_protect_flags(void)
+load_server_protect_function_flags(void)
 {
     int i;
 
@@ -439,13 +439,13 @@ load_server_protect_flags(void)
 	bf_table[i].protected
 	    = server_flag_option(bf_table[i].protect_str, 0);
     }
-    oklog("Loaded protect cache for %d builtins\n", i);
+    oklog("Loaded protect cache for %d builtin functions\n", i);
 }
 
 void
 load_server_options(void)
 {
-    load_server_protect_flags();
+    load_server_protect_function_flags();
 }
 
 static package
