@@ -69,11 +69,23 @@ static Var handler_verb_args;
 
 /**** error handling ****/
 
-typedef enum {			/* Reasons for executing a FINALLY handler */
-    /* These constants are stored in the DB, so don't change the order... */
-    FIN_FALL_THRU, FIN_RAISE, FIN_UNCAUGHT, FIN_RETURN,
-    FIN_ABORT,			/* This doesn't actually get you into a FINALLY... */
-    FIN_EXIT
+
+/*
+ * Compendium of all of the possible ways in which the stack
+ * may be unwound to some specific place (loop exit, return,
+ * EXCEPT/FINALLY handler) or all of the way out (uncaught
+ * exception, kill_task(), or ticks/seconds exhaustion)
+ *
+ * WARNING:  These constants show up in DB files,
+ *   so do *NOT* change their order/values...
+ */
+typedef enum {
+    FIN_FALL_THRU,	/* (none) TRY body finished normally	*/
+    FIN_RAISE,		/* (partial) handled exception		*/
+    FIN_UNCAUGHT,	/* (full unless finally) uncaught exception */
+    FIN_RETURN,		/* (partial) did a RETURN		*/
+    FIN_ABORT,		/* (full + skip handlers) ticks/seconds	*/
+    FIN_EXIT		/* (partial) did a BREAK / CONTINUE	*/
 } Finally_Reason;
 
 /*
@@ -202,8 +214,17 @@ static int raise_error(package p, enum outcome *outcome);
 static int
 unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 {
-    /* Returns true iff the entire stack was unwound and the interpreter
-     * should stop, in which case *outcome is the correct outcome to return. */
+    /*
+     * Unwind the activation and rt stacks in accordance with 'why'.
+     * Return true iff the interpreter should stop, in which case
+     * *outcome is set.  Interpreter stops either because it was
+     * blocked (OUTCOME_BLOCKED) or the entire stack was unwound
+     * (OUTCOME_DONE/OUTCOME_ABORTED)
+     *
+     * Return value may be safely ignored in the following cases:
+     * why==FIN_EXIT  always returns false
+     * why==FIN_ABORT always returns true/OUTCOME_ABORTED
+     */
     Var code = (why == FIN_RAISE ? value.v.list[1] : zero);
 
     for (;;) {			/* loop over activations */
@@ -314,7 +335,10 @@ unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 		    a->bi_func_data = p.u.call.data;
 		    return 0;
 		case BI_KILL:
-		    return unwind_stack(FIN_ABORT, zero, outcome);
+		    (void) unwind_stack(FIN_ABORT, zero, 0);
+		    if (outcome)
+			*outcome = OUTCOME_ABORTED;
+		    return 1;
 		}
 	    } else {
 		/* Built-in functions receive zero as a `returned value' on
@@ -496,7 +520,7 @@ abort_task(int is_ticks)
 				      root_activ_vector, 1);
     value.v.list[3] = error_backtrace_list(msg);
     save_handler_info("handle_task_timeout", value);
-    unwind_stack(FIN_ABORT, zero, 0);
+    (void) unwind_stack(FIN_ABORT, zero, 0);
 }
 
 /**** activation manipulation ****/
@@ -1638,7 +1662,7 @@ do {    						    	\
 			break;
 		    case BI_KILL:
 			STORE_STATE_VARIABLES();
-			unwind_stack(FIN_ABORT, zero, 0);
+			(void) unwind_stack(FIN_ABORT, zero, 0);
 			return OUTCOME_ABORTED;
 		    }
 		}
@@ -1894,7 +1918,7 @@ do {    						    	\
 			v.v.list[2].type = TYPE_INT;
 			v.v.list[2].v.num = READ_BYTES(bv, bc.numbytes_label);
 			STORE_STATE_VARIABLES();
-			unwind_stack(FIN_EXIT, v, 0);
+			(void) unwind_stack(FIN_EXIT, v, 0);
 			LOAD_STATE_VARIABLES();
 		    }
 		    break;
