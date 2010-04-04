@@ -37,7 +37,7 @@ typedef struct {
 	BI_RAISE,		/* Raising an error */
 	BI_CALL,		/* Making a nested verb call */
 	BI_SUSPEND,		/* Suspending the current task */
-	BI_KILL			/* Killing the current task */
+	BI_ABORT		/* Aborting the current task */
     } kind;
     union {
 	Var ret;
@@ -54,6 +54,7 @@ typedef struct {
 	    enum error (*proc) (vm, void *);
 	    void *data;
 	} susp;
+	enum abort_reason why;
     } u;
 } package;
 
@@ -61,7 +62,7 @@ void register_bi_functions(void);
 void register_objects(void);
 void register_property(void);
 
-package make_kill_pack(void);
+package make_abort_pack(enum abort_reason reason);
 package make_error_pack(enum error err);
 package make_raise_pack(enum error err, const char *msg, Var value);
 package make_var_pack(Var v);
