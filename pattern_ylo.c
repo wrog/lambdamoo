@@ -108,7 +108,7 @@ translate_pattern(const char *pattern, int *tpatlen)
 Pattern
 new_pattern(const char *pattern, int case_matters)
 {
-    int tpatlen;
+    int tpatlen = -1;
     const char *tpattern = translate_pattern(pattern, &tpatlen);
     regexp_t buf = mymalloc(sizeof(*buf), M_PATTERN);
     Pattern p;
