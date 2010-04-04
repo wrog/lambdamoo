@@ -1482,9 +1482,10 @@ do {    						    	\
 			case BP_NAME:
 			    if (rhs.type != TYPE_STR)
 				err = E_TYPE;
-			    else if (!is_wizard(progr)
-				     && (is_user(obj.v.obj)
-				 || progr != db_object_owner(obj.v.obj)))
+			    else if (!is_wizard(progr) &&
+				     (is_user(obj.v.obj) ||
+				      bi_prop_protected(h.built_in, progr) ||
+				      progr != db_object_owner(obj.v.obj)))
 				err = E_PERM;
 			    break;
 			case BP_OWNER:
@@ -1516,8 +1517,9 @@ do {    						    	\
 			case BP_R:
 			case BP_W:
 			case BP_F:
-			    if (progr != db_object_owner(obj.v.obj)
-				&& !is_wizard(progr))
+			    if (!is_wizard(progr) &&
+				(bi_prop_protected(h.built_in, progr) ||
+				 progr != db_object_owner(obj.v.obj)))
 				err = E_PERM;
 			    break;
 			case BP_LOCATION:
