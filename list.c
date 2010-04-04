@@ -750,6 +750,9 @@ do_match(Var arglist, int reverse)
 	ans.v.err = E_INVARG;
     } else
 	switch (match_pattern(pat, subject, regs, reverse)) {
+	default:
+	    panic("do_match:  match_pattern returned unfortunate value.\n");
+
 	case MATCH_SUCCEEDED:
 	    ans = new_list(4);
 	    ans.v.list[1].type = TYPE_INT;
