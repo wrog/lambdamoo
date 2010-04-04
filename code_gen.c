@@ -383,6 +383,10 @@ capture_label(State * state)
     f.prev_stacks = state->num_stacks;
     f.next = -1;
 
+    /* silence compiler warning;
+     * capture_label() is always followed by add_known_label()
+     */
+    f.pc = 0xdefeca7e;
     return f;
 }
 
