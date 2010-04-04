@@ -153,6 +153,53 @@ extern int get_server_option(Objid oid, const char *name, Var * r);
 				 * OPT.NAME and return 1; else return 0.
 				 */
 
+#include "db.h"
+
+/* Some server options are cached for performance reasons.
+   Changes to cached options must be followed by load_server_options()
+   in order to have any effect.  Three categories of cached options
+   (1)  "protect_<bi-function>" cached in bf_table (functions.c).
+   (2)  "protect_<bi-property>" cached here. (***TODO***)
+   (3)  SERVER_OPTIONS_CACHED_MISC cached here.
+
+ * Each of the entries in SERVER_OPTIONS_CACHED_MISC
+ * should be of the form
+ *
+ *    DEFINE( SVO_OPTION_NAME,     // symbolic name
+ *            property_name,	   // $server_options property
+ *            kind,		   // 'int' or 'flag'
+ *            default_value,	   //
+ *            {value = fn(value);},// canonicalizer
+ *          )
+ */
+#define SERVER_OPTIONS_CACHED_MISC(DEFINE, value)  /* none yet */
+
+/* List of all category (2) and (3) cached server options */
+enum Server_Option {
+
+# define _SVO_DEF(SVO_MISC_OPTION,_1,_2,_3,_4)	\
+      SVO_MISC_OPTION,				\
+
+    SERVER_OPTIONS_CACHED_MISC(_SVO_DEF,@)
+
+# undef _SVO_DEF
+
+    SVO__CACHE_SIZE   /* end marker, not an option */
+};
+
+/*
+ * Retrieve cached integer server_option values using the SVO_ numbers
+ * E.g., use   server_int_option_cached( SVO_MAX_LIST_CONCAT )
+ * instead of  server_int_option("max_list_concat")
+ */
+#define server_flag_option_cached(srvopt)  (_server_int_option_cache[srvopt])
+#define server_int_option_cached(srvopt)   (_server_int_option_cache[srvopt])
+
+
+extern int _server_int_option_cache[]; /* private */
+
+
+
 enum Fork_Result {
     FORK_PARENT, FORK_CHILD, FORK_ERROR
 };
