@@ -305,7 +305,7 @@ print_to_stream(Var v, Stream * s)
 	stream_printf(s, "#%"PRIdN, v.v.obj);
 	break;
     case TYPE_ERR:
-	stream_add_string(s, error_name(v.v.num));
+	stream_add_string(s, error_name(v.v.err));
 	break;
     case TYPE_FLOAT:
         tmp = float2str(v.v.fnum);
