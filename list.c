@@ -254,14 +254,14 @@ value2str(Var value)
     if (value.type == TYPE_STR) {
 	/* do this case separately to avoid two copies
 	 * and to ensure that the stream never grows */
-	return value.v.str;
+	return str_ref(value.v.str);
     }
     else {
 	static Stream *s = 0;
 	if (!s)
 	    s = new_stream(32);
 	stream_add_tostr(s, value);
-	return reset_stream(s);
+	return str_dup(reset_stream(s));
     }
 }
 
