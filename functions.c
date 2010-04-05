@@ -335,6 +335,12 @@ make_raise_pack(enum error err, const char *msg, Var value)
 }
 
 package
+make_space_pack(void)
+{
+    return make_abort_pack(ABORT_SECONDS);
+}
+
+package
 make_var_pack(Var v)
 {
     package p;
@@ -483,8 +489,7 @@ Num _server_int_option_cache[SVO__CACHE_SIZE];
 void
 load_server_options(void)
 {
-    /* uncomment when SERVER_OPTIONS_CACHED_MISC is nonempty */
-    /* Num value; */
+    Num value;
 
     load_server_protect_function_flags();
 
