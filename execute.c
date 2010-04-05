@@ -968,13 +968,20 @@ do {								\
 	case OP_LIST_ADD_TAIL:
 	    {
 		Var tail, list;
+		enum error e = E_NONE;
 
 		tail = POP();	/* whatever */
 		list = POP();	/* should be list */
-		if (list.type != TYPE_LIST) {
+		if (list.type != TYPE_LIST)
+		    e = E_TYPE;
+		else if (server_int_option_cached(SVO_MAX_LIST_CONCAT)
+			 <= list.v.list[0].v.num)
+		    e = E_QUOTA;
+
+		if (e != E_NONE) {
 		    free_var(list);
 		    free_var(tail);
-		    PUSH_ERROR(E_TYPE);
+		    PUSH_ERROR_UNLESS_QUOTA(e);
 		} else
 		    PUSH(listappend(list, tail));
 	    }
