@@ -56,6 +56,23 @@ new_stream(size_t size)
     return s;
 }
 
+Exception stream_too_big;
+size_t stream_alloc_maximum = 0;
+
+static int allow_stream_exceptions = 0;
+
+void
+enable_stream_exceptions(void)
+{
+    ++allow_stream_exceptions;
+}
+
+void
+disable_stream_exceptions(void)
+{
+    --allow_stream_exceptions;
+}
+
 static int
 grew(Stream * s, size_t need)
 {
@@ -64,6 +81,14 @@ grew(Stream * s, size_t need)
 
     size_t newlen = s->current + need;
     NEXT_2_POWER(newlen);
+    if (allow_stream_exceptions > 0) {
+	if (newlen > stream_alloc_maximum) {
+	    if (s->current + need < stream_alloc_maximum)
+		newlen = stream_alloc_maximum;
+	    else
+		RAISE(stream_too_big, 0);
+	}
+    }
     char *newbuf = mymalloc(newlen, M_STREAM);
 
     memcpy(newbuf, s->buffer, s->current);

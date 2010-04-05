@@ -22,6 +22,7 @@
 #include "options.h"
 
 #include "my-string.h"
+#include "exceptions.h"
 
 typedef struct {
     char *buffer;
@@ -30,29 +31,37 @@ typedef struct {
 } Stream;
 
 extern Stream *new_stream(size_t size);
-extern void stream_add_char(Stream *, char);
-extern void stream_delete_char(Stream *);
+extern void free_stream(Stream *);
 
+extern char *stream_contents(Stream *);
+extern size_t stream_length(Stream *);
+extern int32_t stream_last_byte(Stream *s);
+
+extern void stream_delete_char(Stream *);
 #if !UNICODE_STRINGS
-inline int  stream_add_utf(Stream *s, uint32_t c)
-{ stream_add_char(s, c); return 0; }
 inline void stream_delete_utf(Stream *s)
 { stream_delete_char(s); }
 #else
-extern int  stream_add_utf(Stream *, uint32_t);
 extern void stream_delete_utf(Stream *);
 #endif
+extern char *reset_stream(Stream *);
 
+/*
+ * If stream exceptions are enabled,
+ * all of the following may RAISE(stream_too_big)
+ */
+extern void stream_add_char(Stream *, char);
+#if !UNICODE_STRINGS
+inline int  stream_add_utf(Stream *s, uint32_t c)
+{ stream_add_char(s, c); return 0; }
+#else
+extern int  stream_add_utf(Stream *, uint32_t);
+#endif
 extern void stream_add_float(Stream *s, double n, int prec);
 extern void stream_add_bytes(Stream *, const char *, size_t);
 inline void stream_add_string(Stream * s, const char *string)
 { stream_add_bytes(s, string, strlen(string)); }
 extern void stream_printf(Stream *, const char *,...) FORMAT(printf,2,3);
-extern void free_stream(Stream *);
-extern char *stream_contents(Stream *);
-extern char *reset_stream(Stream *);
-extern size_t stream_length(Stream *);
-extern int32_t stream_last_byte(Stream *s);
 
 /*
  * How to provide fixed-size buffers for others to fill:
@@ -79,6 +88,65 @@ extern int32_t stream_last_byte(Stream *s);
  */
 extern void stream_beginfill(Stream *, size_t, char **, size_t *);
 extern void stream_endfill(Stream *, size_t);
+
+/*
+ * Helper for catching overly large allocations:
+ *
+ *   TRY_STREAM
+ *     ...stuff that may allocate too much
+ *   EXCEPT_STREAM
+ *     ...recover from too much allocation
+ *   ENDTRY_STREAM
+ */
+#define TRY_STREAM				\
+{						\
+    enable_stream_exceptions();			\
+    if (ES_exceptionStack)			\
+	panic("TRY_STREAM not outermost");	\
+    TRY
+
+#define EXCEPT_STREAM				\
+    EXCEPT(stream_too_big)
+
+#define ENDTRY_STREAM				\
+    ENDTRY					\
+    disable_stream_exceptions();		\
+}
+/*
+ * (1) TRY_STREAM, if used, *must* be the outermost TRY.
+ *     Otherwise, you would have to do
+ *
+ *       TRY
+ *          enable_stream_exceptions();
+ *          TRY
+ *             ...something that may fail in additional ways
+ *          EXCEPT(stream_too_big)
+ *             ...recover from stream_too_big
+ *          ENDTRY
+ *       FINALLY
+ *          disable_stream_exceptions();
+ *	    ... other mandatory cleanups??
+ *       ENDTRY;
+ *
+ *    ((XXX -- provide better TRY_STREAM if this ever comes up?..))
+ *
+ * see also notes in exceptions.h
+ */
+
+/* low level machinery for catching large allocations:
+ */
+extern void enable_stream_exceptions(void);
+extern void disable_stream_exceptions(void);
+extern size_t stream_alloc_maximum;
+extern Exception stream_too_big;
+/*
+ * Calls to enable_stream_exceptions() and disable_stream_exceptions()
+ * must be paired and nest properly.
+ *
+ * If enable_stream_exceptions() is in effect, then, upon any
+ * attempt to grow a stream beyond stream_alloc_maximum bytes,
+ * a stream_too_big exception will be raised.
+ */
 
 #endif		/* !Streams_H */
 
