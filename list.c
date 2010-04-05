@@ -1009,11 +1009,8 @@ bf_decode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 	    r.v.list[i].v.num = (unsigned char) bytes[i - 1];
 	}
     } else {
-	static Stream *s = 0;
 	int count, in_string;
-
-	if (!s)
-	    s = new_stream(50);
+	Stream *s = new_stream(50);
 
 	for (count = in_string = 0, i = 0; i < length; i++) {
 	    unsigned char c = bytes[i];
@@ -1052,6 +1049,7 @@ bf_decode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 	    r.v.list[count].type = TYPE_STR;
 	    r.v.list[count].v.str = str_dup(reset_stream(s));
 	}
+	free_stream(s);
     }
 
     return make_var_pack(r);
