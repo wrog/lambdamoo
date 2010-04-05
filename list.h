@@ -19,6 +19,7 @@
 #define List_H 1
 
 #include "structures.h"
+#include "streams.h"
 
 extern Var listappend(Var list, Var value);
 extern Var listinsert(Var list, Var value, int pos);
@@ -35,7 +36,7 @@ extern Var substr(Var str, int lower, int upper);
 extern Var strget(Var str, Var i);
 extern Var new_list(int size);
 extern const char *value2str(Var);
-extern const char *value_to_literal(Var);
+extern void unparse_value(Stream *, Var);
 
 #endif		/* !List_H */
 
