@@ -668,15 +668,24 @@ bf_tostr(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
 static package
 bf_toliteral(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
+    package p;
     Stream *s = new_stream(100);
-    Var r;
 
-    unparse_value(s, arglist.v.list[1]);
-    r.type = TYPE_STR;
-    r.v.str = str_dup(stream_contents(s));
+    TRY_STREAM {
+	Var r;
+
+	unparse_value(s, arglist.v.list[1]);
+	r.type = TYPE_STR;
+	r.v.str = str_dup(stream_contents(s));
+	p = make_var_pack(r);
+    }
+    EXCEPT (stream_too_big) {
+	p = make_space_pack();
+    }
+    ENDTRY_STREAM;
     free_stream(s);
     free_var(arglist);
-    return make_var_pack(r);
+    return p;
 }
 
 struct pat_cache_entry {
