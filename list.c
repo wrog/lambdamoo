@@ -223,54 +223,48 @@ sublist(Var list, int lower, int upper)
     }
 }
 
-static const char *
-list2str(Var * args)
+static void
+stream_add_tostr(Stream * s, Var v)
 {
-    static Stream *str = 0;
-    int i;
-
-    if (!str)
-	str = new_stream(100);
-
-    for (i = 1; i <= args[0].v.num; i++) {
-	switch (args[i].type) {
-	case TYPE_INT:
-	    stream_printf(str, "%"PRIdN, args[i].v.num);
-	    break;
-	case TYPE_OBJ:
-	    stream_printf(str, "#%"PRIdN, args[i].v.obj);
-	    break;
-	case TYPE_STR:
-	    stream_add_string(str, args[i].v.str);
-	    break;
-	case TYPE_ERR:
-	    stream_add_string(str, unparse_error(args[i].v.err));
-	    break;
-	case TYPE_FLOAT:
-            stream_add_float(str, args[i].v.fnum, DBL_DIG);
-	    break;
-	case TYPE_LIST:
-	    stream_add_string(str, "{list}");
-	    break;
-	default:
-	    panic("LIST2STR: Impossible var type.\n");
-	}
+    switch (v.type) {
+    case TYPE_INT:
+	stream_printf(s, "%"PRIdN, v.v.num);
+	break;
+    case TYPE_OBJ:
+	stream_printf(s, "#%"PRIdN, v.v.obj);
+	break;
+    case TYPE_STR:
+	stream_add_string(s, v.v.str);
+	break;
+    case TYPE_ERR:
+	stream_add_string(s, unparse_error(v.v.err));
+	break;
+    case TYPE_FLOAT:
+	stream_add_float(s, v.v.fnum, DBL_DIG);
+	break;
+    case TYPE_LIST:
+	stream_add_string(s, "{list}");
+	break;
+    default:
+	panic("STREAM_ADD_TOSTR: Unknown Var type");
     }
-
-    return reset_stream(str);
 }
 
 const char *
 value2str(Var value)
 {
-    Var list;
-    const char *str;
-
-    list = new_list(1);
-    list.v.list[1] = var_ref(value);
-    str = list2str(list.v.list);
-    free_var(list);
-    return str;
+    if (value.type == TYPE_STR) {
+	/* do this case separately to avoid two copies
+	 * and to ensure that the stream never grows */
+	return value.v.str;
+    }
+    else {
+	static Stream *s = 0;
+	if (!s)
+	    s = new_stream(32);
+	stream_add_tostr(s, value);
+	return reset_stream(s);
+    }
 }
 
 void
@@ -641,9 +635,15 @@ bf_rindex(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 static package
 bf_tostr(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
+    Stream *s = new_stream(100);
     Var r;
+    int i;
+    for (i = 1; i <= arglist.v.list[0].v.num; i++) {
+	stream_add_tostr(s, arglist.v.list[i]);
+    }
     r.type = TYPE_STR;
-    r.v.str = str_dup(list2str(arglist.v.list));
+    r.v.str = str_dup(stream_contents(s));
+    free_stream(s);
     free_var(arglist);
     return make_var_pack(r);
 }
