@@ -1114,15 +1114,22 @@ bf_encode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
     package p;
     Stream *s = new_stream(100);
     Stream *s2 = new_stream(100);
-    if (encode_binary(s, arglist)) {
-	stream_add_moobinary_from_raw_bytes(
-	    s2, stream_contents(s), stream_length(s));
-	r.type = TYPE_STR;
-	r.v.str = str_dup(stream_contents(s2));
-	p = make_var_pack(r);
+
+    TRY_STREAM {
+	if (encode_binary(s, arglist)) {
+	    stream_add_moobinary_from_raw_bytes(
+		s2, stream_contents(s), stream_length(s));
+	    r.type = TYPE_STR;
+	    r.v.str = str_dup(stream_contents(s2));
+	    p = make_var_pack(r);
+	}
+	else
+	    p = make_error_pack(E_INVARG);
     }
-    else
-	p = make_error_pack(E_INVARG);
+    EXCEPT (stream_too_big) {
+	p = make_space_pack();
+    }
+    ENDTRY_STREAM;
     free_stream(s2);
     free_stream(s);
     free_var(arglist);
