@@ -513,24 +513,31 @@ bf_is_member(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UN
 static package
 bf_strsub(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* (source, what, with [, case-matters]) */
-    Var r;
-    int case_matters = 0;
     Stream *s;
+    package p;
 
-    if (arglist.v.list[0].v.num == 4)
-	case_matters = is_true(arglist.v.list[4]);
     if (arglist.v.list[2].v.str[0] == '\0') {
 	free_var(arglist);
 	return make_error_pack(E_INVARG);
     }
     s = new_stream(100);
-    stream_add_strsub(s, arglist.v.list[1].v.str, arglist.v.list[2].v.str,
-		      arglist.v.list[3].v.str, case_matters);
-    r.type = TYPE_STR;
-    r.v.str = str_dup(stream_contents(s));
+    TRY_STREAM {
+	Var r;
+	int case_matters = arglist.v.list[0].v.num == 4
+	    && is_true(arglist.v.list[4]);
+	stream_add_strsub(s, arglist.v.list[1].v.str, arglist.v.list[2].v.str,
+			  arglist.v.list[3].v.str, case_matters);
+	r.type = TYPE_STR;
+	r.v.str = str_dup(stream_contents(s));
+	p = make_var_pack(r);
+    }
+    EXCEPT (stream_too_big) {
+	p = make_space_pack();
+    }
+    ENDTRY_STREAM;
     free_stream(s);
     free_var(arglist);
-    return make_var_pack(r);
+    return p;
 }
 
 #if HAVE_CRYPT
