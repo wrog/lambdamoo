@@ -887,34 +887,40 @@ bf_substitute(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr U
     (void) memo_strlen(subject);
 
     s = new_stream(template_length);
-    while ((c = *(template++)) != '\0') {
-	if (c != '%')
-	    stream_add_char(s, c);
-	else if ((c = *(template++)) == '%')
-	    stream_add_char(s, '%');
-	else {
-	    int start = 0, end = 0;
-	    if (c >= '1' && c <= '9') {
-		Var pair = subs.v.list[3].v.list[c - '0'];
-		start = pair.v.list[1].v.num;
-		end = pair.v.list[2].v.num;
-	    } else if (c == '0') {
-		start = subs.v.list[1].v.num;
-		end = subs.v.list[2].v.num;
-	    } else {
-		p = make_error_pack(E_INVARG);
-		goto oops;
+    TRY_STREAM {
+	while ((c = *(template++)) != '\0') {
+	    if (c != '%')
+		stream_add_char(s, c);
+	    else if ((c = *(template++)) == '%')
+		stream_add_char(s, '%');
+	    else {
+		int start = 0, end = 0;
+		if (c >= '1' && c <= '9') {
+		    Var pair = subs.v.list[3].v.list[c - '0'];
+		    start = pair.v.list[1].v.num;
+		    end = pair.v.list[2].v.num;
+		} else if (c == '0') {
+		    start = subs.v.list[1].v.num;
+		    end = subs.v.list[2].v.num;
+		} else {
+		    p = make_error_pack(E_INVARG);
+		    goto oops;
+		}
+		Num bstartafter[2] = { start, end + 1 };
+		utf_byte_range(subject, bstartafter);
+		stream_add_bytes(s, subject + bstartafter[0] - 1,
+				 bstartafter[1] - bstartafter[0]);
 	    }
-	    Num bstartafter[2] = { start, end + 1 };
-	    utf_byte_range(subject, bstartafter);
-	    stream_add_bytes(s, subject + bstartafter[0] - 1,
-			     bstartafter[1] - bstartafter[0]);
 	}
+	ans.type = TYPE_STR;
+	ans.v.str = str_dup(stream_contents(s));
+	p = make_var_pack(ans);
+      oops: ;
     }
-    ans.type = TYPE_STR;
-    ans.v.str = str_dup(stream_contents(s));
-    p = make_var_pack(ans);
-  oops: ;
+    EXCEPT (stream_too_big) {
+	p = make_space_pack();
+    }
+    ENDTRY_STREAM;
     free_var(arglist);
     free_stream(s);
     return p;
