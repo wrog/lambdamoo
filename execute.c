@@ -983,13 +983,20 @@ do {								\
 	case OP_LIST_APPEND:
 	    {
 		Var tail, list;
+		enum error e = E_NONE;
 
 		tail = POP();	/* second, should be list */
 		list = POP();	/* first, should be list */
-		if (tail.type != TYPE_LIST || list.type != TYPE_LIST) {
+		if (tail.type != TYPE_LIST || list.type != TYPE_LIST)
+		    e = E_TYPE;
+		else if (server_int_option_cached(SVO_MAX_LIST_CONCAT)
+			 < list.v.list[0].v.num + tail.v.list[0].v.num)
+		    e = E_QUOTA;
+
+		if (e != E_NONE) {
 		    free_var(tail);
 		    free_var(list);
-		    PUSH_ERROR(E_TYPE);
+		    PUSH_ERROR_UNLESS_QUOTA(e);
 		} else
 		    PUSH(listconcat(list, tail));
 	    }
