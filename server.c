@@ -748,7 +748,8 @@ emergency_mode(void)
 						wizard, debug, wizard, "",
 						&result)) {
 		case OUTCOME_DONE:
-		    printf("=> %s\n", value_to_literal(result));
+		    unparse_value(s, result);
+		    printf("=> %s\n", reset_stream(s));
 		    free_var(result);
 		    break;
 		case OUTCOME_ABORTED:

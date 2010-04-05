@@ -601,7 +601,7 @@ unparse_expr(Stream * str, Expr * expr)
 	break;
 
     case EXPR_VAR:
-	stream_add_string(str, value_to_literal(expr->e.var));
+	unparse_value(str, expr->e.var);
 	break;
 
     case EXPR_ASGN:
