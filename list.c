@@ -987,14 +987,24 @@ bf_string_hash(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr 
 static package
 bf_value_hash(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r;
+    package p;
     Stream *s = new_stream(100);
-    unparse_value(s, arglist.v.list[1]);
-    r.type = TYPE_STR;
-    r.v.str = hash_bytes(stream_contents(s), stream_length(s));
+
+    TRY_STREAM {
+	Var r;
+
+	unparse_value(s, arglist.v.list[1]);
+	r.type = TYPE_STR;
+	r.v.str = hash_bytes(stream_contents(s), stream_length(s));
+	p = make_var_pack(r);
+    }
+    EXCEPT (stream_too_big) {
+	p = make_space_pack();
+    }
+    ENDTRY_STREAM;
     free_stream(s);
     free_var(arglist);
-    return make_var_pack(r);
+    return p;
 }
 
 static package
