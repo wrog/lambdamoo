@@ -172,7 +172,28 @@ extern int get_server_option(Objid oid, const char *name, Var * r);
  *            {value = fn(value);},// canonicalizer
  *          )
  */
-#define SERVER_OPTIONS_CACHED_MISC(DEFINE, value)  /* none yet */
+#define SERVER_OPTIONS_CACHED_MISC(DEFINE, value)		\
+								\
+  DEFINE( SVO_MAX_LIST_CONCAT, max_list_concat,			\
+								\
+	  int, DEFAULT_MAX_LIST_CONCAT,				\
+	 _STATEMENT({						\
+	     if (0 < value && value < MIN_LIST_CONCAT_LIMIT)	\
+		 value = MIN_LIST_CONCAT_LIMIT;			\
+	     else if (value <= 0 || MAX_LIST < value)		\
+		 value = MAX_LIST;				\
+	   }))							\
+								\
+  DEFINE( SVO_MAX_STRING_CONCAT, max_string_concat,		\
+								\
+	  int, DEFAULT_MAX_STRING_CONCAT,			\
+	 _STATEMENT({						\
+	     if (0 < value && value < MIN_STRING_CONCAT_LIMIT)	\
+		 value = MIN_STRING_CONCAT_LIMIT;		\
+	     else if (value <= 0 || MAX_STRING < value)		\
+		 value = MAX_STRING;				\
+	     stream_alloc_maximum = value + 1;			\
+	   }))							\
 
 /* List of all category (2) and (3) cached server options */
 enum Server_Option {

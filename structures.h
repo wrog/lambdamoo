@@ -159,6 +159,19 @@ struct Var {
 
 extern Var zero;		/* useful constant */
 
+/*
+ * Hard limits on string and list sizes are imposed mainly to keep
+ * malloc calculations from rolling over, and thus preventing the
+ * ensuing buffer overruns.  Sizes allow space for reference counts
+ * and cached length values.  Actual limits imposed on
+ * user-constructed lists and strings should generally be smaller
+ * (see DEFAULT_MAX_LIST_CONCAT and DEFAULT_MAX_STRING_CONCAT
+ *  in options.h)
+ */
+#define MAX_LIST   (INT32_MAX/sizeof(Var) - 2)
+#define MAX_STRING (INT32_MAX - 9)
+
+
 #endif		/* !Structures_H */
 
 /*

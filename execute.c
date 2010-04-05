@@ -775,6 +775,20 @@ do {    						    	\
     PUSH(error_var);						\
 } while (0)
 
+#define PUSH_ERROR_UNLESS_QUOTA(the_err)			\
+do {								\
+    if (E_QUOTA == (the_err))					\
+    {								\
+        /* simulate out-of-seconds abort resulting */		\
+	/* from monster malloc+copy taking too long */		\
+	STORE_STATE_VARIABLES();				\
+	abort_task(ABORT_SECONDS);				\
+	return OUTCOME_ABORTED;					\
+    }								\
+    else							\
+	PUSH_ERROR(the_err);					\
+} while (0)
+
 #define JUMP(label)     (bv = bc.vector + label)
 
 /* end of major run() macros */
