@@ -861,7 +861,7 @@ bf_substitute(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr U
     int template_length;
     const char *template, *subject;
     Var subs, ans;
-    int invarg = 0;
+    package p;
     Stream *s;
     char c = '\0';
 
@@ -877,51 +877,36 @@ bf_substitute(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr U
     (void) memo_strlen(subject);
 
     s = new_stream(template_length);
-    ans.type = TYPE_STR;
     while ((c = *(template++)) != '\0') {
-	switch (c) {
-	case '%':
-	    {
-		Var pair;
-		int start = 0, end = 0;
-		c = *(template++);
-		if (c == '%')
-		    stream_add_char(s, '%');
-		else {
-		    if (c >= '1' && c <= '9') {
-			pair = subs.v.list[3].v.list[c - '0'];
-			start = pair.v.list[1].v.num - 1;
-			end = pair.v.list[2].v.num - 1;
-		    } else if (c == '0') {
-			start = subs.v.list[1].v.num - 1;
-			end = subs.v.list[2].v.num - 1;
-		    } else
-			invarg = 1;
-		    if (!invarg) {
-			int where = skip_utf(subject, start);
-
-                        end = where + skip_utf(subject + where, end - start + 1);
-			for (; where < end; where++)
-			    stream_add_char(s, subject[where]);
-		    }
-		}
-		break;
-	    }
-	default:
+	if (c != '%')
 	    stream_add_char(s, c);
+	else if ((c = *(template++)) == '%')
+	    stream_add_char(s, '%');
+	else {
+	    int start = 0, end = 0;
+	    if (c >= '1' && c <= '9') {
+		Var pair = subs.v.list[3].v.list[c - '0'];
+		start = pair.v.list[1].v.num - 1;
+		end = pair.v.list[2].v.num - 1;
+	    } else if (c == '0') {
+		start = subs.v.list[1].v.num - 1;
+		end = subs.v.list[2].v.num - 1;
+	    } else {
+		p = make_error_pack(E_INVARG);
+		goto oops;
+	    }
+	    int bstart = skip_utf(subject, start);
+	    int bafter = bstart + skip_utf(subject + bstart, end - start + 1);
+	    stream_add_bytes(s, subject + bstart, bafter - bstart);
 	}
-	if (invarg)
-	    break;
     }
-
+    ans.type = TYPE_STR;
+    ans.v.str = str_dup(stream_contents(s));
+    p = make_var_pack(ans);
+  oops: ;
     free_var(arglist);
-    if (!invarg)
-	ans.v.str = str_dup(reset_stream(s));
     free_stream(s);
-    if (invarg)
-	return make_error_pack(E_INVARG);
-    else
-	return make_var_pack(ans);
+    return p;
 }
 
 static package
