@@ -396,8 +396,9 @@ should now be completely unnecessary given that
  * and $server_options.max_string_concat override these defaults.
  * A zero value disables limit checking.
  *
- * When an overly-large value is spotted, the task is aborted
- * as if it ran out of seconds (see DEFAULT_FG_SECONDS),
+ * $server_options.max_concat_catchable, if defined, causes an E_QUOTA error
+ * to be raised when an overly-large value is spotted.  Otherwise, the task
+ * is aborted as if it ran out of seconds (see DEFAULT_FG_SECONDS),
  * which was the original behavior in this situation (i.e., if we
  * were lucky enough to avoid a server memory allocation panic).
  */
