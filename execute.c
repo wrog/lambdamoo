@@ -680,12 +680,31 @@ call_verb2(Objid this, const char *vname, Var args, int do_pass)
     return E_NONE;
 }
 
-static int
-rangeset_check(int end, int from, int to)
+static enum error
+rangeset_check(Var base, Var inst, int from, int to)
 {
-    if (from > end + 1 || to < 0)
-	return 1;
-    return 0;
+    int blen;
+    int ilen;
+    int max;
+    if (base.type == TYPE_STR) {
+	blen = memo_strlen(base.v.str);
+	ilen = memo_strlen(inst.v.str);
+	max  = server_int_option_cached(SVO_MAX_STRING_CONCAT);
+    }
+    else {
+	blen = base.v.list[0].v.num;
+	ilen = inst.v.list[0].v.num;
+	max  = server_int_option_cached(SVO_MAX_LIST_CONCAT);
+    }
+
+    if (from > blen + 1 || to < 0)
+	return E_RANGE;
+
+    if (max < (((from > 1) ? from - 1 : 0) + ilen
+	       + ((blen > to) ? blen - to : 0)))
+	return E_QUOTA;
+
+    return E_NONE;
 }
 
 #ifdef IGNORE_PROP_PROTECTED
@@ -1703,6 +1722,7 @@ do {								\
 		case EOP_RANGESET:
 		    {
 			Var base, from, to, value;
+			enum error e;
 
 			value = POP();	/* rhs value (list or string) */
 			to = POP();	/* end of range (integer) */
@@ -1718,15 +1738,12 @@ do {								\
 			    free_var(from);
 			    free_var(value);
 			    PUSH_ERROR(E_TYPE);
-			} else if (rangeset_check(base.type == TYPE_STR
-						  ? memo_strlen(base.v.str)
-						  : base.v.list[0].v.num,
-						  from.v.num, to.v.num)) {
+			} else if (E_NONE != (e = rangeset_check(base, value, from.v.num, to.v.num))) {
 			    free_var(base);
 			    free_var(to);
 			    free_var(from);
 			    free_var(value);
-			    PUSH_ERROR(E_RANGE);
+			    PUSH_ERROR_UNLESS_QUOTA(e);
 			} else if (base.type == TYPE_LIST)
 			    PUSH(listrangeset(base, from.v.num, to.v.num, value));
 			else	/* TYPE_STR */
