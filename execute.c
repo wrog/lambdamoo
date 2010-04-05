@@ -694,10 +694,17 @@ rangeref_fails(Num length, Num from, Num after)
 	     || (1 <= from && after <= length + 1));
 }
 
-static int
-rangeset_fails(Num length, Num from, Num after)
+static enum error
+rangeset_error(UNum max, size_t blen, size_t ilen, Num from, Num after)
 {
-    return !(1 <= after && from <= length + 1);
+    if (!(1 <= after && (from <= 0 || ((UNum)from <= blen + 1))))
+	return E_RANGE;
+    if (max < (((from > 1) ? (size_t)(from - 1) : 0)
+	       + ilen
+	       + ((blen >= (size_t)after) ? (blen - (size_t)after) + 1 : 0)))
+	return E_QUOTA;
+
+    return E_NONE;
 }
 
 #ifdef IGNORE_PROP_PROTECTED
@@ -1583,7 +1590,7 @@ do {								\
 		    enum error e;
 
 		    e = enqueue_forked_task2(RUN_ACTIV, f_index, time.v.num,
-					op == OP_FORK_WITH_ID ? id : -1);
+					     op == OP_FORK_WITH_ID ? (int)id : -1);
 		    if (e != E_NONE)
 			RAISE_ERROR(e);
 		}
@@ -1727,20 +1734,22 @@ do {								\
 			    || value.type != base.type)
 			    e = E_TYPE;
 			else if (base.type == TYPE_LIST) {
-			    if (rangeset_fails(base.v.list[0].v.num,
-					       from.v.num, to.v.num + 1))
-				e = E_RANGE;
-			    else
+			    e = rangeset_error(server_int_option_cached(SVO_MAX_LIST_CONCAT),
+					       base.v.list[0].v.num,
+					       value.v.list[0].v.num,
+					       from.v.num, to.v.num + 1);
+			    if (e == E_NONE)
 				PUSH(listrangeset(base, from.v.num,
 						  to.v.num + 1, value));
 			}
 			else {  /* base.type == TYPE_STR */
 			    Num bfromafter[] = { from.v.num, to.v.num + 1 };
 			    utf_byte_range(base.v.str, bfromafter);
-			    if (rangeset_fails(memo_strlen(base.v.str),
-					       bfromafter[0], bfromafter[1]))
-				e = E_RANGE;
-			    else
+			    e = rangeset_error(server_int_option_cached(SVO_MAX_STRING_CONCAT),
+					       memo_strlen(base.v.str),
+					       memo_strlen(value.v.str),
+					       bfromafter[0], bfromafter[1]);
+			    if (e == E_NONE)
 				PUSH(strrangeset(base, bfromafter[0],
 						 bfromafter[1], value));
 			}
@@ -1750,7 +1759,7 @@ do {								\
 			if (e != E_NONE) {
 			    free_var(base);
 			    free_var(value);
-			    PUSH_ERROR(e);
+			    PUSH_ERROR_UNLESS_QUOTA(e);
 			}
 		    }
 		    break;
