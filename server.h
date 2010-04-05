@@ -194,6 +194,10 @@ extern int get_server_option(Objid oid, const char *name, Var * r);
 		 value = MAX_STRING;				\
 	     stream_alloc_maximum = value + 1;			\
 	   }))							\
+								\
+  DEFINE( SVO_MAX_CONCAT_CATCHABLE, max_concat_catchable,	\
+	  flag, 0, /* already canonical */			\
+	  )
 
 /* List of all category (2) and (3) cached server options */
 enum Server_Option {

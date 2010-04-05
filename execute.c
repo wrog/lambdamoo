@@ -789,7 +789,8 @@ do {    						    	\
 
 #define PUSH_ERROR_UNLESS_QUOTA(the_err)			\
 do {								\
-    if (E_QUOTA == (the_err))					\
+    if (E_QUOTA == (the_err) &&					\
+        !server_flag_option_cached(SVO_MAX_CONCAT_CATCHABLE))	\
     {								\
         /* simulate out-of-seconds abort resulting */		\
 	/* from monster malloc+copy taking too long */		\
