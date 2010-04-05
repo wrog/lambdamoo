@@ -1241,12 +1241,19 @@ do {								\
 		else if (lhs.type == TYPE_STR && rhs.type == TYPE_STR) {
 		    char *str;
 		    int llen = memo_strlen(lhs.v.str);
+		    int flen = llen + memo_strlen(rhs.v.str);
 
-		    str = mymalloc(llen + memo_strlen(rhs.v.str) + 1, M_STRING);
-		    strcpy(str, lhs.v.str);
-		    strcpy(str + llen, rhs.v.str);
-		    ans.type = TYPE_STR;
-		    ans.v.str = str;
+		    if (server_int_option_cached(SVO_MAX_STRING_CONCAT)
+			< flen) {
+			ans.type = TYPE_ERR;
+			ans.v.err = E_QUOTA;
+		    } else {
+			str = mymalloc(flen + 1, M_STRING);
+			strcpy(str, lhs.v.str);
+			strcpy(str + llen, rhs.v.str);
+			ans.type = TYPE_STR;
+			ans.v.str = str;
+		    }
 		} else {
 		    ans.type = TYPE_ERR;
 		    ans.v.err = E_TYPE;
@@ -1255,7 +1262,7 @@ do {								\
 		free_var(lhs);
 
 		if (ans.type == TYPE_ERR)
-		    PUSH_ERROR(ans.v.err);
+		    PUSH_ERROR_UNLESS_QUOTA(ans.v.err);
 		else
 		    PUSH(ans);
 	    }
