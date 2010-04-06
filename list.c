@@ -436,6 +436,12 @@ insert_or_append(Var arglist, int append1)
     Var lst = var_ref(arglist.v.list[1]);
     Var elt = var_ref(arglist.v.list[2]);
 
+    if (server_int_option_cached(SVO_MAX_LIST_CONCAT) <= lst.v.list[0].v.num) {
+	free_var(lst);
+	free_var(elt);
+	free_var(arglist);
+	return make_space_pack();
+    }
     if (arglist.v.list[0].v.num == 2)
 	pos = append1 ? lst.v.list[0].v.num + 1 : 1;
     else {
