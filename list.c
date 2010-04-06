@@ -415,10 +415,18 @@ static package
 bf_setadd(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
+    Var list = var_ref(arglist.v.list[1]);
 
-    r = setadd(var_ref(arglist.v.list[1]), var_ref(arglist.v.list[2]));
+    r = setadd(list, var_ref(arglist.v.list[2]));
     free_var(arglist);
-    return make_var_pack(r);
+
+    if (r.v.list == list.v.list ||
+	r.v.list[0].v.num <= server_int_option_cached(SVO_MAX_LIST_CONCAT))
+	return make_var_pack(r);
+    else {
+	free_var(r);
+	return make_space_pack();
+    }
 }
 
 
