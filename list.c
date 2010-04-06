@@ -442,31 +442,39 @@ bf_setremove(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UN
 
 
 static package
+insert_or_append(Var arglist, int append1)
+{
+    int pos;
+    Var lst = var_ref(arglist.v.list[1]);
+    Var elt = var_ref(arglist.v.list[2]);
+
+    if (arglist.v.list[0].v.num == 2)
+	pos = append1 ? lst.v.list[0].v.num + 1 : 1;
+    else {
+	pos = arglist.v.list[3].v.num + append1;
+	if (pos <= 0)
+	    pos = 1;
+	else if (pos > lst.v.list[0].v.num + 1)
+	    pos = lst.v.list[0].v.num + 1;
+    }
+    free_var(arglist);
+    return make_var_pack(doinsert(lst, elt, pos));
+}
+
+
+static package
 bf_listappend(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r;
-    if (arglist.v.list[0].v.num == 2)
-	r = listappend(var_ref(arglist.v.list[1]), var_ref(arglist.v.list[2]));
-    else
-	r = listinsert(var_ref(arglist.v.list[1]), var_ref(arglist.v.list[2]),
-		       arglist.v.list[3].v.num + 1);
-    free_var(arglist);
-    return make_var_pack(r);
+    return insert_or_append(arglist, 1);
 }
 
 
 static package
 bf_listinsert(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r;
-    if (arglist.v.list[0].v.num == 2)
-	r = listinsert(var_ref(arglist.v.list[1]), var_ref(arglist.v.list[2]), 1);
-    else
-	r = listinsert(var_ref(arglist.v.list[1]),
-		    var_ref(arglist.v.list[2]), arglist.v.list[3].v.num);
-    free_var(arglist);
-    return make_var_pack(r);
+    return insert_or_append(arglist, 0);
 }
+
 
 static package
 bf_listdelete(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
