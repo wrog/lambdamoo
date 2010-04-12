@@ -43,7 +43,7 @@
 const char *server_version = "1.8.3";
 
 int
-check_version(DB_Version version)
+check_db_version(DB_Version version)
 {
     return version < Num_DB_Versions;
 }

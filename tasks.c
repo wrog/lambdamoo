@@ -589,7 +589,7 @@ end_programming(tqueue * tq)
 	    s.nerrors = 0;
 	    s.input = stream_contents(tq->program_stream);
 
-	    program = parse_program(current_version, client, &s);
+	    program = parse_program(current_db_version, client, &s);
 
 	    sprintf(buf, "%d error(s).", s.nerrors);
 	    notify(player, buf);

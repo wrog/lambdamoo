@@ -2835,7 +2835,7 @@ read_activ(activation * a, int which_vector)
     else if (dbio_scanf("language version %u\n", &v) != 1) {
 	errlog("READ_ACTIV: Malformed language version\n");
 	return 0;
-    } else if (version = v, !check_version(version)) {
+    } else if (version = v, !check_db_version(version)) {
 	errlog("READ_ACTIV: Unrecognized language version: %d\n",
 	       version);
 	return 0;

@@ -403,7 +403,7 @@ read_db_file(void)
     if (dbio_scanf(header_format_string, &dbio_input_version) != 1)
 	dbio_input_version = DBV_Prehistory;
 
-    if (!check_version(dbio_input_version)) {
+    if (!check_db_version(dbio_input_version)) {
 	errlog("READ_DB_FILE: Unknown DB version number: %d\n",
 	       dbio_input_version);
 	return 0;
@@ -503,7 +503,7 @@ write_db_file(const char *reason)
     user_list = db_all_users();
 
     TRY {
-	dbio_printf(header_format_string, current_version);
+	dbio_printf(header_format_string, current_db_version);
 	dbio_printf("%"PRIdN"\n%d\n%d\n%"PRIdN"\n",
 		    max_oid + 1, nprogs, 0, user_list.v.list[0].v.num);
 	for (i = 1; i <= user_list.v.list[0].v.num; i++)

@@ -48,9 +48,9 @@ typedef enum {
     Num_DB_Versions		/* Special: the current version is this - 1. */
 } DB_Version;
 
-#define current_version	((DB_Version) (Num_DB_Versions - 1))
+#define current_db_version	((DB_Version) (Num_DB_Versions - 1))
 
-extern int check_version(DB_Version);
+extern int check_db_version(DB_Version);
 				/* Returns true iff given version is within the
 				 * known range.
 				 */
@@ -76,8 +76,10 @@ extern int check_version(DB_Version);
  * Added somewhat bogus DBV_BFBugFixed version.  Release 1.8.0p4.
  *
  * Revision 2.2  1996/02/08  06:07:10  pavel
- * Added DBV_BreakCont and DBV_Float versions, check_version().  Moved
- * db_in_version to db_io.h and renamed db_out_version to current_version.
+ * Added DBV_BreakCont and DBV_Float versions, check_version().
+ * ...(check_version is now check_db_version -- wrog 2010)
+ * Moved db_in_version to db_io.h and renamed db_out_version to
+ * current_version ...(is now current_db_version -- wrog 2010)
  * Updated copyright notice for 1996.  Release 1.8.0beta1.
  *
  * Revision 2.1  1995/12/28  00:48:42  pavel
