@@ -2120,30 +2120,33 @@ run_interpreter(char raise, enum error e,
        suspend().) */
 {
     enum outcome ret;
+    Var args;
 
     setup_task_execution_limits(is_fg);
 
+    /* handler_verb_* is garbage/unreferenced outside of run()
+     * and this is the only place run() is called. */
     handler_verb_args = zero;
     handler_verb_name = 0;
     interpreter_is_running = 1;
     ret = run(raise, e, result);
     interpreter_is_running = 0;
-    task_timed_out = 0;
+    args = handler_verb_args;
+
     cancel_timer(task_alarm_id);
+    task_timed_out = 0;
 
     if (ret == OUTCOME_ABORTED && handler_verb_name) {
-	db_verb_handle h;
-        enum outcome hret;
-	Var args, handled, traceback;
-	int i;
-
-	args = handler_verb_args;
-	h = db_find_callable_verb(SYSTEM_OBJECT, handler_verb_name);
-	if (do_db_tracebacks && h.ptr) {
-	    hret = do_server_verb_task(SYSTEM_OBJECT, handler_verb_name,
-				       var_ref(handler_verb_args), h,
-				       activ_stack[0].player, "", &handled,
-				       0/*no-traceback*/);
+	db_verb_handle h = {};
+	if (do_db_tracebacks)
+	    h = db_find_callable_verb(SYSTEM_OBJECT, handler_verb_name);
+	if (h.ptr) {
+	    Var handled;
+	    enum outcome hret =
+		do_server_verb_task(SYSTEM_OBJECT, handler_verb_name,
+				    var_ref(args), h,
+				    activ_stack[0].player, "", &handled,
+				    0/*no-traceback*/);
 	    if ((hret == OUTCOME_DONE && is_true(handled))
 		|| hret == OUTCOME_BLOCKED) {
 		/* Assume the in-DB code handled it */
@@ -2151,12 +2154,12 @@ run_interpreter(char raise, enum error e,
 		return OUTCOME_ABORTED;		/* original ret value */
 	    }
 	}
-	i = args.v.list[0].v.num;
-	traceback = args.v.list[i];	/* traceback is always the last argument */
+	int i = args.v.list[0].v.num;
+	Var traceback = args.v.list[i];	/* traceback is always the last argument */
 	for (i = 1; i <= traceback.v.list[0].v.num; i++)
 	    notify(activ_stack[0].player, traceback.v.list[i].v.str);
-	free_var(args);
     }
+    free_var(args);
     return ret;
 }
 
