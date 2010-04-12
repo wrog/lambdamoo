@@ -1235,7 +1235,7 @@ parse_list_as_program(Var code, Var *errors)
     state.cur_string = 1;
     state.cur_char = 0;
     state.errors = new_list(0);
-    program = parse_program(current_version, list_parser_client, &state);
+    program = parse_program(current_db_version, list_parser_client, &state);
     *errors = state.errors;
 
     return program;
