@@ -2373,12 +2373,12 @@ Version 1.8.1, 10 January 2000
 -- Server hackers should read README.rX for more information on
    changes to server internals.
 
-Version 1.8.2
+Version 1.8.2, circa November 2006 (not released)
 Because of the long time with no release after 1.8.1, some distributors began
 to distribute 1.8.1 plus patches as 1.8.2.  To avoid confusion, we have opted
 to make the next official release version 1.8.3.
 
-Version 1.8.3, in progress
+Version 1.8.3, circa June 2008 (not released)
 -- SF bug #887464: fixed a bug in the server's startup processing, in which it
    scans for unknown built-in functions in active verbs (Thanks luke-jr and
    Gavin Lambert for reports and patches.)
@@ -2391,6 +2391,10 @@ Version 1.8.3, in progress
 -- SF bug #1500775: fixed two use-after-free bugs that could lead very rarely to
    calling the wrong functions during player connection (Thanks Garance Drosehn
    for the report and initial patch.)
+-- Added sync so that checkpoint file will not be lost by being unlinked
+   before being physically written to the disk
+-- Fixed uninitialized fileds that caused occasional weirdness in size accounting
+   for forked tasks and wrong line numbers in decompile
 **** Changes relevant to programmers / wizards:
 -- SF bug #227620: add_verb() now returns (positive integer) verb index
 -- bf_crypt() now passes salts longer than 2 characters to the underlying C
@@ -2449,6 +2453,66 @@ Version 1.8.3, in progress
    stdout and stderr are now closed if they are not being used.
    (Outside of emergency wizard mode, stdout is only used on an an NP_SINGLE
    server; stderr is only used if no logfile (-l) is specifed.)
+-- Added new compile option INPUT_APPLY_BACKSPACE to process
+   backspace/delete characters on nonbinary connections (patch 1571939)
 **** Changes relevant to server hackers:
 -- New call_verb2() accepts verb name that is a MOO string (ie, str_ref-able)
 -- str_hash() replaced with a faster (and better?) string hash function
+
+
+Version 1.8.4, in progress
+-- Fix FOR statement infinite loop when $maxint is the upper limit.
+-- Fix random($maxint) to return in correct range.
+-- Fix memory leak in flush_input.
+-- Fix memory leak in run_interpreter/save_handler_info
+   in the case where FINALLY returns/breaks/suspends.
+-- Fix random(m) to be uniformly distributed for m!=2^k
+   to allow for m > RAND_MAX
+-- Refactored bf_listinsert/bf_listappend to reduce refcounts
+
+**** Changes relevant to programmers / wizards:
+-- server_version() now takes an argument so that information
+   about the server build can be available in-db.
+-- $server_options.protect_<prop> now prevents non-wizard *writes*
+   and must be followed by load_server_options() to take effect
+-- New $server_options .max_list_concat and .max_string_concat
+   to limit the size of user-constructed lists and strings
+-- New $server_option .max_concat_catchable to govern whether
+   violating new size limits causes out-of-seconds or E_QUOTA error
+
+**** Changes significant to people compiling and running the server:
+-- Source/build information that is compiled into the server now
+   comes from version_src.h.  Purpose and format of this file is
+   now described in version_src.txt.
+-- New GNUmakefile invokes optional ./version_hook which can be linked
+   to any script that will generate a version_src.h file from source
+   control information as appropriate.  (You can also have a static
+   version_src.h file that #defines the VERSION_* macros.)
+-- IGNORE_PROP_PROTECTED deprecated since no longer necessary
+-- New options DEFAULT_MAX_LIST_CONCAT, DEFAULT_MAX_STRING_CONCAT,
+   MIN_LIST_CONCAT_LIMIT, MIN_STRING_CONCAT_LIMIT to set defaults
+   and lower bounds for .max_list_concat and .max_string_concat
+
+**** Changes relevant to server hackers:
+-- Added HACKING as an index to the various server-hacking
+   documentation files scattered about the source directory.
+   (do we need a doc directory?)
+-- If you add or remove #defines from options.h, you should update
+   version_opt_gen.pl accordingly and rerun it to generate a new
+   version_options.h, which then populates the group returned
+   by server_version("options").
+-- Some prep work for 64-bit MOO currently isolated in numbers.c
+   (will need autoconf update to work properly)
+-- server_flag_option() now takes an explicit default argument
+-- Rename load_server_protect_flags() to
+   load_server_protect_function_flags()
+-- make_abort_pack(ABORT_KILL) replaces make_kill_pack()
+   builtin functions can now cause other kinds of aborts
+-- Added caching regime for server options other than
+   .protect_<function>
+-- List/string API changes (prep for raising stream exceptions)
+   raw_bytes_to_moobinary -> stream_add_moobinary_from_raw_bytes
+   strsub -> stream_add_strsub
+   value_to_literal -> unparse_value
+   list2str -> stream_add_tostr
+-- New stream exception API to catch malloc failures
