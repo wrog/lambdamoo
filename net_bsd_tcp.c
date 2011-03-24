@@ -106,7 +106,7 @@ proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
 	return e;
     }
     if (port == 0) {
-	size_t length = sizeof(address);
+	socklen_t length = sizeof(address);
 
 	if (getsockname(s, (struct sockaddr *) &address, &length) < 0) {
 	    log_perror("Discovering local port number");
@@ -139,7 +139,7 @@ proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
     int timeout = server_int_option("name_lookup_timeout", 5);
     int fd;
     struct sockaddr_in address;
-    size_t addr_length = sizeof(address);
+    socklen_t addr_length = sizeof(address);
     static Stream *s = 0;
 
     if (!s)
@@ -199,7 +199,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
     static const char *host_name;
     static int port;
     static Timer_ID id;
-    size_t length;
+    socklen_t length;
     int s, result;
     int timeout = server_int_option("name_lookup_timeout", 5);
     static struct sockaddr_in addr;
