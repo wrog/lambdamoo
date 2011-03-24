@@ -188,7 +188,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 		s = alloc_stmt(STMT_COND);
 		DECOMPILE(bc, ptr, bc.vector + next - jump_len, &arm_stmts, 0);
 		arm = s->s.cond.arms = alloc_cond_arm(condition, arm_stmts);
-		HOT_OP1(condition, arm);
+		(void) HOT_OP1(condition, arm);
 		done = READ_JUMP(jump_hot);
 		HOT_BOTTOM(jump_hot, arm);
 		DECOMPILE(bc, ptr, bc.vector + done, &(s->s.cond.otherwise),
@@ -208,7 +208,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 
 		DECOMPILE(bc, ptr, bc.vector + next - jump_len, &arm_stmts, 0);
 		ADD_ARM(arm = alloc_cond_arm(condition, arm_stmts));
-		HOT_OP1(condition, arm);
+		(void) HOT_OP1(condition, arm);
 		done = READ_JUMP(jump_hot);
 		HOT_BOTTOM(jump_hot, arm);
 		if (bc.vector + done != end)
@@ -600,7 +600,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 					  bc.vector + sc->next_label - 1,
 					  0, 0);
 				defallt = pop_expr();
-				HOT1(is_hot, defallt, e);
+				(void) HOT1(is_hot, defallt, e);
 				if (defallt->kind != EXPR_ASGN
 				    || defallt->e.bin.lhs->kind != EXPR_ID
 				    || defallt->e.bin.lhs->e.id != sc->id)
@@ -713,7 +713,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 			    ex = alloc_except(-1, a, 0);
 			    ex->label = label;
 			    ex->next = s->s.catch.excepts;
-			    HOT2(0, label_expr, e, ex);
+			    (void) HOT2(0, label_expr, e, ex);
 			    s->s.catch.excepts = ex;
 			}
 			DECOMPILE(bc, ptr, end, &(s->s.catch.body), 0);
@@ -736,7 +736,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 				ex->id = PUT_n_INDEX(op);
 				op = *ptr++;
 			    }
-			    HOT(op_hot || ptr - 1 == hot_byte, ex);
+			    (void) HOT(op_hot || ptr - 1 == hot_byte, ex);
 			    if (op != OP_POP)
 				panic("Missing POP in DECOMPILE!");
 			    if (ex->next)
