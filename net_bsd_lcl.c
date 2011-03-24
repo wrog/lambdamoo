@@ -130,7 +130,7 @@ proto_accept_connection(int listener_fd, server_listener sl UNUSED_,
 {
     int fd;
     static struct sockaddr_un address;
-    int addr_length = sizeof(address);
+    socklen_t addr_length = sizeof(address);
 
     fd = accept(listener_fd, (struct sockaddr *) &address, &addr_length);
     if (fd < 0) {
