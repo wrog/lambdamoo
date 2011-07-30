@@ -68,7 +68,7 @@ DISTFILES = $(SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
 	ChangeLog.txt README configure.in configure config.h.in \
 	aclocal.m4 \
-	MOOCodeSequences.txt AddingNewMOOTypes.txt pgperf
+	MOOCodeSequences.txt AddingNewMOOTypes.txt
 
 COBJS = $(CSRCS:.c=.o)
 
@@ -114,9 +114,13 @@ config.h: config.h.in config.status
 
 y.tab.h: parser.o
 
+# The LambdaMOO server project originally shipped with a lightly
+# hacked version 2.1 of GNU gperf, renamed 'pgperf', now removed;
+# see commit log for full history.
 keywords.c: keywords.gperf
-	pgperf -aCIptT -k1,3,$$ keywords.gperf \
-		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' \
+	gperf --language=C --ignore-case --readonly-tables --struct-type \
+		--omit-struct-type --key-positions=1,3,$$ keywords.gperf \
+		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/'   \
 		> keywords.c
 
 # the only dependences we have to add are
