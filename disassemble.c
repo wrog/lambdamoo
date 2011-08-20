@@ -196,7 +196,6 @@ disassemble(Program * prog, Printer p, void *data)
     Stream *insn = new_stream(50);
     unsigned pc;
     Bytecodes bc;
-    const char *ptr;
     const char **names = prog->var_names;
     unsigned tmp, num_names = prog->num_var_names;
 #   define NAMES(exp)	(tmp = (exp),					\
@@ -348,35 +347,8 @@ disassemble(Program * prog, Printer p, void *data)
 				  NAMES(ADD_BYTES(bc.numbytes_var_name)));
 		    break;
 		case OP_IMM:
-		    {
-			Var v;
-
-			v = literals[ADD_BYTES(bc.numbytes_literal)];
-			switch (v.type) {
-			case TYPE_OBJ:
-			    stream_printf(insn, " #%"PRIdN, v.v.obj);
-			    break;
-			case TYPE_INT:
-			    stream_printf(insn, " %"PRIdN, v.v.num);
-			    break;
-			case TYPE_STR:
-			    stream_add_string(insn, " \"");
-			    for (ptr = v.v.str; *ptr; ptr++) {
-				if (*ptr == '"' || *ptr == '\\')
-				    stream_add_char(insn, '\\');
-				stream_add_char(insn, *ptr);
-			    }
-			    stream_add_char(insn, '"');
-			    break;
-			case TYPE_ERR:
-			    stream_printf(insn, " %s", error_name(v.v.err));
-			    break;
-			default:
-			    stream_printf(insn, " <literal type = %d>",
-					  v.type);
-			    break;
-			}
-		    }
+		    stream_add_char(insn, ' ');
+		    unparse_value(insn, literals[ADD_BYTES(bc.numbytes_literal)]);
 		    break;
 		case OP_BI_FUNC_CALL:
 		    stream_printf(insn, " %s", name_func_by_num(ADD_BYTES(1)));
