@@ -2502,3 +2502,8 @@ Version 1.8.4, in progress
    builtin functions can now cause other kinds of aborts
 -- added caching regime for server options other than 
    .protect_<function>
+
+Version X, in progress
+-- The disassemble() built-in function will now properly disassemble all
+   possible literal values. Formerly, FLOAT literals were not properly
+   disassembled.
