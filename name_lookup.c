@@ -96,7 +96,11 @@ spawn_pipe(void (*child_proc) (int to_parent, int from_parent),
 	    log_perror("SPAWNING: Couldn't fork child");
 	    exit(1);
 	} else if (pid != 0) {	/* still the middleman */
-	    write(pipe_from_child[1], &pid, sizeof(pid));
+	    if (write(pipe_from_child[1], &pid, sizeof(pid)) != sizeof(pid))
+	    {
+		log_perror("SPAWNING: Write to child pipe failed");
+		exit(1);
+	    }
 	    exit(0);
 	} else {		/* finally, the child */
 	    (*child_proc) (pipe_from_child[1], pipe_to_child[0]);
@@ -183,14 +187,16 @@ lookup(int to_intermediary, int from_intermediary)
 	     */
 	    e = gethostbyname((void *) buffer);
 	    cancel_timer(id);
-	    if (e && e->h_length == sizeof(unsigned32))
-		write(to_intermediary, e->h_addr_list[0], e->h_length);
-	    else {
+	    if (e && e->h_length == sizeof(unsigned32)) {
+		if (write(to_intermediary, e->h_addr_list[0], e->h_length) != e->h_length)
+		    _exit(1);
+	    } else {
 		unsigned32 addr;
 
 		/* This cast is for the same reason as the one above... */
 		addr = inet_addr((void *) buffer);
-		write(to_intermediary, &addr, sizeof(addr));
+		if (write(to_intermediary, &addr, sizeof(addr)) != sizeof(addr))
+		    _exit(1);
 	    }
 	} else {
 	    const char *host_name;
@@ -202,8 +208,10 @@ lookup(int to_intermediary, int from_intermediary)
 	    cancel_timer(id);
 	    host_name = e ? e->h_name : "";
 	    length = strlen(host_name);
-	    write(to_intermediary, &length, sizeof(length));
-	    write(to_intermediary, host_name, length);
+	    if (write(to_intermediary, &length, sizeof(length)) != sizeof(length))
+		_exit(1);
+	    if (write(to_intermediary, host_name, length) != sizeof(length))
+		_exit(1);
 	}
     }
 }
@@ -255,18 +263,25 @@ intermediary(int to_server, int from_server)
 	if (!lookup_pid)	/* Restart lookup if it's died */
 	    restart_lookup();
 	if (lookup_pid) {	/* Only try to deal with lookup if alive */
-	    write(to_lookup, &req, sizeof(req));
 	    if (req.kind == REQ_ADDR_FROM_NAME) {
-		write(to_lookup, buffer, req.u.length);
+		if (write(to_lookup, &req, sizeof(req)) != sizeof(req))
+		    goto lookup_dead;
+		if (write(to_lookup, buffer, req.u.length) != req.u.length)
+		    goto lookup_dead;
 		if (robust_read(from_lookup, &addr, sizeof(addr))
 		    != sizeof(addr)) {
+		  lookup_dead:
 		    restart_lookup();
 		    addr = 0;
 		}
-		write(to_server, &addr, sizeof(addr));
+		if (write(to_server, &addr, sizeof(addr)) != sizeof(addr))
+		    _exit(1);
 	    } else {
+		if (write(to_lookup, &req, sizeof(req)) != sizeof(req))
+		    goto lookup_dead_B;
 		if (robust_read(from_lookup, &len, sizeof(len))
 		    != sizeof(len)) {
+		  lookup_dead_B:
 		    restart_lookup();
 		    len = 0;
 		} else {
@@ -277,14 +292,17 @@ intermediary(int to_server, int from_server)
 			len = 0;
 		    }
 		}
-		write(to_server, &len, sizeof(len));
+		if (write(to_server, &len, sizeof(len)) != sizeof(addr))
+		    _exit(1);
 		if (len > 0)
-		    write(to_server, buffer, len);
+		    if (write(to_server, buffer, len) != len)
+			_exit(1);
 	    }
 	} else {		/* Lookup dead and wouldn't restart ... */
 	    int failure = 0;
 
-	    write(to_server, &failure, sizeof(failure));
+	    if (write(to_server, &failure, sizeof(failure)) != sizeof(failure))
+		_exit(1);
 	}
     }
 }
