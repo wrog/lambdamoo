@@ -193,6 +193,14 @@
 #define PATTERN_CACHE_SIZE	20
 
 /******************************************************************************
+ * Define this option to prevent certain property names from being added on
+ * objects. Useful to ensure forward compatibility.
+ * "class" is used by WAIFs
+ ******************************************************************************
+ */
+#define RESERVED_PROPERTIES "class"
+
+/******************************************************************************
  * This package comes with a copy of the implementation of malloc() from GNU
  * Emacs.  This is a very nice and reasonably portable implementation, but some
  * systems, notably the NeXT machine, won't allow programs to provide their own

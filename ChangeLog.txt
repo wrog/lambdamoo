@@ -2295,3 +2295,9 @@ Version 1.8.0p5, 12 May 1996
 	36789.foo
    (an understandable typo for #6789.foo) stopped compiling when found in a
    database made by a pre-1.8.0 server.
+
+Version X, in progress
+**** Changes significant to people compiling and running the server:
+-- Specific property names can be reserved, preventing them from being used by
+   new or renamed properties. By default, the "class" property is blocked to
+   ensure future WAIF compatibility.
