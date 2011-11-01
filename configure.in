@@ -24,7 +24,7 @@ dnl Defines _POSIX_SOURCE if this machine is running A/UX; this appears to be
 dnl necessary in order to get declarations of POSIX functions.
 define(MOO_AUX, [
 echo checking for A/UX
-AC_PROGRAM_EGREP(yes, [
+AC_EGREP_CPP(yes, [
 #if defined(AUX)
   yes
 #endif
@@ -36,7 +36,7 @@ dnl Defines _HPUX_SOURCE if this machine is running HP/UX; this appears to be
 dnl necessary in order to get declarations of POSIX functions.
 define(MOO_HPUX, [
 echo checking for HP/UX
-AC_PROGRAM_EGREP(yes, [
+AC_EGREP_CPP(yes, [
 #if defined(__hpux)
   yes
 #endif
@@ -49,7 +49,7 @@ dnl add `-Olimit 1000' to the `cc' switches, to allow the compiler to run the
 dnl optimizer over large functions, like the main MOO interpreter loop.
 define(MOO_ALPHA, [
 echo checking for the DEC Alpha running OSF/1
-AC_PROGRAM_EGREP(yes, [
+AC_EGREP_CPP(yes, [
 #if defined(__osf__) && defined(__alpha) && !defined(__GNUC__)
   yes
 #endif
@@ -64,12 +64,12 @@ dnl even if we are using GCC, undefine __EXTENSIONS__ to keep from seeing a
 dnl bunch of interfering declarations.
 define(MOO_SGI, [
 echo checking for the SGI compiler
-AC_PROGRAM_EGREP(yes, [
+AC_EGREP_CPP(yes, [
 #if defined(sgi) && !defined(__GNUC__)
   yes
 #endif
 ], CC="$CC -Olimit 2500")
-AC_PROGRAM_EGREP(yes, [
+AC_EGREP_CPP(yes, [
 #if defined(sgi)
   yes
 #endif
@@ -81,7 +81,7 @@ dnl On NeXT, we need to make sure that _NEXT_SOURCE and _POSIX_SOURCE are
 dnl defined.
 define(MOO_NEXT, [
 echo checking for NeXT
-AC_PROGRAM_EGREP(yes, [
+AC_EGREP_CPP(yes, [
 #ifdef NeXT
   yes
 #endif
@@ -95,7 +95,7 @@ dnl <malloc.h> exists.
 define(MOO_MALLOC_H, [
 echo checking whether stdlib.h declares malloc and friends
 MOO_FUNC_DECL_CHECK(stdlib.h, malloc, ,
-	AC_HEADER_CHECK(malloc.h, AC_DEFINE(NEED_MALLOC_H)))])
+	AC_CHECK_HEADER(malloc.h, AC_DEFINE(NEED_MALLOC_H)))])
 
 dnl ***************************************************************************
 dnl	MOO_FUNC_DECL_CHECK(header, func,
@@ -107,7 +107,7 @@ define(MOO_FUNC_DECL_CHECK, [
 changequote(,)dnl
 pattern="[^_a-zA-Z0-9]$2 *\("
 changequote([,])dnl
-AC_PROGRAM_EGREP($pattern, [
+AC_EGREP_CPP($pattern, [
 #include <$1>
 $5
 ], $3, $4)])
@@ -124,7 +124,7 @@ for func in $2
 do
 echo "checking whether $func is declared in $1"
 MOO_FUNC_DECL_CHECK($1, $func, ,
-	AC_DEFINE(NDECL_`echo $func | tr "$trfrom" "$trto"`), $3)
+	AC_DEFINE_UNQUOTED(NDECL_`echo $func | tr "$trfrom" "$trto"`), $3)
 done
 ])
 
@@ -138,7 +138,7 @@ define(MOO_VAR_DECL_CHECK, [
 changequote(,)dnl
 pattern="[^_a-zA-Z0-9]$2"
 changequote([,])dnl
-AC_PROGRAM_EGREP($pattern, [
+AC_EGREP_CPP($pattern, [
 #include <$1>
 $5
 ], $3, $4)])
@@ -155,7 +155,7 @@ for var in $2
 do
 echo "checking whether $var is declared in $1"
 MOO_VAR_DECL_CHECK($1, $var, ,
-	AC_DEFINE(NDECL_`echo $var | tr "$trfrom" "$trto"`), $3)
+	AC_DEFINE_UNQUOTED(NDECL_`echo $var | tr "$trfrom" "$trto"`), $3)
 done
 ])
 
@@ -169,7 +169,7 @@ changequote([,])dnl
 AC_COMPILE_CHECK(self-sufficiency of $1, [
 #include <$1>
 $2
-], , , AC_DEFINE(`echo $1 | tr "$trfrom" "$trto"`_NEEDS_HELP))
+], , , AC_DEFINE_UNQUOTED(`echo $1 | tr "$trfrom" "$trto"`_NEEDS_HELP))
 ])
 
 dnl ***************************************************************************
@@ -185,12 +185,15 @@ do
   trfrom='[a-z]' trto='[A-Z]'
   var=HAVE_`echo $func | tr "$trfrom" "$trto"`
   changequote([,])dnl
-  AC_FUNC_CHECK($func, AC_DEFINE($var), [
+  eval "ac_cv_func_${func}=no"
+  AC_CHECK_FUNC_ID(${func}, 0, AC_DEFINE_UNQUOTED($var), [
     SAVELIBS="$LIBS"
+    let i=0
     for lib in $2
     do
+      let i++
       LIBS="$LIBS $lib"
-      AC_FUNC_CHECK($func, [AC_DEFINE($var)
+      AC_CHECK_FUNC_ID(${func}, ${i}, [AC_DEFINE_UNQUOTED($var)
 			 break],
 		    LIBS="$SAVELIBS")
     done
@@ -211,12 +214,12 @@ do
   trfrom='[a-z]./' trto='[A-Z]__'
   var=HAVE_`echo $hdr | tr "$trfrom" "$trto"`
   changequote([,])dnl
-  AC_HEADER_CHECK($hdr, AC_DEFINE($var), [
+  AC_CHECK_HEADER($hdr, AC_DEFINE_UNQUOTED($var), [
     SAVECC="$CC"
     for dir in $2
     do
       CC="$CC $dir"
-      AC_HEADER_CHECK($hdr, [AC_DEFINE($var)
+      AC_CHECK_HEADER($hdr, [AC_DEFINE_UNQUOTED($var)
 			     break],
 		      CC="$SAVECC")
     done
@@ -259,7 +262,7 @@ for opt in "" -Aa -Xa -ansi
 do
 SAVECC="$CC"
 CC="$CC $opt"
-AC_TEST_PROGRAM([
+AC_TRY_RUN([
 int main(int argc, char *argv) { void *ptr; exit(0); }
 ],
 [have_ansi=1
@@ -280,8 +283,8 @@ dnl ***************************************************************************
 
 AC_PROG_YACC
 AC_PROG_CC
-AC_GCC_TRADITIONAL
-AC_PROGRAM_EGREP(yes, [
+AC_PROG_GCC_TRADITIONAL
+AC_EGREP_CPP(yes, [
 #if __GNUC__==2
   yes
 #endif
@@ -302,22 +305,22 @@ MOO_CONST
 CPP=""
 AC_PROG_CPP
 MOO_MALLOC_H
-AC_HEADER_CHECK(sys/bsdtypes.h, AC_DEFINE(NEED_BSDTYPES_H))
-AC_HEADER_CHECK(sys/select.h, AC_DEFINE(NEED_SELECT_H))
-AC_HEADER_CHECK(memory.h, AC_DEFINE(NEED_MEMORY_H))
-AC_PID_T
-AC_MODE_T
-AC_SIZE_T
+AC_CHECK_HEADER(sys/bsdtypes.h, AC_DEFINE(NEED_BSDTYPES_H))
+AC_CHECK_HEADER(sys/select.h, AC_DEFINE(NEED_SELECT_H))
+AC_CHECK_HEADER(memory.h, AC_DEFINE(NEED_MEMORY_H))
+AC_TYPE_PID_T
+AC_TYPE_MODE_T
+AC_TYPE_SIZE_T
 AC_STRUCT_TM
-AC_TIMEZONE
+AC_STRUCT_TIMEZONE
 MOO_HAVE_FUNC_LIBS(sqrt, -lm /lib/libm.a "-static -lm")
 MOO_HAVE_FUNC_LIBS(mkfifo waitpid sigemptyset, -lposix /lib/libposix.a)
 MOO_HAVE_FUNC_LIBS(accept, "-lsocket -lnsl" -lsocket -linet)
 MOO_HAVE_FUNC_LIBS(t_open, -lnsl -lnsl_s)
 MOO_HAVE_FUNC_LIBS(crypt, -lcrypt -lcrypt_d)
-AC_HAVE_HEADERS(unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h)
-AC_HAVE_FUNCS(remove rename poll select strerror strftime strtoul matherr)
-AC_HAVE_FUNCS(random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse)
+AC_CHECK_HEADERS(unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h)
+AC_CHECK_FUNCS(remove rename poll select strerror strftime strtoul matherr)
+AC_CHECK_FUNCS(random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse)
 MOO_NDECL_FUNCS(ctype.h, tolower)
 MOO_NDECL_FUNCS(fcntl.h, fcntl)
 MOO_NDECL_FUNCS(netinet/in.h, htonl)
@@ -374,14 +377,14 @@ rm -f conftest*
 
 dnl ***************************************************************************
 echo "checking for incompatibility between <sys/ioctl.h> and <stropts.h>"
-AC_TEST_CPP([
+AC_TRY_CPP([
 #include <sys/ioctl.h>
 #include <stropts.h>
 ], , AC_DEFINE(UNDEF_IO_IN_STROPTS_H))
 
 dnl ***************************************************************************
 echo "checking whether or not fstat() can tell how much data is in a FIFO"
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_TRY_RUN([#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 main()
@@ -405,7 +408,7 @@ main()
 
 dnl ***************************************************************************
 echo "checking whether or not select() can be used on FIFOs"
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_TRY_RUN([#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -441,7 +444,7 @@ main()
 
 dnl ***************************************************************************
 echo "checking whether or not poll() can be used on FIFOs"
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_TRY_RUN([#include <sys/types.h>
 #include <poll.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -462,7 +465,7 @@ main()
 
 dnl ***************************************************************************
 echo checking whether POSIX-style non-blocking I/O works
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_TRY_RUN([#include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -494,17 +497,17 @@ define(MOO_ADD_NET_CONFIG,[
     NETWORK_CONFIGURATIONS="$NETWORK_CONFIGURATIONS $1"])
 NETWORK_CONFIGURATIONS="NP_SINGLE"
 
-AC_HEADER_CHECK(sys/socket.h, [
+AC_CHECK_HEADER(sys/socket.h, [
 	MOO_ADD_NET_CONFIG(NS_BSD/NP_LOCAL)
-	AC_PROGRAM_CHECK(have_telnet, telnet, yes, no)
+	AC_CHECK_PROG(have_telnet, telnet, yes, no)
         test x$have_telnet = xyes && MOO_ADD_NET_CONFIG(NS_BSD/NP_TCP)])
-AC_PROGRAM_EGREP(yes-there-are-FIFOs, [#include <sys/stat.h>
+AC_EGREP_CPP(yes-there-are-FIFOs, [#include <sys/stat.h>
 #if defined(S_IFIFO) && !defined(NeXT) && \
     (SELECT_WORKS_ON_FIFOS || POLL_WORKS_ON_FIFOS || FSTAT_WORKS_ON_FIFOS)
 	yes-there-are-FIFOs
 #endif
 ], MOO_ADD_NET_CONFIG(NS_SYSV/NP_LOCAL))
-AC_PROGRAM_EGREP(yes, [
+AC_EGREP_CPP(yes, [
 #if HAVE_TIUSER_H && HAVE_T_OPEN && HAVE_POLL
 yes
 #endif

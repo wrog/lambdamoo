@@ -2452,3 +2452,7 @@ Version 1.8.3, in progress
 **** Changes relevant to server hackers:
 -- New call_verb2() accepts verb name that is a MOO string (ie, str_ref-able)
 -- str_hash() replaced with a faster (and better?) string hash function
+
+Version X, in progress
+**** Changes relevant to server hackers:
+-- configure script is now generated with autoconf 2.13
