@@ -117,6 +117,31 @@ insert_prop_recursively(Objid root, int root_pos, Pval pv)
     }
 }
 
+static
+char
+is_reserved_property(const char *name)
+{
+#ifdef RESERVED_PROPERTIES
+    static const char *reserved[] = {RESERVED_PROPERTIES};
+    static int hashes[Arraysize(reserved)];
+    static char hashes_init = 0;
+    int i;
+    int hash = str_hash(name);
+
+    if (!hashes_init) {
+	for (i = 0; i < Arraysize(reserved); ++i)
+	    hashes[i] = str_hash(reserved[i]);
+	hashes_init = 1;
+    }
+
+    for (i = 0; i < Arraysize(reserved); ++i)
+	if (hashes[i] == hash && !mystrcasecmp(name, reserved[i]))
+	    return 1;
+
+#endif
+    return 0;
+}
+
 int
 db_add_propdef(Objid oid, const char *pname, Var value, Objid owner,
 	       unsigned flags)
@@ -129,6 +154,9 @@ db_add_propdef(Objid oid, const char *pname, Var value, Objid owner,
     h = db_find_property(oid, pname, 0);
 
     if (h.ptr || property_defined_at_or_below(pname, str_hash(pname), oid))
+	return 0;
+
+    if (is_reserved_property(pname))
 	return 0;
 
     o = dbpriv_find_object(oid);
@@ -164,6 +192,9 @@ db_rename_propdef(Objid oid, const char *old, const char *new)
     int count = props->cur_length;
     int i;
     db_prop_handle h;
+
+    if (is_reserved_property(new))
+	return 0;
 
     for (i = 0; i < count; i++) {
 	Propdef p;

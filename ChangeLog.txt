@@ -2372,3 +2372,9 @@ Version 1.8.0p6
    away with reusing a type like M_VM, but this may break eventually.)
 -- Server hackers should read README.rX for more information on
    changes to server internals.
+
+Version X, in progress
+**** Changes significant to people compiling and running the server:
+-- Specific property names can be reserved, preventing them from being used by
+   new or renamed properties. By default, the "class" property is blocked to
+   ensure future WAIF compatibility.
