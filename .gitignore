@@ -6,6 +6,7 @@ config.log
 config.status
 y.tab.h
 version_src*.h
+keywords.c
 *.o
 moo
 *.db

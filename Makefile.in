@@ -72,7 +72,7 @@ SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) $(HDRS) $(SYSHDRS)
 DISTFILES = $(SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
 	ChangeLog.txt README configure.in configure config.h.in \
-	MOOCodeSequences.txt AddingNewMOOTypes.txt pgperf aclocal.m4
+	MOOCodeSequences.txt AddingNewMOOTypes.txt aclocal.m4
 
 COBJS = $(CSRCS:.c=.o)
 
@@ -116,9 +116,10 @@ y.tab.h: parser.o
 	touch y.tab.h
 
 keywords.c: keywords.gperf
-	pgperf -aCIptT -k1,3,$$ keywords.gperf \
+	gperf -aCptT --ignore-case -k1,3,$$ keywords.gperf \
 		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' \
 		> keywords.c
+	[ -s keywords.c ] || rm keywords.c
 
 dist.tar.Z:	$(DISTFILES)
 	rm -f version_number
@@ -139,7 +140,7 @@ tags:
 	etags -t $(SRCS)
 
 clean:
-	rm -f $(OBJS) $(OPT_NET_OBJS) core parser.c y.tab.c y.tab.h y.output makedep eddep
+	rm -f $(OBJS) $(OPT_NET_OBJS) core parser.c keywords.c y.tab.c y.tab.h y.output makedep eddep
 
 distclean:	clean
 	rm -f config.h Makefile config.status

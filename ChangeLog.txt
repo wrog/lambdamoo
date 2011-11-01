@@ -2485,3 +2485,7 @@ Version 1.8.4, in progress
    version_opt_gen.pl accordingly and rerun it to generate a new
    version_options.h, which then populates the group returned
    by server_version("options").
+
+Version X, in progress
+**** Changes relevant to server hackers:
+-- Makefile now uses gperf (3.0.1+) to generate keywords.c
