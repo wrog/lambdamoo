@@ -2502,3 +2502,7 @@ Version 1.8.4, in progress
    builtin functions can now cause other kinds of aborts
 -- added caching regime for server options other than 
    .protect_<function>
+
+Version X, in progress
+**** Changes relevant to programmers / wizards:
+-- Setting binary mode immediately flushes the connection's buffer, if any

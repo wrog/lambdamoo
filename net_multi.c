@@ -272,16 +272,32 @@ pull_input(nhandle * h)
 	    for (ptr = buffer, end = buffer + count; ptr < end; ptr++) {
 		unsigned char c = *ptr;
 
-		if (isgraph(c) || c == ' ' || c == '\t')
-		    stream_add_char(s, c);
-#ifdef INPUT_APPLY_BACKSPACE
-		else if (c == 0x08 || c == 0x7F)
-		    stream_delete_char(s);
-#endif
-		else if (c == '\r' || (c == '\n' && !h->last_input_was_CR))
-		    server_receive_line(h->shandle, reset_stream(s));
+		if (c == '\r' || (c == '\n' && !h->last_input_was_CR)) {
+		    int fcount = stream_length(s);
+		    char *fptr = reset_stream(s);
+		    Stream *fs = new_stream(count + 1);
+		    int i;
 
-		h->last_input_was_CR = (c == '\r');
+		    h->last_input_was_CR = (c == '\r');
+		    for (i = 0; i < fcount; ++i) {
+			c = fptr[i];
+
+			if (isgraph(c) || c == ' ' || c == '\t')
+			    stream_add_char(fs, c);
+#ifdef INPUT_APPLY_BACKSPACE
+			else if (c == 0x08 || c == 0x7F)
+			    stream_delete_char(fs);
+#endif
+		    }
+		    server_receive_line(h->shandle, stream_contents(fs));
+		    free_stream(fs);
+		}
+		else if (c == '\n')
+		    h->last_input_was_CR = 0;
+		else {
+		    stream_add_char(s, c);
+		    h->last_input_was_CR = 0;
+		}
 	    }
 	}
 	return 1;
@@ -620,6 +636,18 @@ network_set_connection_binary(network_handle nh, int do_binary)
     nhandle *h = nh.ptr;
 
     h->binary = do_binary;
+
+    if (do_binary) {
+	int count = stream_length(h->input);
+
+	if (count) {
+	    Stream *s = new_stream(count + 1);
+	    stream_add_raw_bytes_to_binary(s, reset_stream(h->input), count);
+	    server_receive_line(h->shandle, stream_contents(s));
+	    h->last_input_was_CR = 0;
+	    free_stream(s);
+	}
+    }
 }
 
 #if NETWORK_PROTOCOL == NP_LOCAL
