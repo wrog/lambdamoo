@@ -93,11 +93,7 @@ grew(Stream * s, size_t need)
 		RAISE(stream_too_big, 0);
 	}
     }
-    char *newbuf = mymalloc(newlen, M_STREAM);
-
-    memcpy(newbuf, s->buffer, s->current);
-    myfree(s->buffer, M_STREAM);
-    s->buffer = newbuf;
+    s->buffer = myrealloc(s->buffer, newlen, M_STREAM);
     s->buflen = newlen;
     return 1;
 }
