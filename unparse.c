@@ -271,12 +271,40 @@ unparse_stmt_cond(Stream *str, struct Stmt_Cond cond, int indent)
 static void
 unparse_stmt_list(Stream *str, struct Stmt_List list, int indent)
 {
-    stream_printf(str, "for %s in (", prog->var_names[list.id]);
+    const char *vname = prog->var_names[list.id];
+    Stmt *body = list.body;
+
+    stream_add_string(str, "for ");
+    if (vname[0] == '@' &&
+     body->kind == STMT_EXPR &&
+     body->s.expr->kind == EXPR_ASGN &&
+     body->s.expr->e.bin.rhs->kind == EXPR_ID &&
+     body->s.expr->e.bin.rhs->e.id == list.id &&
+     body->s.expr->e.bin.lhs->kind == EXPR_SCATTER) {
+	unparse_expr(str, body->s.expr->e.bin.lhs);
+	/* NOTE: if programmers are ever allowed to put '@' in their own
+	 *       break/continue statements, this could protentially lead to a
+	 *       decompile-then-recompile inconsistency. For example:
+	 *         for {a, b} in (c)
+	 *           for a in (a)        would continue the *outer* loop
+	 *             continue @a;  <-- initially, but decompile as "continue
+	 *           endfor              a" and then recompile to continue the
+	 *         endfor                inner loop instead
+	 *       This could also happen without extending the syntax, by
+	 *       allowing programmers to modify the bytecode other ways (eg,
+	 *       an assembler/debugger).
+	 */
+	prog->var_names[list.id] = &prog->var_names[list.id][1];
+	body = body->next;
+    } else
+	stream_add_string(str, vname);
+    stream_add_string(str, " in (");
     unparse_expr(str, list.expr);
     stream_add_char(str, ')');
     output(str);
-    unparse_stmt(list.body, indent + 2);
+    unparse_stmt(body, indent + 2);
     indent_stmt(str, indent);
+    prog->var_names[list.id] = vname;
     stream_add_string(str, "endfor");
     output(str);
 }
