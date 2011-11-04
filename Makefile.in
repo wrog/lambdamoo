@@ -120,6 +120,9 @@ keywords.c: keywords.gperf
 		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' \
 		> keywords.c
 
+version_options.h: version_opt_gen.pl options.h
+	perl $< || ( rm -f $@ && false; )
+
 dist.tar.Z:	$(DISTFILES)
 	rm -f version_number
 	grep "server_version = " version.c \
@@ -139,7 +142,7 @@ tags:
 	etags -t $(SRCS)
 
 clean:
-	rm -f $(OBJS) $(OPT_NET_OBJS) core parser.c y.tab.c y.tab.h y.output makedep eddep
+	rm -f $(OBJS) $(OPT_NET_OBJS) core parser.c y.tab.c y.tab.h y.output version_options.h makedep eddep
 
 distclean:	clean
 	rm -f config.h Makefile config.status
