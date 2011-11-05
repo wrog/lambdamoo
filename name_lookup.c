@@ -210,7 +210,7 @@ lookup(int to_intermediary, int from_intermediary)
 	    length = strlen(host_name);
 	    if (write(to_intermediary, &length, sizeof(length)) != sizeof(length))
 		_exit(1);
-	    if (write(to_intermediary, host_name, length) != sizeof(length))
+	    if (write(to_intermediary, host_name, length) != length)
 		_exit(1);
 	}
     }
@@ -292,7 +292,7 @@ intermediary(int to_server, int from_server)
 			len = 0;
 		    }
 		}
-		if (write(to_server, &len, sizeof(len)) != sizeof(addr))
+		if (write(to_server, &len, sizeof(len)) != sizeof(len))
 		    _exit(1);
 		if (len > 0)
 		    if (write(to_server, buffer, len) != len)
