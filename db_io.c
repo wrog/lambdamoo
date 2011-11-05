@@ -52,8 +52,11 @@ dbpriv_set_dbio_input(FILE * f)
 void
 dbio_read_line(char *s, int n)
 {
-    if (!fgets(s, n, input))
-	panic("DBIO_READ_LINE: Read failed");
+    if (!fgets(s, n, input)) {
+	errlog("DBIO_READ_LINE: Error or end of file reading db\n");
+	if (n)
+	    *s = '\0';
+    }
 }
 
 int
