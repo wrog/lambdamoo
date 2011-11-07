@@ -147,6 +147,7 @@ proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
 {
     int timeout = server_int_option("name_lookup_timeout", 5);
     int fd;
+    int optval;
     struct sockaddr_in address;
     int addr_length = sizeof(address);
     static Stream *s = 0;
@@ -163,6 +164,8 @@ proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
 	    return PA_OTHER;
 	}
     }
+    optval = 1;
+    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
     *read_fd = *write_fd = fd;
     stream_printf(s, "%s, port %d",
 		  lookup_name_from_addr(&address, timeout),
@@ -210,6 +213,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
     static Timer_ID id;
     int s, result, length;
     int timeout = server_int_option("name_lookup_timeout", 5);
+    int optval;
     static struct sockaddr_in addr;
     static Stream *st1 = 0, *st2 = 0;
 
@@ -259,6 +263,8 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 	log_perror("Connecting in proto_open_connection");
 	return E_QUOTA;
     }
+    optval = 1;
+    setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
     length = sizeof(addr);
     if (getsockname(s, (struct sockaddr *) &addr, &length) < 0) {
 	close(s);
