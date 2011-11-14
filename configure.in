@@ -172,10 +172,16 @@ define(MOO_HEADER_STANDS_ALONE, [
 changequote(,)dnl
 trfrom='[a-z]./' trto='[A-Z]__'
 changequote([,])dnl
-AC_COMPILE_CHECK(self-sufficiency of $1, [
+AC_MSG_CHECKING(if $1 is self-sufficient)
+AC_TRY_COMPILE([
 #include <$1>
 $2
-], , , AC_DEFINE_UNQUOTED(`echo $1 | tr "$trfrom" "$trto"`_NEEDS_HELP))
+], , [
+	AC_MSG_RESULT(yes)
+], [
+	AC_MSG_RESULT(no)
+	AC_DEFINE_UNQUOTED(`echo $1 | tr "$trfrom" "$trto"`_NEEDS_HELP)
+])
 ])
 
 dnl ***************************************************************************
