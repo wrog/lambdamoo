@@ -8,10 +8,11 @@
 
 include Makefile
 
+semi=;
 version_src.h: $(shell                              \
                                                     \
   [ -x version_hook ] && {                          \
     MAKEOVERRIDES='$(subst ',$$Q,$(MAKEOVERRIDES))' \
-    ./version_hook>/dev/null;                       \
+    ./version_hook>/dev/null${semi}                 \
   } )#'
 
