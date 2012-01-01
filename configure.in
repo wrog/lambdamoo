@@ -511,8 +511,10 @@ NETWORK_CONFIGURATIONS="NP_SINGLE"
 
 AC_CHECK_HEADER(sys/socket.h, [
 	MOO_ADD_NET_CONFIG(NS_BSD/NP_LOCAL)
-	AC_CHECK_PROG(have_telnet, telnet, yes, no)
-        test x$have_telnet = xyes && MOO_ADD_NET_CONFIG(NS_BSD/NP_TCP)])
+	AC_CHECK_HEADER(arpa/inet.h, [
+		MOO_ADD_NET_CONFIG(NS_BSD/NP_TCP)
+	])
+])
 AC_EGREP_CPP(yes-there-are-FIFOs, [#include <sys/stat.h>
 #if defined(S_IFIFO) && !defined(NeXT) && \
     (SELECT_WORKS_ON_FIFOS || POLL_WORKS_ON_FIFOS || FSTAT_WORKS_ON_FIFOS)
