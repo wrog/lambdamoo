@@ -1325,11 +1325,19 @@ run_server_task_setting_id(Objid player, Objid what, const char *verb,
 			   Var args, const char *argstr, Var * result,
 			   int *task_id)
 {
-    db_verb_handle h;
-
     current_task_id = new_task_id();
     if (task_id)
 	*task_id = current_task_id;
+    return run_server_task_in_current_id(player, what, verb, args, argstr,
+					 result);
+}
+
+enum outcome
+run_server_task_in_current_id(Objid player, Objid what, const char *verb,
+			      Var args, const char *argstr, Var * result)
+{
+    db_verb_handle h;
+
     h = db_find_callable_verb(what, verb);
     if (h.ptr)
 	return do_server_verb_task(what, verb, args, h, player, argstr,
