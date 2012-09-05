@@ -25,6 +25,7 @@
 #include "match.h"
 #include "parse_cmd.h"
 #include "storage.h"
+#include "tasks.h"
 #include "unparse.h"
 #include "utils.h"
 
@@ -113,8 +114,8 @@ match_contents(Objid player, const char *name)
 	return d.partial;
 }
 
-Objid
-match_object(Objid player, const char *name)
+static Objid
+server_match_object(Objid player, const char *name)
 {
     if (name[0] == '\0')
 	return NOTHING;
@@ -133,6 +134,12 @@ match_object(Objid player, const char *name)
     if (!mystrcasecmp(name, "here"))
 	return db_object_location(player);
     return match_contents(player, name);
+}
+
+Objid
+match_object(Objid player, const char *name)
+{
+    return server_match_object(player, name);
 }
 
 char rcsid_match[] = "$Id$";
