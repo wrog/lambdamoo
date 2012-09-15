@@ -524,7 +524,8 @@ start_programming(tqueue * tq, char *argstr)
     db_verb_handle h;
     const char *message, *vname;
 
-    h = find_verb_for_programming(tq->player, argstr, &message, &vname);
+    h = find_verb_for_programming(tq->player, tq->handler, argstr, &message,
+				  &vname);
     notify(tq->player, message);
 
     if (h.ptr) {
@@ -686,7 +687,7 @@ do_command_task(tqueue * tq, char *command)
 	    stream_printf(tq->program_stream, "%s\n", command);
     } else {
 	start_new_task(&(tq->last_input_task_id));
-	Parsed_Command *pc = parse_command(command, tq->player);
+	Parsed_Command *pc = parse_command(command, tq->player, tq->handler);
 
 	if (!pc)
 	    return 0;
@@ -1542,7 +1543,7 @@ read_task_queue(void)
 }
 
 db_verb_handle
-find_verb_for_programming(Objid player, const char *verbref,
+find_verb_for_programming(Objid player, Objid handler, const char *verbref,
 			  const char **message, const char **vname)
 {
     char *copy = str_dup(verbref);
@@ -1570,7 +1571,7 @@ find_verb_for_programming(Objid player, const char *verbref,
     if (obj[0] == '$')
 	oid = get_system_object(obj + 1);
     else
-	oid = match_object(player, obj);
+	oid = match_object(player, handler, obj);
 
     if (!valid(oid)) {
 	switch (oid) {

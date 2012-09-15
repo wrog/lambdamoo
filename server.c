@@ -755,7 +755,7 @@ emergency_mode()
 		db_verb_handle h;
 		const char *message, *vname;
 
-		h = find_verb_for_programming(wizard, verbref,
+		h = find_verb_for_programming(wizard, SYSTEM_OBJECT, verbref,
 					      &message, &vname);
 		printf("%s\n", message);
 		if (h.ptr) {
@@ -793,7 +793,7 @@ emergency_mode()
 		db_verb_handle h;
 		const char *message, *vname;
 
-		h = find_verb_for_programming(wizard, verbref,
+		h = find_verb_for_programming(wizard, SYSTEM_OBJECT, verbref,
 					      &message, &vname);
 		if (h.ptr)
 		    unparse_to_file(stdout, db_verb_program(h), 0, 1,
@@ -805,7 +805,7 @@ emergency_mode()
 		db_verb_handle h;
 		const char *message, *vname;
 
-		h = find_verb_for_programming(wizard, verbref,
+		h = find_verb_for_programming(wizard, SYSTEM_OBJECT, verbref,
 					      &message, &vname);
 		if (h.ptr)
 		    disassemble_to_file(stdout, db_verb_program(h));

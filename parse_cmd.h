@@ -39,7 +39,8 @@ typedef struct {
 
 extern char **parse_into_words(char *input, int *nwords);
 extern Var parse_into_wordlist(const char *command);
-extern Parsed_Command *parse_command(const char *command, Objid user);
+extern Parsed_Command *parse_command(const char *command, Objid user,
+				     Objid handler);
 extern void free_parsed_command(Parsed_Command *);
 
 #endif				/* !Parse_Cmd_H */

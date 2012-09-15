@@ -102,7 +102,7 @@ extern int last_input_task_id(Objid player);
 extern void write_task_queue(void);
 extern int read_task_queue(void);
 
-extern db_verb_handle find_verb_for_programming(Objid player,
+extern db_verb_handle find_verb_for_programming(Objid player, Objid handler,
 						const char *verbref,
 						const char **message,
 						const char **vname);

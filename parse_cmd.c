@@ -124,7 +124,7 @@ parse_into_wordlist(const char *command)
 }
 
 Parsed_Command *
-parse_command(const char *command, Objid user)
+parse_command(const char *command, Objid user, Objid handler)
 {
     static Parsed_Command pc;
     const char *argstr;
@@ -216,7 +216,7 @@ parse_command(const char *command, Objid user)
     if (pc.prep != PREP_NONE) {
 	pc.prepstr = build_string(pend - pstart + 1, argv + pstart);
 	pc.iobjstr = build_string(argc - (pend + 1), argv + (pend + 1));
-	pc.iobj = match_object(user, pc.iobjstr);
+	pc.iobj = match_object(user, handler, pc.iobjstr);
     } else {
 	pc.prepstr = str_dup("");
 	pc.iobjstr = str_dup("");
@@ -229,7 +229,7 @@ parse_command(const char *command, Objid user)
 	pc.dobj = NOTHING;
     } else {
 	pc.dobjstr = build_string(dlen, argv + 1);
-	pc.dobj = match_object(user, pc.dobjstr);
+	pc.dobj = match_object(user, handler, pc.dobjstr);
     }
 
     free_str(buf);

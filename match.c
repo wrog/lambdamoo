@@ -138,7 +138,7 @@ server_match_object(Objid player, const char *name)
 }
 
 static int
-db_match_object(Objid player, const char *name, Objid *match)
+db_match_object(Objid player, Objid handler, const char *name, Objid *match)
 {
     Var args, value;
 
@@ -146,7 +146,7 @@ db_match_object(Objid player, const char *name, Objid *match)
     args.v.list[1].type = TYPE_STR;
     args.v.list[1].v.str = str_dup(name);
 
-    if (run_server_task_in_current_id(player, 0, "do_match", args, name,
+    if (run_server_task_in_current_id(player, handler, "do_match", args, name,
 				      &value)
 	== OUTCOME_DONE
 	&& value.type == TYPE_OBJ)
@@ -162,11 +162,11 @@ db_match_object(Objid player, const char *name, Objid *match)
 }
 
 Objid
-match_object(Objid player, const char *name)
+match_object(Objid player, Objid handler, const char *name)
 {
     Objid matched;
 
-    if (db_match_object(player, name, &matched))
+    if (db_match_object(player, handler, name, &matched))
 	return matched;
     return server_match_object(player, name);
 }
