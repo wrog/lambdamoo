@@ -84,10 +84,6 @@ extern void run_ready_tasks(void);
 extern enum outcome run_server_task(Objid player, Objid what,
 				    const char *verb, Var args,
 				    const char *argstr, Var * result);
-extern enum outcome run_server_task_setting_id(Objid player, Objid what,
-					       const char *verb, Var args,
-					       const char *argstr,
-					     Var * result, int *task_id);
 extern enum outcome run_server_task_in_current_id(Objid player, Objid what,
 						  const char *verb,
 						  Var args, const char *argstr,

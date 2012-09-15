@@ -146,7 +146,8 @@ db_match_object(Objid player, const char *name, Objid *match)
     args.v.list[1].type = TYPE_STR;
     args.v.list[1].v.str = str_dup(name);
 
-    if (run_server_task(player, 0, "do_match", args, name, &value)
+    if (run_server_task_in_current_id(player, 0, "do_match", args, name,
+				      &value)
 	== OUTCOME_DONE
 	&& value.type == TYPE_OBJ)
     {
