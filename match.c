@@ -22,9 +22,11 @@
 #include "db.h"
 #include "exceptions.h"
 #include "structures.h"
+#include "list.h"
 #include "match.h"
 #include "parse_cmd.h"
 #include "storage.h"
+#include "tasks.h"
 #include "unparse.h"
 #include "utils.h"
 
@@ -113,8 +115,8 @@ match_contents(Objid player, const char *name)
 	return d.partial;
 }
 
-Objid
-match_object(Objid player, const char *name)
+static Objid
+server_match_object(Objid player, const char *name)
 {
     if (name[0] == '\0')
 	return NOTHING;
@@ -133,6 +135,40 @@ match_object(Objid player, const char *name)
     if (!mystrcasecmp(name, "here"))
 	return db_object_location(player);
     return match_contents(player, name);
+}
+
+static int
+db_match_object(Objid player, Objid handler, const char *name, Objid *match)
+{
+    Var args, value;
+
+    args = new_list(1);
+    args.v.list[1].type = TYPE_STR;
+    args.v.list[1].v.str = str_dup(name);
+
+    if (run_server_task_in_current_id(player, handler, "do_match", args, name,
+				      &value)
+	== OUTCOME_DONE
+	&& value.type == TYPE_OBJ)
+    {
+	*match = value.v.obj;
+
+	free_var(value);
+	return 1;
+    }
+
+    free_var(value);
+    return 0;
+}
+
+Objid
+match_object(Objid player, Objid handler, const char *name)
+{
+    Objid matched;
+
+    if (db_match_object(player, handler, name, &matched))
+	return matched;
+    return server_match_object(player, name);
 }
 
 char rcsid_match[] = "$Id$";

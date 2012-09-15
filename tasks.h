@@ -84,10 +84,10 @@ extern void run_ready_tasks(void);
 extern enum outcome run_server_task(Objid player, Objid what,
 				    const char *verb, Var args,
 				    const char *argstr, Var * result);
-extern enum outcome run_server_task_setting_id(Objid player, Objid what,
-					       const char *verb, Var args,
-					       const char *argstr,
-					     Var * result, int *task_id);
+extern enum outcome run_server_task_in_current_id(Objid player, Objid what,
+						  const char *verb,
+						  Var args, const char *argstr,
+						  Var * result);
 extern enum outcome run_server_program_task(Objid this, const char *verb,
 					    Var args, Objid vloc,
 					    const char *verbname,
@@ -102,7 +102,7 @@ extern int last_input_task_id(Objid player);
 extern void write_task_queue(void);
 extern int read_task_queue(void);
 
-extern db_verb_handle find_verb_for_programming(Objid player,
+extern db_verb_handle find_verb_for_programming(Objid player, Objid handler,
 						const char *verbref,
 						const char **message,
 						const char **vname);

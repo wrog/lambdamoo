@@ -524,7 +524,8 @@ start_programming(tqueue * tq, char *argstr)
     db_verb_handle h;
     const char *message, *vname;
 
-    h = find_verb_for_programming(tq->player, argstr, &message, &vname);
+    h = find_verb_for_programming(tq->player, tq->handler, argstr, &message,
+				  &vname);
     notify(tq->player, message);
 
     if (h.ptr) {
@@ -619,6 +620,14 @@ set_delimiter(char **slot, const char *string)
 }
 
 static int
+start_new_task(int *task_id)
+{
+    current_task_id = new_task_id();
+    if (task_id)
+	*task_id = current_task_id;
+}
+
+static int
 find_verb_on(Objid oid, Parsed_Command * pc, db_verb_handle * vh)
 {
     if (!valid(oid))
@@ -677,7 +686,8 @@ do_command_task(tqueue * tq, char *command)
 	else
 	    stream_printf(tq->program_stream, "%s\n", command);
     } else {
-	Parsed_Command *pc = parse_command(command, tq->player);
+	start_new_task(&(tq->last_input_task_id));
+	Parsed_Command *pc = parse_command(command, tq->player, tq->handler);
 
 	if (!pc)
 	    return 0;
@@ -695,9 +705,9 @@ do_command_task(tqueue * tq, char *command)
 		notify(tq->player, tq->output_prefix);
 
 	    args = parse_into_wordlist(command);
-	    if (run_server_task_setting_id(tq->player, tq->handler,
-					   "do_command", args, command,
-				      &result, &(tq->last_input_task_id))
+	    if (run_server_task_in_current_id(tq->player, tq->handler,
+					      "do_command", args, command,
+					      &result)
 		!= OUTCOME_DONE
 		|| is_true(result)) {
 		/* Do nothing more; we assume :do_command handled it. */
@@ -738,9 +748,9 @@ do_login_task(tqueue * tq, char *command)
 				 */
 
     args = parse_into_wordlist(command);
-    run_server_task_setting_id(tq->player, tq->handler, "do_login_command",
-			       args, command, &result,
-			       &(tq->last_input_task_id));
+    start_new_task(&(tq->last_input_task_id));
+    run_server_task_in_current_id(tq->player, tq->handler, "do_login_command",
+				  args, command, &result);
     if (tq->connected && result.type == TYPE_OBJ && is_user(result.v.obj)) {
 	Objid new_player = result.v.obj;
 	Objid old_player = tq->player;
@@ -1316,20 +1326,17 @@ enum outcome
 run_server_task(Objid player, Objid what, const char *verb, Var args,
 		const char *argstr, Var * result)
 {
-    return run_server_task_setting_id(player, what, verb, args, argstr, result,
-				      0);
+    start_new_task(0);
+    return run_server_task_in_current_id(player, what, verb, args, argstr,
+					 result);
 }
 
 enum outcome
-run_server_task_setting_id(Objid player, Objid what, const char *verb,
-			   Var args, const char *argstr, Var * result,
-			   int *task_id)
+run_server_task_in_current_id(Objid player, Objid what, const char *verb,
+			      Var args, const char *argstr, Var * result)
 {
     db_verb_handle h;
 
-    current_task_id = new_task_id();
-    if (task_id)
-	*task_id = current_task_id;
     h = db_find_callable_verb(what, verb);
     if (h.ptr)
 	return do_server_verb_task(what, verb, args, h, player, argstr,
@@ -1351,7 +1358,7 @@ run_server_program_task(Objid this, const char *verb, Var args, Objid vloc,
 			int debug, Objid player, const char *argstr,
 			Var * result)
 {
-    current_task_id = new_task_id();
+    start_new_task(0);
     return do_server_program_task(this, verb, args, vloc, verbname, program,
 				  progr, debug, player, argstr, result,
 				  1/*traceback*/);
@@ -1536,7 +1543,7 @@ read_task_queue(void)
 }
 
 db_verb_handle
-find_verb_for_programming(Objid player, const char *verbref,
+find_verb_for_programming(Objid player, Objid handler, const char *verbref,
 			  const char **message, const char **vname)
 {
     char *copy = str_dup(verbref);
@@ -1564,7 +1571,7 @@ find_verb_for_programming(Objid player, const char *verbref,
     if (obj[0] == '$')
 	oid = get_system_object(obj + 1);
     else
-	oid = match_object(player, obj);
+	oid = match_object(player, handler, obj);
 
     if (!valid(oid)) {
 	switch (oid) {
