@@ -22,6 +22,7 @@
 #include "db.h"
 #include "exceptions.h"
 #include "structures.h"
+#include "list.h"
 #include "match.h"
 #include "parse_cmd.h"
 #include "storage.h"
@@ -136,9 +137,36 @@ server_match_object(Objid player, const char *name)
     return match_contents(player, name);
 }
 
+static int
+db_match_object(Objid player, const char *name, Objid *match)
+{
+    Var args, value;
+
+    args = new_list(1);
+    args.v.list[1].type = TYPE_STR;
+    args.v.list[1].v.str = str_dup(name);
+
+    if (run_server_task(player, 0, "do_match", args, name, &value)
+	== OUTCOME_DONE
+	&& value.type == TYPE_OBJ)
+    {
+	*match = value.v.obj;
+
+	free_var(value);
+	return 1;
+    }
+
+    free_var(value);
+    return 0;
+}
+
 Objid
 match_object(Objid player, const char *name)
 {
+    Objid matched;
+
+    if (db_match_object(player, name, &matched))
+	return matched;
     return server_match_object(player, name);
 }
 
