@@ -1375,6 +1375,7 @@ do {								\
 		    || to.type != TYPE_INT || from.type != TYPE_INT) {
 		    free_var(to);
 		    free_var(from);
+		    free_var(base);
 		    PUSH_ERROR(E_TYPE);
 		} else {
 		    int len = (base.type == TYPE_STR ? memo_strlen(base.v.str)
