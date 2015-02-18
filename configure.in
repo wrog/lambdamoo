@@ -260,7 +260,7 @@ do
 SAVECC="$CC"
 CC="$CC $opt"
 AC_TEST_PROGRAM([
-int main(int argc, char *argv) { void *ptr; exit(0); }
+int main(int argc, char **argv) { void *ptr; exit(0); }
 ],
 [have_ansi=1
 break],

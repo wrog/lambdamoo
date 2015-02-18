@@ -600,7 +600,7 @@ CC="$CC $opt"
 cat > conftest.c <<EOF
 #include "confdefs.h"
 
-int main(int argc, char *argv) { void *ptr; exit(0); }
+int main(int argc, char **argv) { void *ptr; exit(0); }
 
 EOF
 eval $compile
