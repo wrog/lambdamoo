@@ -600,7 +600,7 @@ CC="$CC $opt"
 cat > conftest.c <<EOF
 #include "confdefs.h"
 
-int main(int argc, char *argv) { void *ptr; exit(0); }
+int main(int argc, char **argv) { void *ptr; exit(0); }
 
 EOF
 eval $compile
@@ -1513,16 +1513,17 @@ for func in tolower
 do
 echo "checking whether $func is declared in ctype.h"
 
-pattern="[^_a-zA-Z0-9]$func *\("
 cat > conftest.c <<EOF
 #include "confdefs.h"
 
 #include <ctype.h>
 
+int main(void) {
+	$func('A');
+}
 
 EOF
-eval "$CPP conftest.c > conftest.out 2>&1"
-if egrep "$pattern" conftest.out >/dev/null 2>&1; then
+if ${CC-cc} conftest.c > conftest.out 2>&1; then
   :
 else
   rm -rf conftest*
@@ -1583,16 +1584,17 @@ for func in htonl
 do
 echo "checking whether $func is declared in netinet/in.h"
 
-pattern="[^_a-zA-Z0-9]$func *\("
 cat > conftest.c <<EOF
 #include "confdefs.h"
 
 #include <netinet/in.h>
 
+int main(void) {
+	$func(1L);
+}
 
 EOF
-eval "$CPP conftest.c > conftest.out 2>&1"
-if egrep "$pattern" conftest.out >/dev/null 2>&1; then
+if ${CC-cc} conftest.c > conftest.out 2>&1; then
   :
 else
   rm -rf conftest*
