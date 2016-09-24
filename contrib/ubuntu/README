@@ -1,0 +1,29 @@
+Ubuntu support for LambdaMOO
+----------------------------
+
+INSTALLATION
+
+* Build LambdaMOO, following the instructions in the README
+* Install `moo` to `/usr/local/bin/moo`
+* Install `moo-server` to `/usr/local/bin/moo-service`
+* Install `moo.service` to `/etc/systemd/system/moo.service`
+* Create a `moo` user and group, and give ownership of `/var/local/moo` to it (I
+  use `adduser --in-group --system moo` for this)
+* Run `systemctl enable moo.service` to start LambdaMOO on boot
+* Run `systemctl start moo.service` to start LambdaMOO immediately
+
+FILES AND DIRECTORIES
+
+This configuration stores its brains in `/var/local/moo`, in three files:
+
+* `recovery.db` is last booted DB.
+* `boot.db` is the database used to bootstrap the server. On boot, it will be
+  copied to `recovery.db` if it exists.
+* `snapshot.db` is the snapshot produced by the server as it runs. On boot, it
+  will be copied to `boot.db` if it exists.
+
+By default, the server will listen on port 7777. Setting `MOO_PORT`, either in
+`moo.service` or in `/etc/default/moo-server`, will configure the server to
+listen on another port.
+
+Feedback and questions to <owen@grimoire.ca>.
