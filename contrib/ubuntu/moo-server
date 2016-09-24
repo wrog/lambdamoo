@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+[ -e /etc/default/moo-server ] && source /etc/default/moo-server
+[ -z ${MOO_DIR} ] || cd "${MOO_DIR}"
+
+[ -e boot.db ]     && cp -a boot.db     recovery.db
+[ -e snapshot.db ] && cp -a snapshot.db boot.db
+
+exec moo boot.db snapshot.db ${MOO_OPTS} -p ${MOO_PORT:-7777}
