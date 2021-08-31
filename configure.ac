@@ -15,13 +15,15 @@ dnl   3333 Coyote Hill Rd.
 dnl   Palo Alto, CA 94304
 dnl   Pavel@Xerox.Com
 dnl
-AC_INIT(Makefile.in)
+AC_INIT
 [if test "x$srcdir" != "x." && test -f "$srcdir/config.status" ; then]
   AC_MSG_ERROR([[clean up the source directory (make distclean) before attempting a VPATH build]])[
 fi]
 
 AC_CONFIG_MACRO_DIR([ac_include])
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_SRCDIR([Minimal.db])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([Makefile])
 
 dnl ***************************************************************************
 dnl Start of actual configuration tests
@@ -35,92 +37,93 @@ AC_ARG_VAR([GPERF],
 [The perfect hash function generator to use.  Defaults to 'gperf'.])
 
 AC_PROG_CC
-AC_GCC_TRADITIONAL
-AC_GNU_SOURCE
-AC_PROGRAM_EGREP(yes, [
-#if __GNUC__==2
-  yes
+AC_PROG_GCC_TRADITIONAL
+AC_USE_SYSTEM_EXTENSIONS
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if __GNUC__<2
+#emote cant use -Wall
 #endif
-], [CC="$CC -Wall -Wwrite-strings"])
+]])], [CC="$CC -Wall -Wwrite-strings"], [])
 test -n "$GCC" && CC="$CC -g"
 AC_PROG_CPP
 MOO_NEXT
 MOO_ALPHA
 MOO_SGI
-AC_AIX
-AC_ISC_POSIX
-AC_MINIX
-AC_SCO_INTL
+AC_SEARCH_LIBS([strerror],[cposix])
+AC_FUNC_STRFTIME
 MOO_AUX
 MOO_HPUX
 MOO_ANSI_C
-MOO_ADD_CFLAGS(-Wall)
-MOO_ADD_CFLAGS(-W)
-MOO_ADD_CFLAGS(-Wwrite-strings)
-MOO_ADD_CFLAGS(-Wpointer-arith)
-MOO_ADD_CFLAGS(-Wbad-function-cast)
-MOO_ADD_CFLAGS(-Wcast-equal)
-MOO_ADD_CFLAGS(-Wstrict-prototypes)
-MOO_ADD_CFLAGS(-Wmissing-prototypes)
-MOO_ADD_CFLAGS(-Wmissing-declarations)
-MOO_ADD_CFLAGS(-Wnested-externs)
-MOO_ADD_CFLAGS(-Winline)
-MOO_ADD_CFLAGS(-Wwrite-strings)
-dnl MOO_ADD_CFLAGS(-Wundef)
-dnl MOO_ADD_CFLAGS(-Wshadow)
-dnl MOO_ADD_CFLAGS(-Wsign-compare)
-MOO_ADD_CFLAGS(-pipe)
-MOO_ADD_CFLAGS(-O3)
+MOO_ADD_CFLAGS([-Wall])
+MOO_ADD_CFLAGS([-W])
+MOO_ADD_CFLAGS([-Wwrite-strings])
+MOO_ADD_CFLAGS([-Wpointer-arith])
+MOO_ADD_CFLAGS([-Wbad-function-cast])
+MOO_ADD_CFLAGS([-Wcast-equal])
+MOO_ADD_CFLAGS([-Wstrict-prototypes])
+MOO_ADD_CFLAGS([-Wmissing-prototypes])
+MOO_ADD_CFLAGS([-Wmissing-declarations])
+MOO_ADD_CFLAGS([-Wnested-externs])
+MOO_ADD_CFLAGS([-Winline])
+MOO_ADD_CFLAGS([-Wwrite-strings])
+dnl MOO_ADD_CFLAGS([-Wundef])
+dnl MOO_ADD_CFLAGS([-Wshadow])
+dnl MOO_ADD_CFLAGS([-Wsign-compare])
+MOO_ADD_CFLAGS([-pipe])
+MOO_ADD_CFLAGS([-O3])
 AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
 AC_SYS_LARGEFILE
-AC_HEADER_CHECK(malloc.h, AC_DEFINE(NEED_MALLOC_H))
-AC_HEADER_CHECK(sys/bsdtypes.h, AC_DEFINE(NEED_BSDTYPES_H))
-AC_HEADER_CHECK(sys/select.h, AC_DEFINE(NEED_SELECT_H))
-AC_HEADER_CHECK(memory.h, AC_DEFINE(NEED_MEMORY_H))
-AC_HEADER_CHECK(inttypes.h, AC_DEFINE(NEED_INTTYPES_H))
-AC_HEADER_CHECK(stdint.h, AC_DEFINE(NEED_STDINT_H))
-AC_PID_T
-AC_MODE_T
-AC_SIZE_T
+AC_CHECK_HEADER([malloc.h],[AC_DEFINE([NEED_MALLOC_H])])
+AC_CHECK_HEADER([sys/bsdtypes.h],[AC_DEFINE([NEED_BSDTYPES_H])])
+AC_CHECK_HEADER([sys/select.h],[AC_DEFINE([NEED_SELECT_H])])
+AC_CHECK_HEADER([memory.h],[AC_DEFINE([NEED_MEMORY_H])])
+AC_CHECK_HEADER([inttypes.h],[AC_DEFINE([NEED_INTTYPES_H])])
+AC_CHECK_HEADER([stdint.h],[AC_DEFINE([NEED_STDINT_H])])
+AC_TYPE_PID_T
+AC_TYPE_MODE_T
+AC_TYPE_SIZE_T
 AC_STRUCT_TM
-AC_TIMEZONE
+AC_STRUCT_TIMEZONE
 MOO_HAVE_FUNC_LIBS(atan2 asinh expm1 erfc j1, -lm /lib/libm.a "-static -lm")
 MOO_HAVE_FUNC_LIBS(mkfifo waitpid sigemptyset, -lposix /lib/libposix.a)
 MOO_HAVE_FUNC_LIBS(accept, "-lsocket -lnsl" -lsocket -linet)
 MOO_HAVE_FUNC_LIBS(t_open, -lnsl -lnsl_s)
 MOO_HAVE_FUNC_LIBS(crypt, -lcrypt -lcrypt_d)
-AC_HAVE_HEADERS(unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h)
-AC_HAVE_FUNCS(remove rename poll select strerror strftime strtoul matherr)
-AC_HAVE_FUNCS(random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse)
-AC_HAVE_FUNCS(strtoimax)
-MOO_NDECL_FUNCS(ctype.h, tolower)
-MOO_NDECL_FUNCS(fcntl.h, fcntl)
-MOO_NDECL_FUNCS(netinet/in.h, htonl)
-dnl *** this next should really be some variety of AC_CHECK_TYPE
-dnl *** but this is just a grep test anyway   --wrog
-AC_CHECK_TYPES(long long)
-AC_CHECK_TYPES(uint8_t)
-AC_CHECK_TYPES(int32_t)
-AC_CHECK_TYPES(int64_t)
+AC_CHECK_HEADERS([unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h])
+AC_CHECK_FUNCS([remove rename poll select strerror strftime strtoul matherr])
+AC_CHECK_FUNCS([random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse])
+AC_CHECK_FUNCS([strtoimax])
+MOO_NDECL_FUNCS([ctype.h], [tolower])
+MOO_NDECL_FUNCS([fcntl.h], [fcntl])
+MOO_NDECL_FUNCS([netinet/in.h], [htonl])
+AC_CHECK_TYPES([long long])
+AC_CHECK_TYPES([uint8_t])
+AC_CHECK_TYPES([int32_t])
+AC_CHECK_TYPES([int64_t])
 AC_CHECK_TYPES([int128_t])
 AC_CHECK_TYPES([__int128])
-MOO_NDECL_VARS(netinet/in.h, in_addr_t)
-MOO_NDECL_FUNCS(sys/ioctl.h, ioctl)
-MOO_NDECL_FUNCS(poll.h, poll)
-MOO_NDECL_FUNCS(signal.h, kill sigemptyset sigprocmask sigrelse)
-MOO_NDECL_FUNCS(sys/socket.h, accept bind shutdown)
-MOO_NDECL_FUNCS(sys/stat.h, fstat)
-MOO_NDECL_FUNCS(stdio.h, fclose perror remove vfprintf)
-MOO_NDECL_FUNCS(stdlib.h, random srandom strtod strtol strtoul)
-MOO_NDECL_FUNCS(string.h, bzero memcpy memset strerror, [
+AC_CHECK_TYPE([in_addr_t], [], [AC_DEFINE([NDECL_IN_ADDR_T])],
+  [[@%:@include <netinet/in.h>]])
+MOO_NDECL_FUNCS([sys/ioctl.h], [ioctl])
+MOO_NDECL_FUNCS([poll.h],      [poll])
+MOO_NDECL_FUNCS([signal.h],    [kill sigemptyset sigprocmask sigrelse])
+MOO_NDECL_FUNCS([sys/socket.h],[accept bind shutdown])
+MOO_NDECL_FUNCS([sys/stat.h],  [fstat])
+MOO_NDECL_FUNCS([stdio.h],  [fclose perror remove vfprintf])
+MOO_NDECL_FUNCS([stdlib.h], [random srandom strtod strtol strtoul])
+MOO_NDECL_FUNCS([string.h], [bzero memcpy memset strerror], [[
 #if NEED_MEMORY_H
 #include <memory.h>
-#endif
-])
-echo checking for bzero being declared in stdlib.h
-MOO_FUNC_DECL_CHECK(stdlib.h, bzero, AC_DEFINE(BZERO_IN_STDLIB_H))
+@%:@endif]])
+AS_IF([test "$ac_cv_have_decl_bzero" = no],
+[AC_MSG_CHECKING([[for bzero being declared in stdlib.h]])[
+  ac_cv_have_decl_bzero=]
+  AC_CHECK_DECL([bzero],
+[AC_MSG_RESULT([yes])
+AC_DEFINE([BZERO_IN_STDLIB_H])], [AC_MSG_RESULT([no])],
+[[@%:@include <stdlib.h>]])])
 MOO_NDECL_FUNCS(sys/time.h, getitimer setitimer select, [
 #if NEED_SELECT_H
 #include <sys/types.h>
@@ -134,37 +137,41 @@ MOO_NDECL_VARS(tiuser.h, t_errlist)
 MOO_NDECL_FUNCS(unistd.h, fork)
 MOO_NDECL_FUNCS(sys/wait.h, waitpid)
 
-MOO_HEADER_STANDS_ALONE(arpa/inet.h, [struct in_addr foo;])
-MOO_HEADER_STANDS_ALONE(signal.h)
-MOO_HEADER_STANDS_ALONE(sys/socket.h)
-MOO_HEADER_STANDS_ALONE(sys/stat.h)
-MOO_HEADER_STANDS_ALONE(time.h)
+MOO_HEADER_STANDS_ALONE([arpa/inet.h], [struct in_addr foo;])
+MOO_HEADER_STANDS_ALONE([signal.h])
+MOO_HEADER_STANDS_ALONE([sys/socket.h])
+MOO_HEADER_STANDS_ALONE([sys/stat.h])
+MOO_HEADER_STANDS_ALONE([time.h])
 
 dnl ***************************************************************************
-echo checking for string.h declaring some functions incorrectly
-echo "
+AC_MSG_CHECKING([[for string.h declaring some functions incorrectly]])[
+cat >conftest.c <<'_MOOEOF'
 #include <sys/types.h>
 #include <string.h>
 #if NEED_MEMORY_H
 #include <memory.h>
 #endif
-" > conftest.c
+_MOOEOF
 $CC $DEFS conftest.c -o conftest $LIBS > conftest.out 2>&1
-if grep "conflicting types for built-in function" conftest.out >/dev/null; then
-  AC_DEFINE(USE_OWN_STRING_H)
+if grep "conflicting types for built-in function" conftest.out >/dev/null; then]
+  AC_MSG_RESULT([yes])
+  AC_DEFINE(USE_OWN_STRING_H)[
+else]
+  AC_MSG_RESULT([no])[
 fi
-rm -f conftest*
+rm -f conftest*]
 
 dnl ***************************************************************************
-echo "checking for incompatibility between <sys/ioctl.h> and <stropts.h>"
-AC_TEST_CPP([
+AC_MSG_CHECKING([[for incompatibility between <sys/ioctl.h> and <stropts.h>]])
+AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #include <sys/ioctl.h>
 #include <stropts.h>
-], , AC_DEFINE(UNDEF_IO_IN_STROPTS_H))
+]])],[AC_MSG_RESULT([no])],[AC_MSG_RESULT([yes])
+AC_DEFINE([UNDEF_IO_IN_STROPTS_H],[1])])
 
 dnl ***************************************************************************
 echo "checking whether or not fstat() can tell how much data is in a FIFO"
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 main()
@@ -184,11 +191,11 @@ main()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-], AC_DEFINE(FSTAT_WORKS_ON_FIFOS))
+]])], [AC_DEFINE([FSTAT_WORKS_ON_FIFOS],[1])], [], [])
 
 dnl ***************************************************************************
 echo "checking whether or not select() can be used on FIFOs"
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -220,11 +227,11 @@ main()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-], AC_DEFINE(SELECT_WORKS_ON_FIFOS))
+]])], [AC_DEFINE([SELECT_WORKS_ON_FIFOS],[1])],[],[])
 
 dnl ***************************************************************************
 echo "checking whether or not poll() can be used on FIFOs"
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
 #include <poll.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -241,11 +248,11 @@ main()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-], AC_DEFINE(POLL_WORKS_ON_FIFOS))
+]])],[AC_DEFINE([POLL_WORKS_ON_FIFOS],[1])],[],[])
 
 dnl ***************************************************************************
 echo checking whether POSIX-style non-blocking I/O works
-AC_TEST_PROGRAM([#include <sys/types.h>
+AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -269,29 +276,32 @@ main ()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-], AC_DEFINE(POSIX_NONBLOCKING_WORKS))
+]])],[AC_DEFINE([POSIX_NONBLOCKING_WORKS],[1])],[],[])
 
 dnl ***************************************************************************
-echo checking which MOO networking configurations are likely to work...
-define(MOO_ADD_NET_CONFIG,[
-    NETWORK_CONFIGURATIONS="$NETWORK_CONFIGURATIONS $1"])
-NETWORK_CONFIGURATIONS="NP_SINGLE"
+AC_MSG_CHECKING([which MOO networking configurations are likely to work])
 
-AC_HEADER_CHECK(sys/socket.h, [
+[NETWORK_CONFIGURATIONS="NP_SINGLE"]
+m4_define(MOO_ADD_NET_CONFIG,
+  [[NETWORK_CONFIGURATIONS="$NETWORK_CONFIGURATIONS $1"]])dnl
+
+AC_CHECK_HEADER([sys/socket.h],[
 	MOO_ADD_NET_CONFIG(NS_BSD/NP_LOCAL)
-	AC_PROGRAM_CHECK(have_telnet, telnet, yes, no)
+	AC_CHECK_PROG([have_telnet],[telnet],[yes],[no])
         test x$have_telnet = xyes && MOO_ADD_NET_CONFIG(NS_BSD/NP_TCP)])
-AC_PROGRAM_EGREP(yes-there-are-FIFOs, [#include <sys/stat.h>
-#if defined(S_IFIFO) && !defined(NeXT) && \
-    (SELECT_WORKS_ON_FIFOS || POLL_WORKS_ON_FIFOS || FSTAT_WORKS_ON_FIFOS)
-	yes-there-are-FIFOs
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/stat.h>
+@%:@if !(defined(S_IFIFO) && !defined(NeXT) && \
+      (SELECT_WORKS_ON_FIFOS || POLL_WORKS_ON_FIFOS || FSTAT_WORKS_ON_FIFOS))
+#emote no FIFOs
 #endif
-], MOO_ADD_NET_CONFIG(NS_SYSV/NP_LOCAL))
-AC_PROGRAM_EGREP(yes, [
-#if HAVE_TIUSER_H && HAVE_T_OPEN && HAVE_POLL
-yes
+]])], [MOO_ADD_NET_CONFIG(NS_SYSV/NP_LOCAL)], [])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if !(HAVE_TIUSER_H && HAVE_T_OPEN && HAVE_POLL)
+#emote no user+open+poll
 #endif
-], test -r /dev/tcp && MOO_ADD_NET_CONFIG(NS_SYSV/NP_TCP))
+]])],[test -r /dev/tcp && MOO_ADD_NET_CONFIG(NS_SYSV/NP_TCP)], [])
+AC_MSG_RESULT([done])
 
 dnl ***************************************************************************
 dnl Find a usable PCRE library
@@ -299,27 +309,32 @@ AC_CHECK_LIB([pcre], [pcre_exec], [], [AC_MSG_ERROR([[missing -lpcre
 *** The PCRE library cannot be found. (must be PCRE1, not PCRE2)
 ***   ('apt-get install libpcre3-dev' in Debian or Ubuntu)
 ***   (Fedora, Red Hat, MacOS homebrew all have 'pcre' packages)]])])
-AC_MSG_CHECKING([whether -lpcre was built with required features])
-AC_RUN_IFELSE([AC_LANG_PROGRAM([[@%:@ include <pcre.h>]],[[
+AC_CACHE_CHECK([[whether -lpcre was built with required features]],
+  [moo_lib_cv_pcre_utf8],
+[AC_RUN_IFELSE([AC_LANG_PROGRAM([[@%:@ include <pcre.h>]],[[
   int have_utf8, have_props;
   pcre_config(PCRE_CONFIG_UTF8, &have_utf8);
   pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &have_props);
   return (have_utf8 && have_props) ? 0 : 1;
-]])], [AC_MSG_RESULT(yes)], [AC_MSG_RESULT(no)
-AC_MSG_ERROR([[-lpcre cannot be used
+]])], [[moo_lib_cv_pcre_utf8=yes]], [[moo_lib_cv_pcre_utf8=no]])])[
+if test "x$moo_lib_cv_pcre_utf8" = xno ; then]
+  AC_MSG_ERROR([[-lpcre cannot be used
 *** The installed PCRE library is missing either support for UTF-8 or support
-*** for Unicode character properties.  We need at least version 8.]])])
-dnl
+*** for Unicode character properties.  We need at least version 8.]])[
+fi]
 
-echo "----------------------------------------------------------------------"
-echo "| The following networking configurations will probably work on your"
-echo "| system; any configuration *not* listed here almost certainly will"
-echo "| *not* work on your system:"
-echo "|"
-echo "|   $NETWORK_CONFIGURATIONS"
-echo "----------------------------------------------------------------------"
-
-AC_OUTPUT(Makefile)
+AC_OUTPUT
+[
+cat <<_MOO_EOF
+----------------------------------------------------------------------
+| The following networking configurations will probably work on your
+| system; any configuration *not* listed here almost certainly will
+| *not* work on your system:
+|
+|   $NETWORK_CONFIGURATIONS
+----------------------------------------------------------------------
+_MOO_EOF
+]
 
 # $Log$
 # Revision 1.2  2004/05/22 01:25:43  wrog
