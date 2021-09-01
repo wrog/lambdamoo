@@ -86,11 +86,15 @@ AC_TYPE_MODE_T
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
-MOO_HAVE_FUNC_LIBS(atan2 asinh expm1 erfc j1, -lm /lib/libm.a "-static -lm")
-MOO_HAVE_FUNC_LIBS(mkfifo waitpid sigemptyset, -lposix /lib/libposix.a)
-MOO_HAVE_FUNC_LIBS(accept, "-lsocket -lnsl" -lsocket -linet)
-MOO_HAVE_FUNC_LIBS(t_open, -lnsl -lnsl_s)
-MOO_HAVE_FUNC_LIBS(crypt, -lcrypt -lcrypt_d)
+MOO_HAVE_FUNC_LIBS([atan2 asinh expm1 erfc j1], [m])
+dnl *** was -lm /lib/libm.a "-static -lm" (is this still needed?)
+MOO_HAVE_FUNC_LIBS([mkfifo waitpid sigemptyset], [posix])
+dnl *** was -lposix /lib/libposix.a (is this still needed?)
+MOO_HAVE_FUNC_LIBS([accept], [socket inet], [nsl])
+dnl *** was "-lsocket -lnsl" -lsocket -linet
+dnl *** (does nsl screw up non-sysV builds?)
+MOO_HAVE_FUNC_LIBS([t_open], [nsl nsl_s])
+MOO_HAVE_FUNC_LIBS([crypt], [crypt crypt_d])
 AC_CHECK_HEADERS([unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h])
 AC_CHECK_FUNCS([remove rename poll select strerror strftime strtoul matherr])
 AC_CHECK_FUNCS([random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse])
@@ -113,29 +117,22 @@ MOO_NDECL_FUNCS([sys/socket.h],[accept bind shutdown])
 MOO_NDECL_FUNCS([sys/stat.h],  [fstat])
 MOO_NDECL_FUNCS([stdio.h],  [fclose perror remove vfprintf])
 MOO_NDECL_FUNCS([stdlib.h], [random srandom strtod strtol strtoul])
-MOO_NDECL_FUNCS([string.h], [bzero memcpy memset strerror], [[
+MOO_NDECL_FUNCS([string.h], [memcpy memset strerror], [[
 #if NEED_MEMORY_H
 #include <memory.h>
 @%:@endif]])
-AS_IF([test "$ac_cv_have_decl_bzero" = no],
-[AC_MSG_CHECKING([[for bzero being declared in stdlib.h]])[
-  ac_cv_have_decl_bzero=]
-  AC_CHECK_DECL([bzero],
-[AC_MSG_RESULT([yes])
-AC_DEFINE([BZERO_IN_STDLIB_H])], [AC_MSG_RESULT([no])],
-[[@%:@include <stdlib.h>]])])
-MOO_NDECL_FUNCS(sys/time.h, getitimer setitimer select, [
+MOO_WHERE_THE_HELL_IS_BZERO()
+MOO_NDECL_FUNCS([sys/time.h], [getitimer setitimer select], [[
 #if NEED_SELECT_H
 #include <sys/types.h>
 #include <sys/select.h>
-#endif
-])
-MOO_NDECL_FUNCS(time.h, strftime time)
-MOO_NDECL_VARS(time.h, tzname)
-MOO_NDECL_FUNCS(tiuser.h, t_open)
-MOO_NDECL_VARS(tiuser.h, t_errlist)
-MOO_NDECL_FUNCS(unistd.h, fork)
-MOO_NDECL_FUNCS(sys/wait.h, waitpid)
+@%:@endif]])
+MOO_NDECL_FUNCS([time.h], [strftime time])
+MOO_NDECL_VARS([time.h], [tzname])
+MOO_NDECL_FUNCS([tiuser.h], [t_open])
+MOO_NDECL_VARS([tiuser.h], [t_errlist])
+MOO_NDECL_FUNCS([unistd.h], [fork])
+MOO_NDECL_FUNCS([sys/wait.h], [waitpid])
 
 MOO_HEADER_STANDS_ALONE([arpa/inet.h], [struct in_addr foo;])
 MOO_HEADER_STANDS_ALONE([signal.h])

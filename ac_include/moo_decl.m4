@@ -1,112 +1,79 @@
 dnl -*- autoconf -*-
 
-dnl ***************************************************************************
-dnl	MOO_FUNC_DECL_CHECK(header, func,
-dnl			    if-declared [, if-not-declared[, extra-hdr]])
-dnl Do `if-declared' is `func' is declared in `header', and if-not-declared
-dnl otherwise.  If `extra-hdr' is provided, it is added after the #include of
-dnl `header'.
-AC_DEFUN([MOO_FUNC_DECL_CHECK], [
-changequote(,)dnl
-pattern="[^_a-zA-Z0-9]$2 *\("
-changequote([,])dnl
-AC_PROGRAM_EGREP($pattern, [
-#include <$1>
-$5
-], $3, $4)])
-
-dnl ***************************************************************************
+dnl ******************************************************************
 dnl 	MOO_NDECL_FUNCS(header, func1 func2 ...[, extra-hdr])
-dnl Defines NDECL_func1, NDECL_func2, ... if they are not declared in header.
+dnl Defines NDECL_func1, NDECL_func2, ... if not declared in header.
+dnl Sets ac_cv_have_decl_{func1,func2,...} if declared
+dnl *** TODO: use AC_CHECK_DECLS but that entails changing
+dnl ***   #ifdef NDECL_func to #if !HAVE_DECL_func everywhere
+dnl *** ALSO if you use this twice for the same function (cf. bzero)
+dnl ***   you need to reset ac_cv_have_decl_FUNC
+dnl ***   otherwise the 2nd check does not happen.   --wrog
+m4_define([_MOO_CHECK_NDECL],
+[AC_CHECK_DECL([$1], [],
+ [AC_DEFINE_UNQUOTED(AS_TR_CPP([NDECL_][$1]))], [$2])
+])dnl -- this NL apparently matters in 2.71
 dnl
-AC_DEFUN([MOO_NDECL_FUNCS], [
-changequote(,)dnl
-trfrom='[a-z]' trto='[A-Z]'
-changequote([,])dnl
-for func in $2
-do
-echo "checking whether $func is declared in $1"
-MOO_FUNC_DECL_CHECK($1, $func, ,
-	AC_DEFINE(NDECL_`echo $func | tr "$trfrom" "$trto"`), $3)
-done
-])
-
-dnl ***************************************************************************
-dnl	MOO_VAR_DECL_CHECK(header, variable,
-dnl			   if-declared [, if-not-declared[, extra-hdr]])
-dnl Do `if-declared' is `variable' is declared in `header', and if-not-declared
-dnl otherwise.  If `extra-hdr' is provided, it is added after the #include of
-dnl `header'.
-AC_DEFUN([MOO_VAR_DECL_CHECK], [
-changequote(,)dnl
-pattern="[^_a-zA-Z0-9]$2"
-changequote([,])dnl
-AC_PROGRAM_EGREP($pattern, [
-#include <$1>
-$5
-], $3, $4)])
-
+AC_DEFUN([MOO_NDECL_FUNCS],
+[m4_map_args_w([$2], [_MOO_CHECK_NDECL(], [,
+[[@%:@include <$1>]
+$3])],[
+])])dnl
+dnl
 dnl ***************************************************************************
 dnl 	MOO_NDECL_VARS(header, var1 var2 ...[, extra-hdr])
 dnl Defines NDECL_var1, NDECL_var2, ... if they are not declared in header.
+dnl Sets ac_cv_have_decl_{var1,var2,...} if declared
+dnl (since AC_CHECK_DECL only checks that the name can be used as an
+dnl  rvalue without causing link errors and so works equally well for
+dnl  vars and funcs, so this is now identical to MOO_NDECL_FUNCS)
+AC_DEFUN([MOO_NDECL_VARS],m4_defn([MOO_NDECL_FUNCS]))dnl
+
+
+dnl ***************************************************************************
+dnl    MOO_WHERE_THE_HELL_IS_BZERO
+dnl It seems bzero() can be just about anywhere.  If we already know
+dnl it will be in the cache (ac_cv_have_decl_bzero), otherwise search
+dnl 'yes' is for the usual place (string.h) and otherwise we
+dnl cdefine NDECL_BZERO and whichever BZERO_IN_<WHATEVER> applies
 dnl
-AC_DEFUN([MOO_NDECL_VARS], [
-changequote(,)dnl
-trfrom='[a-z]' trto='[A-Z]'
-changequote([,])dnl
-for var in $2
-do
-echo "checking whether $var is declared in $1"
-MOO_VAR_DECL_CHECK($1, $var, ,
-	AC_DEFINE(NDECL_`echo $var | tr "$trfrom" "$trto"`), $3)
-done
-])
+AC_DEFUN([MOO_WHERE_THE_HELL_IS_BZERO],
+[AS_IF([[test x"$ac_cv_have_decl_bzero" = x]],
+  [_MOO_WHERE_THE_HELL_IS_BZERO(
+    [[yes]], [[@%:@if NEED_MEMORY_H
+@%:@include <memory.h>
+@%:@endif
+@%:@include <string.h>]],
+    [[strings]],[[@%:@include <strings.h>]],
+    [[stdlib]], [[@%:@include <stdlib.h>]])])
+AS_IF([[test "$ac_cv_have_decl_bzero" != yes]],
+  [AC_DEFINE([NDECL_BZERO])
+AS_CASE([[$ac_cv_have_decl_bzero]],[[
+  strings]],[AC_DEFINE([BZERO_IN_STRINGS_H])],[[
+  stdlib]], [AC_DEFINE([BZERO_IN_STDLIB_H])])])])
+
+m4_define([_MOO_WHERE_THE_HELL_IS_BZERO],
+[m4_ifval([$2],[AS_UNSET([ac_cv_have_decl_bzero])
+AC_CHECK_DECL([bzero],
+  [[ac_cv_have_decl_bzero=]$1],
+  [$0(m4_shift2($@))], [$2])],
+[[ac_cv_have_decl_bzero=no]])])
+
 
 dnl ***************************************************************************
 dnl 	MOO_HEADER_STANDS_ALONE(header [, extra-code])
+dnl Sets moo_cc_cv_hso_HEADER to yes or no accordingly.
 dnl Defines header_NEEDS_HELP if can't be compiled all by itself.
-AC_DEFUN([MOO_HEADER_STANDS_ALONE], [
-changequote(,)dnl
-trfrom='[a-z]./' trto='[A-Z]__'
-changequote([,])dnl
-AC_COMPILE_CHECK(self-sufficiency of $1, [
+dnl
+AC_DEFUN([MOO_HEADER_STANDS_ALONE],
+[AS_VAR_PUSHDEF([_moo_Flag], [moo_cc_cv_hso_$1])dnl
+AC_CACHE_CHECK([for self-sufficiency of $1], m4_dquote(_moo_Flag),
+ 	       [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <$1>
 $2
-], , , AC_DEFINE(`echo $1 | tr "$trfrom" "$trto"`_NEEDS_HELP))
-])
-
-dnl LambdaMOO-specific version of AC_FUNC_CHECK, uses <assert.h> instead of
-dnl <ctype.h>, since OSF/1's <ctype.h> includes <sys/types.h> which includes
-dnl <sys/select.h> which declares select() correctly in conflict with the
-dnl bogus `extern char foo();' declaration below.  This change is adapted
-dnl from autoconf-2.4, which we ought to start using at some point.
-dnl
-m4_undefine([AC_FUNC_CHECK])dnl
-m4_define([AC_FUNC_CHECK],
-[ifelse([$3], , [AC_COMPILE_CHECK($1, [#include <assert.h>], [
-/* The GNU C library defines this for functions which it implements
-    to always fail with ENOSYS.  Some functions are actually named
-    something starting with __ and the normal name is an alias.  */
-#if defined (__stub_$1) || defined (__stub___$1)
-choke me
-#else
-/* Override any gcc2 internal prototype to avoid an error.  */
-extern char $1(); $1();
-#endif
-],
-$2)], [AC_COMPILE_CHECK($1, [#include <assert.h>], [
-/* The GNU C library defines this for functions which it implements
-    to always fail with ENOSYS.  Some functions are actually named
-    something starting with __ and the normal name is an alias.  */
-#if defined (__stub_$1) || defined (__stub___$1)
-choke me
-#else
-/* Override any gcc2 internal prototype to avoid an error.  */
-extern char $1(); $1();
-#endif
-],
-$2, $3)])dnl
-])dnl
+]],[[]])],[AS_VAR_SET(m4_dquote(_moo_Flag),[yes])],[AS_VAR_SET(m4_dquote(_moo_Flag),[no])])])
+AS_VAR_IF(m4_dquote(_moo_Flag),[no],[AC_DEFINE_UNQUOTED(AS_TR_CPP([$1][_NEEDS_HELP]))])
+AS_VAR_POPDEF([_moo_Flag])])dnl
 
 dnl ***************************************************************************
 dnl	MOO_HAVE_FUNC_LIBS(func1 func2 ..., lib1 "lib2a lib2b" lib3 ...)
@@ -114,48 +81,10 @@ dnl For each `func' in turn, if `func' is defined using the current LIBS value,
 dnl leave LIBS alone.  Otherwise, try adding each of the given libs to LIBS in
 dnl turn, stopping when one of them succeeds in providing `func'.  Define
 dnl HAVE_func if `func' is eventually found.
-define(MOO_HAVE_FUNC_LIBS, [
-for func in $1
-do
-  changequote(,)dnl
-  trfrom='[a-z]' trto='[A-Z]'
-  var=HAVE_`echo $func | tr "$trfrom" "$trto"`
-  changequote([,])dnl
-  AC_FUNC_CHECK($func, AC_DEFINE_UNQUOTED($var), [
-    SAVELIBS="$LIBS"
-    for lib in $2
-    do
-      LIBS="$LIBS $lib"
-      AC_FUNC_CHECK($func, [AC_DEFINE_UNQUOTED($var)
-			 break],
-		    LIBS="$SAVELIBS")
-    done
-    ])
-done
-])
+dnl
+m4_define([_MOO_HAVE_FUNC_LIBS],
+ [AC_SEARCH_LIBS([$1], [$2],
+   [AC_DEFINE_UNQUOTED(AS_TR_CPP([HAVE_$1]),[1])], [], [$3])])dnl
 
-dnl ***************************************************************************
-dnl	MOO_HAVE_HEADER_DIRS(header1 header2 ..., dir1 dir2 ...)
-dnl For each `header' in turn, if `header' is found using the current CC value
-dnl leave CC alone.  Otherwise, try adding each of the given `dir's to CC in
-dnl turn, stopping when one of them succeeds in providing `header'.  Define
-dnl HAVE_header if `header' is eventually found.
-define(MOO_HAVE_HEADER_DIRS, [
-for hdr in $1
-do
-  changequote(,)dnl
-  trfrom='[a-z]./' trto='[A-Z]__'
-  var=HAVE_`echo $hdr | tr "$trfrom" "$trto"`
-  changequote([,])dnl
-  AC_HEADER_CHECK($hdr, AC_DEFINE($var), [
-    SAVECC="$CC"
-    for dir in $2
-    do
-      CC="$CC $dir"
-      AC_HEADER_CHECK($hdr, [AC_DEFINE($var)
-			     break],
-		      CC="$SAVECC")
-    done
-    ])
-done
-])
+AC_DEFUN([MOO_HAVE_FUNC_LIBS],
+ [m4_map_args_w([$1], [_$0(], [, [$2], [$3])])])dnl
