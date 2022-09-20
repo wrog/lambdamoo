@@ -342,6 +342,8 @@ AC_CHECK_TYPES(long long)
 AC_CHECK_TYPES(uint8_t)
 AC_CHECK_TYPES(int32_t)
 AC_CHECK_TYPES(int64_t)
+AC_CHECK_TYPES([int128_t])
+AC_CHECK_TYPES([__int128])
 MOO_NDECL_VARS(netinet/in.h, in_addr_t)
 MOO_NDECL_FUNCS(sys/ioctl.h, ioctl)
 MOO_NDECL_FUNCS(poll.h, poll)
@@ -614,7 +616,3 @@ AC_OUTPUT(Makefile)
 #
 # Revision 1.2  1992/10/21  03:09:41  pavel
 # Added this log.
-
-# Local Variables:
-# mode: c
-# End:

@@ -84,7 +84,7 @@ ALL_SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) \
 
 DISTFILES = $(ALL_SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
-	ChangeLog.txt README configure.in configure config.h.in \
+	ChangeLog.txt README configure.ac configure config.h.in \
 	aclocal.m4 \
 	MOOCodeSequences.txt AddingNewMOOTypes.txt
 
@@ -114,7 +114,7 @@ client_sysv: client_sysv.o
 restart:
 	touch restart
 
-configure: configure.in
+configure: configure.ac
 	autoconf
 
 config.status: configure
