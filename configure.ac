@@ -37,14 +37,15 @@ AC_ARG_VAR([GPERF],
 [The perfect hash function generator to use.  Defaults to 'gperf'.])
 
 AC_PROG_CC
-AC_PROG_GCC_TRADITIONAL
+dnl  prior to 2.70 only tests for C89
+dnl    and AC_PROG_CC_C99 is needed to test for C99
+dnl  2.70+ rolled that behavior into AC_PROG_CC
+dnl    and made AC_PROG_CC_C99 immediately obsolete; nice!
+m4_version_prereq([2.70],[],[AC_PROG_CC_C99])[
+test x$ac_cv_prog_cc_c99 = xno &&]
+  AC_MSG_ERROR([[We need a C compiler that knows about C99]])dnl
+
 AC_USE_SYSTEM_EXTENSIONS
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if __GNUC__<2
-#emote cant use -Wall
-#endif
-]])], [CC="$CC -Wall -Wwrite-strings"], [])
-test -n "$GCC" && CC="$CC -g"
 AC_PROG_CPP
 MOO_NEXT
 MOO_ALPHA
@@ -54,11 +55,11 @@ AC_FUNC_STRFTIME
 MOO_AUX
 MOO_HPUX
 MOO_ADD_CFLAGS([-Wall])
-MOO_ADD_CFLAGS([-W])
-MOO_ADD_CFLAGS([-Wwrite-strings])
-MOO_ADD_CFLAGS([-Wpointer-arith])
+MOO_ADD_CFLAGS([-Wextra],[-W])
+MOO_ADD_CFLAGS([-Wwritable-strings],[-Wwrite-strings])
+MOO_ADD_CFLAGS([-Wgnu-pointer-arith],[-Wpointer-arith])
 MOO_ADD_CFLAGS([-Wbad-function-cast])
-MOO_ADD_CFLAGS([-Wcast-equal])
+dnl MOO_ADD_CFLAGS([-Wcast-qual])
 MOO_ADD_CFLAGS([-Wstrict-prototypes])
 MOO_ADD_CFLAGS([-Wmissing-prototypes])
 MOO_ADD_CFLAGS([-Wmissing-declarations])
