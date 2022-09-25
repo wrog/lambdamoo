@@ -21,6 +21,8 @@
 extern enum error validate_verb_descriptor(Var desc);
 extern db_verb_handle find_described_verb(Objid oid, Var desc);
 
+extern void register_verbs(void);
+
 /*
  * $Log$
  * Revision 1.3  1998/12/14 13:19:17  nop

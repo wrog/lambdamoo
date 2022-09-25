@@ -102,6 +102,8 @@ void re_compile_fastmap(regexp_t compiled);
    the calling program must have initialized the fastmap field to point
    to an array of 256 characters. */
 
+#ifdef UNUSED
+
 char *re_comp(char *s);
 /* BSD 4.2 regex library routine re_comp.  This compiles the regexp into
    an internal buffer.  This returns NULL if the regexp was compiled
@@ -111,6 +113,8 @@ int re_exec(char *s);
 /* BSD 4.2 regexp library routine re_exec.  This returns true if the string
    matches the regular expression (that is, a matching part is found
    anywhere in the string). */
+
+#endif
 
 #endif				/* REGEXPR_H */
 

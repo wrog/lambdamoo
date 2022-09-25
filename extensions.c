@@ -139,7 +139,7 @@ bf_read_stdin(Var arglist, Byte next, void *vdata, Objid progr)
 #endif				/* EXAMPLE */
 
 void
-register_extensions()
+register_extensions(void)
 {
 #if EXAMPLE
     register_task_queue(stdin_enumerator);

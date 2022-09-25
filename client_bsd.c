@@ -30,7 +30,7 @@
 #include "config.h"
 #include "options.h"
 
-void
+int
 main(int argc, char **argv)
 {
     const char *connect_file = DEFAULT_CONNECT_FILE;

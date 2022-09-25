@@ -113,7 +113,7 @@ extern int task_timed_out;
 extern void abort_running_task(void);
 extern void print_error_backtrace(const char *, void (*)(const char *));
 extern void output_to_log(const char *);
-extern Objid caller();
+extern Objid caller(void);
 
 extern void write_activ_as_pi(activation);
 extern int read_activ_as_pi(activation *);
@@ -125,6 +125,8 @@ Var *reorder_rt_env(Var * old_rt_env, const char **old_names,
 		    int old_size, Program * prog);
 extern void write_activ(activation a);
 extern int read_activ(activation * a, int which_vector);
+
+extern void register_execute(void);
 
 #endif
 

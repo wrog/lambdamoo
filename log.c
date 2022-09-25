@@ -40,7 +40,7 @@ set_log_file(FILE * f)
 
 int log_pcount = 5000;
 static time_t log_prev = 0;
-int log_report_progress_cktime()
+int log_report_progress_cktime(void)
 {
     time_t now = time(0);
     log_pcount = 5000;
@@ -99,7 +99,7 @@ static Stream *command_history = 0;
 #endif
 
 void
-reset_command_history()
+reset_command_history(void)
 {
 #ifdef LOG_COMMANDS
     if (command_history == 0)
@@ -110,7 +110,7 @@ reset_command_history()
 }
 
 void
-log_command_history()
+log_command_history(void)
 {
 #ifdef LOG_COMMANDS
     errlog("COMMAND HISTORY:\n%s", stream_contents(command_history));

@@ -36,7 +36,7 @@ static int pool_size, next_pool_slot;
 static struct entry *pool;
 
 void
-begin_code_allocation()
+begin_code_allocation(void)
 {
     pool_size = 10;
     next_pool_slot = 0;

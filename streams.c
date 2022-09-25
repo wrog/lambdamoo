@@ -46,13 +46,13 @@ size_t stream_alloc_maximum = 0;
 static int allow_stream_exceptions = 0;
 
 void
-enable_stream_exceptions()
+enable_stream_exceptions(void)
 {
     ++allow_stream_exceptions;
 }
 
 void
-disable_stream_exceptions()
+disable_stream_exceptions(void)
 {
     --allow_stream_exceptions;
 }

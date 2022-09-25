@@ -30,7 +30,7 @@ extern int cancel_timer(Timer_ID);
 extern void reenable_timers(void);
 extern unsigned timer_wakeup_interval(Timer_ID);
 extern void timer_sleep(unsigned seconds);
-extern int virtual_timer_available();
+extern int virtual_timer_available(void);
 
 #endif				/* !Timers_H */
 

@@ -23,6 +23,7 @@
 #include "my-unistd.h"
 #include "my-stdio.h"
 #include "my-stdlib.h"
+#include "my-string.h"
 
 #include "config.h"
 #include "db.h"
@@ -71,7 +72,7 @@ write_verbdef(Verbdef * v)
 }
 
 static Propdef
-read_propdef()
+read_propdef(void)
 {
     const char *name = dbio_read_string_intern();
     return dbpriv_new_propdef(name);
@@ -220,7 +221,7 @@ write_object(Objid oid)
 /*********** File-level Input ***********/
 
 static int
-validate_hierarchies()
+validate_hierarchies(void)
 {
     Objid oid;
     Objid size = db_last_used_objid() + 1;
@@ -729,7 +730,7 @@ db_disk_size(void)
 }
 
 void
-db_shutdown()
+db_shutdown(void)
 {
     dump_database(DUMP_SHUTDOWN);
 

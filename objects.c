@@ -173,7 +173,7 @@ bf_move_write(void *vdata)
 }
 
 static void *
-bf_move_read()
+bf_move_read(void)
 {
     struct bf_move_data *data = alloc_data(sizeof(*data));
 

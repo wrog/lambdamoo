@@ -2180,7 +2180,7 @@ setup_task_execution_limits(int is_fg)
     return task_alarm_id;
 }
 
-enum outcome
+static enum outcome
 run_interpreter(char raise, enum error e,
 		Var * result, int is_fg, int do_db_tracebacks)
     /* raise is boolean, true iff an error should be raised.
@@ -2236,7 +2236,7 @@ run_interpreter(char raise, enum error e,
 
 
 Objid
-caller()
+caller(void)
 {
     return RUN_ACTIV.this;
 }

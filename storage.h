@@ -44,7 +44,7 @@ extern char *str_dup(const char *);
 extern const char *str_ref(const char *);
 extern Var memory_usage(void);
 
-extern void myfree(void *where, Memory_Type type);
+extern void myfree(const void *where, Memory_Type type);
 extern void *mymalloc(unsigned size, Memory_Type type);
 extern void *myrealloc(void *where, unsigned size, Memory_Type type);
 

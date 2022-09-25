@@ -195,7 +195,7 @@ static const char *binop_string[SizeOf_Expr_Kind];
 static int expr_tables_initialized = 0;
 
 static void
-init_expr_tables()
+init_expr_tables(void)
 {
     int i;
 

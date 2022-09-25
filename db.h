@@ -481,7 +481,7 @@ extern db_verb_handle db_find_defined_verb(Objid oid, const char *verb,
 				 * leave the handle intact.
 				 */
 
-extern db_verb_handle db_find_indexed_verb(Objid oid, unsigned index);
+extern db_verb_handle db_find_indexed_verb(Objid oid, unsigned idx);
 				/* Returns a handle on the 1-based INDEX'th
 				 * verb defined on OID.  The `ptr' in the
 				 * result is null iff there is no such verb.
