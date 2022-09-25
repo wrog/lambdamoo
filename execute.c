@@ -210,7 +210,6 @@ unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 	void *bi_func_data = 0;
 	int bi_func_pc;
 	unsigned bi_func_id = 0;
-	Objid player;
 	Var v, *goal = a->base_rt_stack;
 
 	if (why == FIN_EXIT)
@@ -262,7 +261,6 @@ unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 	    bi_func_id = a->bi_func_id;
 	    bi_func_data = a->bi_func_data;
 	}
-	player = a->player;
 	free_activation(a, 0);	/* 0 == don't free bi_func_data */
 
 	if (top_activ_stack == 0) {	/* done */
@@ -2086,7 +2084,7 @@ static int timeouts_enabled = 1;	/* set to 0 in debugger to disable
 					   timeouts */
 
 static void
-task_timeout(Timer_ID id, Timer_Data data)
+task_timeout(Timer_ID id UNUSED_, Timer_Data data UNUSED_)
 {
     task_timed_out = timeouts_enabled;
 }
@@ -2448,7 +2446,7 @@ bf_call_function_read(void)
 }
 
 static package
-bf_raise(Var arglist, Byte next, void *vdata, Objid progr)
+bf_raise(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     package p;
     int nargs = arglist.v.list[0].v.num;
@@ -2469,7 +2467,7 @@ bf_raise(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_suspend(Var arglist, Byte next, void *vdata, Objid progr)
+bf_suspend(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     static int seconds;
     int nargs = arglist.v.list[0].v.num;
@@ -2487,7 +2485,7 @@ bf_suspend(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_read(Var arglist, Byte next, void *vdata, Objid progr)
+bf_read(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     int argc = arglist.v.list[0].v.num;
     static Objid connection;
@@ -2525,7 +2523,7 @@ bf_read(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_seconds_left(Var arglist, Byte next, void *vdata, Objid progr)
+bf_seconds_left(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
     r.type = TYPE_INT;
@@ -2535,7 +2533,7 @@ bf_seconds_left(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_ticks_left(Var arglist, Byte next, void *vdata, Objid progr)
+bf_ticks_left(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
     r.type = TYPE_INT;
@@ -2545,7 +2543,7 @@ bf_ticks_left(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_pass(Var arglist, Byte next, void *vdata, Objid progr)
+bf_pass(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     enum error e = call_verb2(RUN_ACTIV.this, RUN_ACTIV.verb, arglist, 1);
 
@@ -2557,7 +2555,7 @@ bf_pass(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_set_task_perms(Var arglist, Byte next, void *vdata, Objid progr)
+bf_set_task_perms(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {				/* (player) */
     /* warning!!  modifies top activation */
     Objid oid = arglist.v.list[1].v.obj;
@@ -2572,7 +2570,7 @@ bf_set_task_perms(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_caller_perms(Var arglist, Byte next, void *vdata, Objid progr)
+bf_caller_perms(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* () */
     Var r;
     r.type = TYPE_OBJ;
@@ -2585,7 +2583,7 @@ bf_caller_perms(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_callers(Var arglist, Byte next, void *vdata, Objid progr)
+bf_callers(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     int line_numbers_too = 0;
 
@@ -2598,7 +2596,7 @@ bf_callers(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_task_stack(Var arglist, Byte next, void *vdata, Objid progr)
+bf_task_stack(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     int nargs = arglist.v.list[0].v.num;
     int id = arglist.v.list[1].v.num;

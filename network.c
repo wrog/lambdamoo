@@ -25,20 +25,26 @@
 #  include "net_multi.c"
 #endif
 
+#if NETWORK_PROTOCOL == NP_TCP
+#  define TCP_ONLY
+#else
+#  define TCP_ONLY UNUSED_
+#endif
+
 Var
-network_connection_options(network_handle nh, Var list)
+network_connection_options(network_handle nh TCP_ONLY, Var list)
 {
     CONNECTION_OPTION_LIST(NETWORK_CO_TABLE, nh, list);
 }
 
 int
-network_connection_option(network_handle nh, const char *option, Var * value)
+network_connection_option(network_handle nh TCP_ONLY, const char *option TCP_ONLY, Var * value TCP_ONLY)
 {
     CONNECTION_OPTION_GET(NETWORK_CO_TABLE, nh, option, value);
 }
 
 int
-network_set_connection_option(network_handle nh, const char *option, Var value)
+network_set_connection_option(network_handle nh TCP_ONLY, const char *option TCP_ONLY, Var value TCP_ONLY)
 {
     CONNECTION_OPTION_SET(NETWORK_CO_TABLE, nh, option, value);
 }

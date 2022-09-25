@@ -399,7 +399,7 @@ dbio_write_var(Var v)
 }
 
 static void
-receiver(void *data, const char *line)
+receiver(void *data UNUSED_, const char *line)
 {
     dbio_printf("%s\n", line);
 }

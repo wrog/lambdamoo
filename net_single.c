@@ -48,7 +48,7 @@ network_usage_string(void)
 }
 
 int
-network_initialize(int argc, char **argv, Var * desc)
+network_initialize(int argc, char **argv UNUSED_, Var * desc)
 {
     *desc = zero;
     if (argc != 0)
@@ -58,7 +58,8 @@ network_initialize(int argc, char **argv, Var * desc)
 }
 
 enum error
-network_make_listener(server_listener sl, Var desc, network_listener * nl,
+network_make_listener(server_listener sl, Var desc UNUSED_,
+		      network_listener * nl,
 		      Var * canon, const char **name)
 {
     if (listening)
@@ -73,13 +74,14 @@ network_make_listener(server_listener sl, Var desc, network_listener * nl,
 }
 
 int
-network_listen(network_listener nl)
+network_listen(network_listener nl UNUSED_)
 {
     return 1;
 }
 
 int
-network_send_line(network_handle nh, const char *line, int flush_ok)
+network_send_line(network_handle nh UNUSED_, const char *line,
+		  int flush_ok UNUSED_)
 {
     printf("%s\n", line);
     fflush(stdout);
@@ -88,8 +90,8 @@ network_send_line(network_handle nh, const char *line, int flush_ok)
 }
 
 int
-network_send_bytes(network_handle nh, const char *buffer, int buflen,
-		   int flush_ok)
+network_send_bytes(network_handle nh UNUSED_, const char *buffer, int buflen,
+		   int flush_ok UNUSED_)
 {
     /* Cast to (void *) to discard `const' on some systems */
     fwrite((void *) buffer, sizeof(char), buflen, stdout);
@@ -99,19 +101,19 @@ network_send_bytes(network_handle nh, const char *buffer, int buflen,
 }
 
 int
-network_buffered_output_length(network_handle nh)
+network_buffered_output_length(network_handle nh UNUSED_)
 {
     return 0;
 }
 
 const char *
-network_connection_name(network_handle nh)
+network_connection_name(network_handle nh UNUSED_)
 {
     return "standard input";
 }
 
 void
-network_set_connection_binary(network_handle nh, int do_binary)
+network_set_connection_binary(network_handle nh UNUSED_, int do_binary)
 {
     binary = do_binary;
 }
@@ -121,13 +123,13 @@ network_set_connection_binary(network_handle nh, int do_binary)
 
 
 void
-network_close(network_handle nh)
+network_close(network_handle nh UNUSED_)
 {
     state = STATE_CLOSED;
 }
 
 void
-network_close_listener(network_listener nl)
+network_close_listener(network_listener nl UNUSED_)
 {
     listening = 0;
 }
@@ -145,13 +147,13 @@ network_shutdown(void)
 static int input_suspended = 0;
 
 void
-network_suspend_input(network_handle nh)
+network_suspend_input(network_handle nh UNUSED_)
 {
     input_suspended = 1;
 }
 
 void
-network_resume_input(network_handle nh)
+network_resume_input(network_handle nh UNUSED_)
 {
     input_suspended = 0;
 }

@@ -1599,7 +1599,7 @@ find_verb_for_programming(Objid player, const char *verbref,
 }
 
 static package
-bf_queue_info(Var arglist, Byte next, void *vdata, Objid progr)
+bf_queue_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     int nargs = arglist.v.list[0].v.num;
     Var res;
@@ -1637,7 +1637,7 @@ bf_queue_info(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_task_id(Var arglist, Byte next, void *vdata, Objid progr)
+bf_task_id(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
     r.type = TYPE_INT;
@@ -1789,7 +1789,7 @@ struct qcl_data {
 };
 
 static task_enum_action
-counting_closure(vm the_vm, const char *status, void *data)
+counting_closure(vm the_vm, const char *status UNUSED_, void *data)
 {
     struct qcl_data *qdata = data;
 
@@ -1815,7 +1815,7 @@ listing_closure(vm the_vm, const char *status, void *data)
 }
 
 static package
-bf_queued_tasks(Var arglist, Byte next, void *vdata, Objid progr)
+bf_queued_tasks(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     Var tasks;
     int show_all = is_wizard(progr);
@@ -1905,7 +1905,7 @@ struct fcl_data {
 };
 
 static task_enum_action
-finding_closure(vm the_vm, const char *status, void *data)
+finding_closure(vm the_vm, const char *status UNUSED_, void *data)
 {
     struct fcl_data *fdata = data;
 
@@ -1964,7 +1964,7 @@ struct kcl_data {
 };
 
 static task_enum_action
-killing_closure(vm the_vm, const char *status, void *data)
+killing_closure(vm the_vm, const char *status UNUSED_, void *data)
 {
     struct kcl_data *kdata = data;
 
@@ -2069,7 +2069,7 @@ kill_task(int id, Objid owner)
 }
 
 static package
-bf_kill_task(Var arglist, Byte next, void *vdata, Objid progr)
+bf_kill_task(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     int id = arglist.v.list[1].v.num;
     enum error e = kill_task(id, progr);
@@ -2130,7 +2130,7 @@ do_resume(int id, Var value, Objid progr)
 }
 
 static package
-bf_resume(Var arglist, Byte next, void *vdata, Objid progr)
+bf_resume(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     int nargs = arglist.v.list[0].v.num;
     Var value;
@@ -2147,7 +2147,7 @@ bf_resume(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_output_delimiters(Var arglist, Byte next, void *vdata, Objid progr)
+bf_output_delimiters(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     Var r;
     Objid player = arglist.v.list[1].v.obj;
@@ -2182,7 +2182,7 @@ bf_output_delimiters(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_force_input(Var arglist, Byte next, void *vdata, Objid progr)
+bf_force_input(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {				/* (conn, string [, at_front]) */
     Objid conn = arglist.v.list[1].v.obj;
     const char *line = arglist.v.list[2].v.str;
@@ -2201,7 +2201,7 @@ bf_force_input(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_flush_input(Var arglist, Byte next, void *vdata, Objid progr)
+bf_flush_input(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {				/* (conn [, show_messages]) */
     Objid conn = arglist.v.list[1].v.obj;
     int show_messages = (arglist.v.list[0].v.num > 1
