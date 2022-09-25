@@ -45,6 +45,11 @@ extern int network_set_nonblocking(int fd);
 				 * descriptor FD.  Return true iff successful.
 				 */
 
+extern void network_set_client_echo(network_handle nh, int is_on);
+				/* Emit telnet escape sequence to inform
+				 * client what the echo state should be
+				 */
+
 #endif				/* !Net_Multi_H */
 
 /*

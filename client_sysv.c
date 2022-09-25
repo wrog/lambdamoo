@@ -72,7 +72,7 @@ write_all(int fd, const char *buffer, int length)
     }
 }
 
-void
+int
 main(int argc, char **argv)
 {
     const char *connect_file = DEFAULT_CONNECT_FILE;

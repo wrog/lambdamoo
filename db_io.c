@@ -19,11 +19,13 @@
  * Routines for use by non-DB modules with persistent state stored in the DB
  *****************************************************************************/
 
+#include "config.h"
 #include "my-ctype.h"
 #include <float.h>
 #include "my-stdarg.h"
 #include "my-stdio.h"
 #include "my-stdlib.h"
+#include "my-string.h"
 
 #include "db_io.h"
 #include "db_private.h"

@@ -15,10 +15,12 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#include "config.h"
+
 #include "my-stdio.h"
 
+#include "disassemble.h"
 #include "bf_register.h"
-#include "config.h"
 #include "db.h"
 #include "functions.h"
 #include "list.h"

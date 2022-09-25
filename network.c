@@ -17,6 +17,8 @@
 
 #include "options.h"
 
+#include "network.h"
+
 #if NETWORK_PROTOCOL == NP_SINGLE
 #  include "net_single.c"
 #else

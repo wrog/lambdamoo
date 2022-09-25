@@ -17,6 +17,7 @@
 
 #include "my-ctype.h"
 #include "my-string.h"
+#include "my-math.h"
 
 #include "bf_register.h"
 #include "config.h"
@@ -553,6 +554,10 @@ bf_strsub(Var arglist, Byte next, void *vdata, Objid progr)
     }
 }
 
+#if HAVE_CRYPT
+extern const char *crypt(const char *, const char *);
+#endif
+
 static package
 bf_crypt(Var arglist, Byte next, void *vdata, Objid progr)
 {				/* (string, [salt]) */
@@ -563,7 +568,6 @@ bf_crypt(Var arglist, Byte next, void *vdata, Objid progr)
     const char *saltp;
     static char saltstuff[] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
-    extern const char *crypt(const char *, const char *);
 
     if (arglist.v.list[0].v.num == 1 || memo_strlen(arglist.v.list[2].v.str) < 2) {
 	/* provide a random 2-letter salt, works with old and new crypts */
@@ -669,7 +673,7 @@ static struct pat_cache_entry *pat_cache;
 static struct pat_cache_entry pat_cache_entries[PATTERN_CACHE_SIZE];
 
 static void
-setup_pattern_cache()
+setup_pattern_cache(void)
 {
     int i;
 
@@ -727,7 +731,7 @@ get_pattern(const char *string, int case_matters)
     return entry->pattern;
 }
 
-Var
+static Var
 do_match(Var arglist, int reverse)
 {
     const char *subject, *pattern;
@@ -801,7 +805,7 @@ bf_rmatch(Var arglist, Byte next, void *vdata, Objid progr)
 	return make_var_pack(ans);
 }
 
-int
+static int
 invalid_pair(int num1, int num2, int max)
 {
     if ((num1 == 0 && num2 == -1)
@@ -811,7 +815,7 @@ invalid_pair(int num1, int num2, int max)
 	return 1;
 }
 
-int
+static int
 check_subs_list(Var subs)
 {
     const char *subj;

@@ -38,6 +38,9 @@
 #include <errno.h>
 
 #include "config.h"
+
+#include "name_lookup.h"
+
 #include "log.h"
 #include "server.h"
 #include "storage.h"

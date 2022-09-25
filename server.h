@@ -158,6 +158,7 @@ extern void boot_player(Objid player);
 extern void write_active_connections(void);
 extern int read_active_connections(void);
 
+extern void register_server(void);
 
 
 /* Body for *_connection_option() */

@@ -26,6 +26,7 @@
 #include "program.h"
 #include "storage.h"
 #include "utils.h"
+#include "my-string.h"
 
 static Object **objects;
 static int num_objects = 0;
