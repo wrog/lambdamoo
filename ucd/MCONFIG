@@ -15,7 +15,7 @@ HOST_CFLAGS  = -g -O -I. -W -Wall
 HOST_LDFLAGS =
 HOST_LIBS    =
 
-PERL         = time perl
+PERL         = perl
 
 INSTALL	     = install -c
 INSTALL_LIB  = $(INSTALL) -m 755

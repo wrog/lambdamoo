@@ -13,12 +13,17 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
+# XT_MAKEVARS -----
+ucd_dir = ucd
+XT_DIRS = $(ucd_dir)
+XT_LOBJS = $(ucd_dir)/libucd.a
+
 CC = @CC@
-LIBS = ucd/libucd.a @LIBS@
+LIBS = @LIBS@
 YACC = @YACC@
 
 CFLAGS = @CFLAGS@
-CPPFLAGS = -Iucd @CPPFLAGS@
+CPPFLAGS = -I$(ucd_dir) @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 
 YFLAGS = -d
@@ -79,21 +84,19 @@ OBJS = $(COBJS) $(YOBJS) keywords.o
 
 DFILES = $(OBJS:.o=.d) $(CLIENT_SRCS:.c=.d)
 
-all:
-	cd ucd && $(MAKE) all
-	$(MAKE) moo
+all: moo
 
-moo:	$(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
+moo:	$(OBJS) $(XT_LOBJS)
+	$(CC) $(LDFLAGS) $(OBJS) $(XT_LOBJS) $(LIBS) -o $@
 
 pure_moo: moo
-	purify $(CC) $(CFLAGS) $(OBJS) $(LIBRARIES) -o $@
+	purify $(CC) $(CFLAGS) $(OBJS) $(XT_LOBJS) $(LIBS) -o $@
 
 client_bsd: client_bsd.o
-	$(CC) $(CFLAGS) client_bsd.o $(LIBRARIES) -o $@
+	$(CC) $(CFLAGS) client_bsd.o $(XT_LOBJS) $(LIBS) -o $@
 
 client_sysv: client_sysv.o
-	$(CC) $(CFLAGS) client_sysv.o $(LIBRARIES) -o $@
+	$(CC) $(CFLAGS) client_sysv.o $(XT_LOBJS) $(LIBS) -o $@
 
 # This rule gets around some "make"s' desire to `derive' it from `restart.sh'.
 restart:
@@ -128,7 +131,15 @@ keywords.c: keywords.gperf
 # the only dependences we have to add are
 # those on files that are automatically generated
 keywords.o: y.tab.h
-list.o utf-ctype.o: ucd/ucd.h
+
+# XT_RULES ---------
+$(ucd_dir)/libucd.a:
+	cd $(ucd_dir); $(MAKE) libucd.a
+
+$(ucd_dir)/ucd.h:
+	cd $(ucd_dir); $(MAKE) ucd.h
+
+list.o utf-ctype.o: $(ucd_dir)/ucd.h
 
 dist.tar.Z:	$(DISTFILES)
 	rm -f version_number
