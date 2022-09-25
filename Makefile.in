@@ -74,7 +74,7 @@ SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) $(HDRS) $(SYSHDRS)
 
 DISTFILES = $(SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
-	ChangeLog.txt README configure.in configure config.h.in \
+	ChangeLog.txt README configure.ac configure config.h.in \
 	aclocal.m4 \
 	MOOCodeSequences.txt AddingNewMOOTypes.txt
 
@@ -100,7 +100,7 @@ client_sysv: client_sysv.o
 restart:
 	touch restart
 
-configure: configure.in
+configure: configure.ac
 	# autoconf
 	@echo "Not running autoconf; you must do this by hand."
 	touch configure
