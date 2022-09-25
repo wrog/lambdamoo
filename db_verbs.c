@@ -62,7 +62,7 @@ static const char *prep_list[] =
     "off/off of",
 };
 
-#define NPREPS Arraysize(prep_list)
+#define NPREPS ((db_prep_spec)Arraysize(prep_list))
 
 typedef struct pt_entry {
     int nwords;
@@ -296,7 +296,7 @@ db_delete_verb(db_verb_handle vh)
 
 db_verb_handle
 db_find_command_verb(Objid oid, const char *verb,
-		     db_arg_spec dobj, unsigned prep, db_arg_spec iobj)
+		     db_arg_spec dobj, db_prep_spec prep, db_arg_spec iobj)
 {
     Object *o;
     Verbdef *v;

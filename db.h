@@ -438,7 +438,7 @@ typedef struct {
 } db_verb_handle;
 
 extern db_verb_handle db_find_command_verb(Objid oid, const char *verb,
-					 db_arg_spec dobj, unsigned prep,
+					 db_arg_spec dobj, db_prep_spec prep,
 					   db_arg_spec iobj);
 				/* Returns a handle on the first matching
 				 * verb found defined on OID or one of its
