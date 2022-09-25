@@ -383,12 +383,12 @@ db_find_property(Objid oid, const char *name, Var * value)
     Object *o;
 
     if (!ptable_init) {
-	for (i = 0; i < Arraysize(ptable); i++)
+        for (i = 0; i < (int)Arraysize(ptable); i++)
 	    ptable[i].hash = str_hash(ptable[i].name);
 	ptable_init = 1;
     }
     h.definer = NOTHING;
-    for (i = 0; i < Arraysize(ptable); i++) {
+    for (i = 0; i < (int)Arraysize(ptable); i++) {
 	if (ptable[i].hash == hash && !mystrcasecmp(name, ptable[i].name)) {
 	    static Objid ret;
 
