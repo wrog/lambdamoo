@@ -39,7 +39,7 @@ typedef struct {
     Byte bi_func_pc;		/* next == 0 means a normal activation, which just
 				   returns to the previous activation (caller verb).
 				   next == 1, 2, 3, ... means the returned value should be
-				   fed to the bi_func (as specified in bi_func_id) 
+				   fed to the bi_func (as specified in bi_func_id)
 				   together with the next code. */
     Byte bi_func_id;
     void *bi_func_data;
@@ -128,7 +128,7 @@ extern int read_activ(activation * a, int which_vector);
 
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.8  2004/05/22 01:25:43  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

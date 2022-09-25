@@ -27,7 +27,7 @@ struct gencode
 {
   char **line;                       /* array of text lines, 80 bytes apiece */
   /*
-   * The code placed here must declare "uint32_t rsl" 
+   * The code placed here must declare "uint32_t rsl"
    * and assign it the value of the perfect hash using the function inputs.
    * Later code will be tacked on which returns rsl or manipulates it according
    * to the user directives.

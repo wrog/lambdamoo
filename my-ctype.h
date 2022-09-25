@@ -36,7 +36,7 @@ extern int my_is_printable(int);
 
 #endif				/* !My_Ctype_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:18:07  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

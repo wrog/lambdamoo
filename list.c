@@ -1137,7 +1137,8 @@ bf_encode_binary(Var arglist, Byte next, void *vdata, Objid progr)
 	return make_error_pack(E_INVARG);
 }
 
-static package bf_tochar(Var arglist, Byte next, void *vdata, Objid progr)
+static package
+bf_tochar(Var arglist, Byte next, void *vdata, Objid progr)
 {
     static Stream *s = 0;
     int ucs = 0;
@@ -1178,7 +1179,8 @@ static package bf_tochar(Var arglist, Byte next, void *vdata, Objid progr)
 	return make_var_pack(ans);
 }
 
-static package bf_charname(Var arglist, Byte next, void *vdata, Objid progr)
+static package
+bf_charname(Var arglist, Byte next, void *vdata, Objid progr)
 {
     Var r = arglist.v.list[1];
     const struct unicode_character_data *ucd = 0;
@@ -1200,7 +1202,8 @@ static package bf_charname(Var arglist, Byte next, void *vdata, Objid progr)
     return make_var_pack(ans);
 }
 
-static package bf_ord(Var arglist, Byte next, void *vdata, Objid progr)
+static package
+bf_ord(Var arglist, Byte next, void *vdata, Objid progr)
 {
     Var r = arglist.v.list[1];
     const char *s = r.v.str;
@@ -1402,7 +1405,7 @@ register_list(void)
 
 char rcsid_list[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
@@ -1422,7 +1425,7 @@ char rcsid_list[] = "$Id$";
  *
  * Revision 1.4  1997/07/07 03:24:54  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.3.2.3  1997/07/03 08:04:01  bjj
  * Pattern cache was not storing case_matters flag, causing many patterns to
  * be impossible to find in the cache.

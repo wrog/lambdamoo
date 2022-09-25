@@ -679,7 +679,7 @@ dbpriv_fix_properties_after_chparent(Objid oid, Objid old_parent)
 
 char rcsid_db_properties[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:17:38  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

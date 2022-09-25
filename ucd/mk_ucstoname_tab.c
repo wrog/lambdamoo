@@ -62,10 +62,10 @@ static void read_nameslistoffset(void)
 
   while ( fscanf(f, "%x %d\n", &curr, &offset) == 2 )
     nameslistoffset[curr] = offset;
-    
+
   fclose(f);
 }
-  
+
 
 int32_t hash_to_ucs[PHASHNKEYS];
 static void compute_hash_to_ucs(void)

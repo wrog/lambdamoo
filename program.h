@@ -62,7 +62,7 @@ extern void free_program(Program *);
 
 #endif				/* !Program_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.5  1999/08/16 04:15:13  bjj
  * Lineno computation could be wrong for forked vectors.

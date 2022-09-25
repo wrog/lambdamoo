@@ -53,7 +53,7 @@ static void read_nametoucs_tab(void)
   while ( fgets(line, sizeof line, f) ) {
     if ( (p = strchr(line, '\n')) )
       *p = '\0';
-   
+
     ucs = strtol(line, NULL, 16);
     hash = _libucd_nametoucs_hash(prehash(line+6));
 

@@ -55,6 +55,6 @@ unicode_character_lookup(const char *name)
     errno = EINVAL;
     return NULL;
   }
-  
+
   return ucd;
 }

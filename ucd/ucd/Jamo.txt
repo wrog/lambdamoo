@@ -21,7 +21,7 @@
 # the null string).
 #
 # #############################################################
- 
+
 1100; G   # HANGUL CHOSEONG KIYEOK
 1101; GG  # HANGUL CHOSEONG SSANGKIYEOK
 1102; N   # HANGUL CHOSEONG NIEUN

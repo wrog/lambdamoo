@@ -72,7 +72,7 @@ typedef void *(*bf_read_type) (void);
 #define FUNC_NOT_FOUND   MAX_FUNC
 /* valid function numbers are 0 - 255, or a total of 256 of them.
    function number 256 is reserved for func_not_found signal.
-   hence valid function numbers will fit in one byte but the 
+   hence valid function numbers will fit in one byte but the
    func_not_found signal will not */
 
 extern const char *name_func_by_num(unsigned);
@@ -95,7 +95,7 @@ extern void load_server_options(void);
 
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2001/03/12 03:25:16  bjj
  * Added new package type BI_KILL which kills the task calling the builtin.

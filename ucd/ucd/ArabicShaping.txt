@@ -66,7 +66,7 @@
 # There are currently no characters of type L defined in Unicode.
 #
 # #############################################################
- 
+
 # Unicode; Schematic Name; Joining Type; Joining Group
 
 # Arabic characters

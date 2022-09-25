@@ -20,7 +20,7 @@
 #         "XX", "OP", "CL", "QU", "NS", "EX", "SY",
 #         "IS", "PR", "PO", "NU", "AL", "ID", "IN", "HY",
 #         "BB", "BA", "SA", "AI", "B2"
-#  - All code points, assigned and unassigned, that are not listed 
+#  - All code points, assigned and unassigned, that are not listed
 #         explicitly are given the value "XX".
 #  - Characters ranges are specified as for other property files in
 #         the Unicode Character Database.

@@ -96,7 +96,7 @@ extern void dbio_write_var(Var);
 extern void dbio_write_program(Program *);
 extern void dbio_write_forked_program(Program * prog, int f_index);
 
-/* 
+/*
  * $Log$
  * Revision 1.4  1998/12/14 13:17:35  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

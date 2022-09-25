@@ -233,7 +233,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 	    log_perror("Making socket in proto_open_connection");
 	return E_QUOTA;
     }
-    
+
     if (bind_local_ip != INADDR_ANY) {
 	static struct sockaddr_in local_addr;
 
@@ -251,7 +251,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 	    close(s);
 	    return e;
 	}
-    }	 
+    }
     TRY {
 	id = set_timer(server_int_option("outbound_connect_timeout", 5),
 		       timeout_proc, 0);
@@ -295,7 +295,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 
 char rcsid_net_bsd_tcp[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2007/11/12 11:00:18  wrog
  * fix unsigned-ness compiler warning

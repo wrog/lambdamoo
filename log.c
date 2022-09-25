@@ -161,7 +161,7 @@ register_log(void)
 
 char rcsid_log[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2004/05/22 01:25:43  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

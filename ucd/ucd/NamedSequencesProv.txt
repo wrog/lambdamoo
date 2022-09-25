@@ -29,7 +29,7 @@
 # GURMUKHI PARI YA;0A4D 0A2F
 
 # Entry removed 2006-05-18:
-# 
+#
 # LATIN SMALL LETTER A WITH ACUTE AND OGONEK;00E1 0328
 #
 # This entry was removed because the sequence was not in NFC,

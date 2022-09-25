@@ -13,7 +13,7 @@
 # Field 0: Unicode value
 # Field 1: East Asian Width property, consisting of one of the following values:
 #         "N", "A", "H", "W", "F", "Na"
-#  - All code points, assigned or unassigned, that are not listed 
+#  - All code points, assigned or unassigned, that are not listed
 #         explicitly are given the value "N".
 #  - Characters ranges are specified as for other property files in
 #         the Unicode Character Database.

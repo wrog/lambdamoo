@@ -280,7 +280,7 @@ Pattern new_pattern(const char *pattern, int case_matters)
 # if DEBUG
 	if (error)
 	    fprintf(stderr, __FILE__ ": pcre_study() failed: %s\n", error);
-# endif	    
+# endif
 
 	if (!extra) {
 	    extra = pcre_malloc(sizeof(*extra));

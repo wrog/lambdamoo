@@ -35,10 +35,11 @@ extern int t_errno;
 extern char *t_errlist[];
 #endif
 
-/* $Log$
-/* Revision 1.2  1997/03/03 04:18:58  nop
-/* GNU Indent normalization
 /*
+ * $Log$
+ * Revision 1.2  1997/03/03 04:18:58  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:05  nop
  * LambdaMOO 1.8.0p5
  *

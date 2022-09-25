@@ -363,7 +363,7 @@ dbio_write_forked_program(Program * program, int f_index)
 
 char rcsid_db_io[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.5  1998/12/14 13:17:34  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

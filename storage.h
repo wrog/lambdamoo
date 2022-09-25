@@ -68,7 +68,7 @@ free_str(const char *s)
 
 #endif				/* Storage_h */
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2006/12/06 23:44:56  wrog
  * Fix compiler warnings about redefining strlen/strcmp

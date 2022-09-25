@@ -47,7 +47,7 @@ unicode_character_put(const struct unicode_character_data *ucd)
 {
   struct libucd_private *pvt = (struct libucd_private *)(ucd+1);
   unsigned char zero;
-  
+
   asm volatile("lock ; decl %0 ; setz %1"
 	       : "+m" (pvt->usage_ctr), "=r" (zero));
   if ( zero )
@@ -103,7 +103,7 @@ unicode_character_data(int32_t ucs)
 {
   const struct unicode_character_data *ucd;
   struct cache_row *row;
-  
+
   if ( unlikely((uint32_t)ucs > UCS_MAX) ) {
     errno = EINVAL;
     return NULL;

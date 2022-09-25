@@ -327,7 +327,7 @@ strrindex(const char *source, const char *what, int case_counts)
 	    return ind + 1;
 	}
         while ((*s & 0xc0) == 0x80) {
-            /* UTF8 continuation */ 
+            /* UTF8 continuation */
             s--;
         }
     }
@@ -455,7 +455,7 @@ binary_to_raw_bytes(const char *binary, int *buflen)
 
 char rcsid_utils[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.8  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
@@ -476,7 +476,7 @@ char rcsid_utils[] = "$Id$";
  *
  * Revision 1.3  1997/07/07 03:24:55  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.2.2.3  1997/03/21 15:11:22  bjj
  * add var_refcount interface
  *

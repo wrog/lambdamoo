@@ -34,7 +34,7 @@ extern Var new_list(int size);
 extern const char *value2str(Var);
 extern const char *value_to_literal(Var);
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:17:58  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

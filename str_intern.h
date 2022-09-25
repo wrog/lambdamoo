@@ -1,6 +1,6 @@
 
 /* A string intern table.
- * 
+ *
  * The intern table holds a list of strings.  Given a new string, we
  * either str_dup it and add it to the table or return a ref to the
  * existing copy of the string from the table if present.

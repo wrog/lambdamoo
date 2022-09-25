@@ -12,10 +12,10 @@
 #
 # Warning: Only the variation sequences specifically defined in this file
 # are sanctioned for standard use. In all other cases the variation selector
-# cannot change the visual appearance of the preceding base character from 
+# cannot change the visual appearance of the preceding base character from
 # what it would have had in the absence of the variation selector.
 #
-# For more information, see Section 16.4, Variation Selectors, 
+# For more information, see Section 16.4, Variation Selectors,
 # in The Unicode Standard, Version 5.0.
 #
 # Format:
@@ -28,7 +28,7 @@
 
 # Mathematical
 
-2229 FE00; with serifs; # INTERSECTION 
+2229 FE00; with serifs; # INTERSECTION
 222A FE00; with serifs; # UNION
 2268 FE00; with vertical stroke; # LESS-THAN BUT NOT EQUAL TO
 2269 FE00; with vertical stroke; # GREATER-THAN BUT NOT EQUAL TO
@@ -66,21 +66,21 @@ A868 FE00; phags-pa letter reversed shaping subjoined ya; # PHAGS-PA SUBJOINED L
 # Mongolian
 
 1820 180B; second form; isolate medial final # MONGOLIAN LETTER A
-1820 180C; third form; medial # MONGOLIAN LETTER A 
+1820 180C; third form; medial # MONGOLIAN LETTER A
 1821 180B; second form; initial final # MONGOLIAN LETTER E
 1822 180B; second form; medial # MONGOLIAN LETTER I
-1823 180B; second form; medial final # MONGOLIAN LETTER O 
-1824 180B; second form; medial # MONGOLIAN LETTER U 
-1825 180B; second form; medial final # MONGOLIAN LETTER OE 
-1825 180C; third form; medial # MONGOLIAN LETTER OE 
-1826 180B; second form; isolate medial final # MONGOLIAN LETTER UE 
-1826 180C; third form; medial # MONGOLIAN LETTER UE 
+1823 180B; second form; medial final # MONGOLIAN LETTER O
+1824 180B; second form; medial # MONGOLIAN LETTER U
+1825 180B; second form; medial final # MONGOLIAN LETTER OE
+1825 180C; third form; medial # MONGOLIAN LETTER OE
+1826 180B; second form; isolate medial final # MONGOLIAN LETTER UE
+1826 180C; third form; medial # MONGOLIAN LETTER UE
 1828 180B; second form; initial medial # MONGOLIAN LETTER NA
 1828 180C; third form; medial # MONGOLIAN LETTER NA
 1828 180D; separate form; medial # MONGOLIAN LETTER NA
 182A 180B; alternative form; final # MONGOLIAN LETTER BA
 182C 180B; second form; initial medial # MONGOLIAN LETTER QA
-182C 180B; feminine second form; isolate # MONGOLIAN LETTER QA 
+182C 180B; feminine second form; isolate # MONGOLIAN LETTER QA
 182C 180C; third form; medial # MONGOLIAN LETTER QA
 182C 180D; fourth form; medial # MONGOLIAN LETTER QA
 182D 180B; second form; initial medial # MONGOLIAN LETTER GA
@@ -89,14 +89,14 @@ A868 FE00; phags-pa letter reversed shaping subjoined ya; # PHAGS-PA SUBJOINED L
 182D 180D; feminine form; medial # MONGOLIAN LETTER GA
 1830 180B; second form; final # MONGOLIAN LETTER SA
 1830 180C; third form; final # MONGOLIAN LETTER SA
-1832 180B; second form; medial # MONGOLIAN LETTER TA 
+1832 180B; second form; medial # MONGOLIAN LETTER TA
 1833 180B; second form; initial medial final # MONGOLIAN LETTER DA
 1835 180B; second form; medial # MONGOLIAN LETTER JA
 1836 180B; second form; initial medial # # MONGOLIAN LETTER YA
 1836 180C; third form; medial # MONGOLIAN LETTER YA
 1838 180B; second form; final # MONGOLIAN LETTER WA
 1844 180B; second form; medial # MONGOLIAN LETTER TODO E
-1845 180B; second form; medial # MONGOLIAN LETTER TODO I 
+1845 180B; second form; medial # MONGOLIAN LETTER TODO I
 1846 180B; second form; medial # MONGOLIAN LETTER TODO O
 1847 180B; second form; isolate medial final # MONGOLIAN LETTER TODO U
 1847 180C; third form; medial # MONGOLIAN LETTER TODO U
@@ -119,7 +119,7 @@ A868 FE00; phags-pa letter reversed shaping subjoined ya; # PHAGS-PA SUBJOINED L
 1874 180B; second form; medial # MONGOLIAN LETTER MANCHU KA
 1874 180B; feminine first final form; final # MONGOLIAN LETTER MANCHU KA
 1874 180C; feminine first medial form; medial # MONGOLIAN LETTER MANCHU KA
-1874 180C; feminine second final form; final # MONGOLIAN LETTER MANCHU KA 
+1874 180C; feminine second final form; final # MONGOLIAN LETTER MANCHU KA
 1874 180D; feminine second medial form; medial # MONGOLIAN LETTER MANCHU KA
 1876 180B; second form; initial medial # MONGOLIAN LETTER MANCHU FA
 1880 180B; second form; # MONGOLIAN LETTER ALI GALI ANUSVARA ONE
@@ -127,5 +127,5 @@ A868 FE00; phags-pa letter reversed shaping subjoined ya; # PHAGS-PA SUBJOINED L
 1887 180B; second form; isolate final # MONGOLIAN LETTER ALI GALI A
 1887 180C; third form; final # MONGOLIAN LETTER ALI GALI A
 1887 180D; fourth form; final # MONGOLIAN LETTER ALI GALI A
-1888 180B; second form; final # MONGOLIAN LETTER ALI GALI I 
+1888 180B; second form; final # MONGOLIAN LETTER ALI GALI I
 188A 180B; second form; initial medial # MONGOLIAN LETTER ALI GALI NGA

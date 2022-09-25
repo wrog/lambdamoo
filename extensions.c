@@ -188,14 +188,14 @@ register_extensions()
 
 char rcsid_extensions[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  1998/12/14 13:17:52  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *
  * Revision 1.3  1997/07/07 03:24:54  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.2.2.3  1997/05/29 11:56:22  nop
  * Added Jason Maltzen's builtin to return a list version of cache stats.
  *

@@ -52,7 +52,7 @@ hangul_name(char *buf, size_t n, int32_t codepoint)
   const int32_t SCount = NCount * LCount; /* 11172 */
 
   int32_t SIndex, L, V, T;
-  
+
   SIndex = codepoint - SBase;
   if ( SIndex < 0 || SIndex >= SCount )
     return 0;
@@ -60,7 +60,7 @@ hangul_name(char *buf, size_t n, int32_t codepoint)
   L = SIndex/NCount;
   V = (SIndex % NCount)/TCount;
   T = SIndex % TCount;
-  
+
   return snprintf(buf, n, "HANGUL SYLLABLE %s%s%s",
 		  _libucd_hangul_jamo_l[L],
 		  _libucd_hangul_jamo_v[V],
@@ -215,7 +215,7 @@ _libucd_character_data_raw(int32_t ucs)
       if ( !ucd )
 	return NULL;
       ucd->name = NULL;
-    }      
+    }
   }
 
   return ucd;

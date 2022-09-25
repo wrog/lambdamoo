@@ -50,7 +50,7 @@ will need the following things:
   -- You need an implementation of the crypt() password-encryption function
      that comes with all BSD UNIX operating systems.
 
-If you've got all of this, then try the above procedure (i.e., type 
+If you've got all of this, then try the above procedure (i.e., type
 `sh configure', edit `options.h', and type `make') and there's a good chance
 that it will just work.  If so, please let me know so that I can add your
 machine and operating system to the table at the end of this file.  If not,

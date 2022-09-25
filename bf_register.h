@@ -28,7 +28,7 @@ extern void register_server(void);
 extern void register_tasks(void);
 extern void register_verbs(void);
 
-/* 
+/*
  * $Log$
  * Revision 1.2  1998/12/14 13:17:29  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

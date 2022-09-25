@@ -53,7 +53,7 @@ sub read_separated_file($$$) {
 		my $p, $f;
 
 		$ucs_props{$c} = {} unless ( exists($ucs_props{$c}) );
-		
+
 		for ( $f = 1 ; $f < scalar(@fields) ; $f++ ) {
 		    my $prop = ${$proplist}[$f-1];
 		    if ( defined($prop) ) {
@@ -131,7 +131,7 @@ sub read_boolean_file($) {
 		my $p, $f;
 
 		$ucs_props{$c} = {} unless ( exists($ucs_props{$c}) );
-		
+
 		${$ucs_props{$c}}{$fields[1]} = 1;
 	    }
 	}
@@ -166,7 +166,7 @@ sub make_jamo_tables() {
     my $TCount = 28;
     my $i;
     my $fh;
-    
+
     # None of the syllables exceed 4 bytes, so let's not waste
     # pointer space that might have to be relocated...
 
@@ -309,7 +309,7 @@ sub dump_prop_list()
     open($fh, '>', 'gen/propdump.txt')
 	or die "$0: cannot write gen/propdump.txt\n";
     binmode $fh, ':utf8';
-    
+
     for ( $c = 0 ; $c <= 0x10ffff ; $c++ ) {
 	my %h = %{$ucs_props{$c}};
 
@@ -335,7 +335,7 @@ sub dump_prop_list()
 		$h{$k} = 0;	# Default is zero offset
 	    }
 	}
-    
+
 	my @l = sort(keys(%h));
 	my $p;
 	printf $fh "%05X ", $c;
@@ -429,7 +429,7 @@ sub make_properties_array()
 	my $block = $$cp{'Block'} || 'No_Block';
 	$block =~ tr/ .-/___/;
 	$mine .= "\t\t((uint64_t)UC_BLK_$block << 48),\n";
-	
+
 	# Simple case mappings
 	my $sum = ($$cp{'Simple_Uppercase_Mapping'} || $c) - $c;
 	$mine .= "\t\t".emit_int24($sum).",\n";
@@ -437,7 +437,7 @@ sub make_properties_array()
 	$mine .= "\t\t".emit_int24($slm).",\n";
 	my $stm = ($$cp{'Simple_Titlecase_Mapping'} || $c) - $c;
 	$mine .= "\t\t".emit_int24($stm).",\n";
-	
+
 	# Age (assume 31.7 as maximum; Unicode has traditionally not had
 	# many minor versions per major version.)
 	my $age = $$cp{'Age'} || '0.0';

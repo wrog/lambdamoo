@@ -143,10 +143,10 @@ foreach $n ( @names ) {
     ($na1 = $n) =~ tr/_+/ -/;
     ($na2 = $na1) =~ s/ $//;
     $true_name = $na2;		# Actually desired output
-    
+
     $na1 = compress_string($na1);
     $na2 = compress_string($na2);
-    
+
     $na = length($na1) < length($na2) ? $na1 : $na2;
 
     # Prefix byte for *uncompressed* length, then compressed data
