@@ -1796,7 +1796,7 @@ register_server(void)
 
 char rcsid_server[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.12  2007/06/02 21:34:36  wrog
  * fix player_connect() so that the user_client_disconnected hook

@@ -34,7 +34,7 @@ extern Match_Result match_pattern(Pattern p, const char *string,
 				Match_Indices * indices, int is_reverse);
 extern void free_pattern(Pattern p);
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:18:47  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

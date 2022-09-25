@@ -122,7 +122,7 @@ read_vm(int task_id)
 
 char rcsid_eval_vm[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2002/08/18 09:47:26  bjj
  * Finally made free_activation() take a pointer after noticing how !$%^&

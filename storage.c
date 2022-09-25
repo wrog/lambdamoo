@@ -231,7 +231,7 @@ memory_usage(void)
 
 char rcsid_storage[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.6  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to

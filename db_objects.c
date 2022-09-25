@@ -552,7 +552,7 @@ dbpriv_set_all_users(Var v)
 
 char rcsid_db_objects[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to

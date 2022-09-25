@@ -41,7 +41,7 @@
 
 #endif				/* !My_Types_h */
 
-/* 
+/*
  * $Log$
  * Revision 1.4  1998/12/14 13:18:22  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

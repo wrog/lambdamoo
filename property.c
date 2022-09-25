@@ -331,7 +331,7 @@ register_property(void)
 
 char rcsid_property[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:18:50  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

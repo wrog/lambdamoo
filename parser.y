@@ -27,7 +27,7 @@
 #include "my-string.h"
 
 #include "ast.h"
-#include "code_gen.h" 
+#include "code_gen.h"
 #include "config.h"
 #include "functions.h"
 #include "keywords.h"
@@ -42,7 +42,7 @@
 #include "structures.h"
 #include "sym_table.h"
 #include "utils.h"
-#include "version.h" 
+#include "version.h"
 
 static Stmt    	       *prog_start;
 static int		dollars_ok;
@@ -80,7 +80,7 @@ static void	check_loop_name(const char *, enum loop_exit_kind);
   Scatter      *scatter;
 }
 
-%type	<stmt>   statements statement elsepart 
+%type	<stmt>   statements statement elsepart
 %type	<arm>    elseifs
 %type   <expr>   expr default
 %type   <args>   arglist ne_arglist codes
@@ -121,7 +121,7 @@ statements:
 		{
 		    if ($1) {
 			Stmt *tmp = $1;
-			
+
 			while (tmp->next)
 			    tmp = tmp->next;
 			tmp->next = $2;
@@ -274,7 +274,7 @@ elseifs:
 	| elseifs tELSEIF '(' expr ')' statements
 		{
 		    Cond_Arm *this_arm = alloc_cond_arm($4, $6);
-		    
+
 		    if ($1) {
 		        Cond_Arm *tmp = $1;
 
@@ -301,7 +301,7 @@ excepts:
 		{
 		    Except_Arm *tmp = $1;
 		    int		count = 1;
-		    
+
 		    while (tmp->next) {
 			tmp = tmp->next;
 			count++;
@@ -314,7 +314,7 @@ excepts:
 	  except
 		{
 		    Except_Arm *tmp = $1;
-		    
+
 		    while (tmp->next)
 			tmp = tmp->next;
 
@@ -877,14 +877,14 @@ start_over:
 		c = lex_getc();
 	    } while (isdigit(c));
 	}
-	
+
 	lex_ungetc(c);
 
 	if (type == tINTEGER)
 	    yylval.integer = n;
 	else {
 	    double	d;
-	    
+
 	    d = strtod(reset_stream(token_stream), 0);
 	    if (!IS_REAL(d)) {
 		yyerror("Floating-point literal out of range");
@@ -894,7 +894,7 @@ start_over:
 	}
 	return type;
     }
-    
+
     if (isalpha(c) || c == '_') {
 	char	       *buf;
 	Keyword	       *k;
@@ -919,7 +919,7 @@ start_over:
 		must_rename_keywords = 1;
 	    }
 	}
-	
+
 	yylval.string = alloc_string(buf);
 	return tID;
     }
@@ -942,17 +942,25 @@ start_over:
     }
 
     switch(c) {
-      case '>':         return follow('=', tGE, '>');
-      case '<':         return follow('=', tLE, '<');
-      case '=':         return ((c = follow('=', tEQ, 0))
-				? c
-				: follow('>', tARROW, '='));
-      case '!':         return follow('=', tNE, '!');
-      case '|':         return follow('|', tOR, '|');
-      case '&':         return follow('&', tAND, '&');
-      normal_dot:
-      case '.':		return follow('.', tTO, '.');
-      default:          return c;
+    case '>':
+	return follow('=', tGE, '>');
+    case '<':
+	return follow('=', tLE, '<');
+    case '=':
+	return ((c = follow('=', tEQ, 0))
+		? c
+		: follow('>', tARROW, '='));
+    case '!':
+	return follow('=', tNE, '!');
+    case '|':
+	return follow('|', tOR, '|');
+    case '&':
+	return follow('&', tAND, '&');
+    normal_dot:
+    case '.':
+	return follow('.', tTO, '.');
+    default:
+	return c;
     }
 }
 
@@ -1086,7 +1094,7 @@ check_loop_name(const char *name, enum loop_exit_kind kind)
 	}
 	return;
     }
-    
+
     for (entry = loop_stack; entry && !entry->is_barrier; entry = entry->next)
 	if (entry->name  &&  mystrcasecmp(entry->name, name) == 0)
 	    return;
@@ -1102,7 +1110,7 @@ parse_program(DB_Version version, Parser_Client c, void *data)
 {
     extern int	yyparse();
     Program    *prog;
-    
+
     if (token_stream == 0)
 	token_stream = new_stream(1024);
     unget_count = 0;
@@ -1115,7 +1123,7 @@ parse_program(DB_Version version, Parser_Client c, void *data)
     dollars_ok = 0;
     loop_stack = 0;
     language_version = version;
-    
+
     begin_code_allocation();
     yyparse();
     end_code_allocation(nerrors > 0);
@@ -1131,7 +1139,7 @@ parse_program(DB_Version version, Parser_Client c, void *data)
 	    myfree(entry, M_AST);
 	}
     }
-    
+
     if (nerrors == 0) {
 	if (must_rename_keywords) {
 	    /* One or more new keywords were used as identifiers in this code,
@@ -1144,7 +1152,7 @@ parse_program(DB_Version version, Parser_Client c, void *data)
 
 	    for (i = first_user_slot(version); i < local_names->size; i++) {
 		const char	*name = local_names->names[i];
-	    
+
 		if (find_keyword(name)) { /* Got one... */
 		    stream_add_string(token_stream, name);
 		    do {
@@ -1184,7 +1192,7 @@ my_error(void *data, const char *msg)
 {
     struct parser_state	*state = (struct parser_state *) data;
     Var			v;
-    
+
     v.type = TYPE_STR;
     v.v.str = str_dup(msg);
     state->errors = listappend(state->errors, v);
@@ -1196,7 +1204,7 @@ my_getc(void *data)
     struct parser_state	*state = (struct parser_state *) data;
     Var			code;
     char		c;
-    
+
     code = state->code;
     if (task_timed_out  ||  state->cur_string > code.v.list[0].v.num)
 	return EOF;
@@ -1217,7 +1225,7 @@ parse_list_as_program(Var code, Var *errors)
 {
     struct parser_state	state;
     Program	       *program;
-    
+
     state.code = code;
     state.cur_string = 1;
     state.cur_char = 0;
@@ -1230,7 +1238,7 @@ parse_list_as_program(Var code, Var *errors)
 
 char rcsid_parser[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)
@@ -1308,35 +1316,35 @@ char rcsid_parser[] = "$Id$";
  *
  * Revision 1.10  1992/08/31  22:25:51  pjames
  * Changed some `char *'s to `const char *'
- * 
+ *
  * Revision 1.9  1992/08/28  23:18:38  pjames
  * Added ASGN_RANGE parsing code.  Fixed tiny memory leak.
- * 
+ *
  * Revision 1.8  1992/08/28  16:16:52  pjames
  * Changed `ak_dealloc_string()' to `free_str()'.
- * 
+ *
  * Revision 1.7  1992/08/12  01:49:58  pjames
  * Negative literals are now accepted (instead of negated positive literals).
- * 
+ *
  * Revision 1.6  1992/08/10  16:55:59  pjames
  * Updated #includes.
- * 
+ *
  * Revision 1.5  1992/07/30  21:22:08  pjames
  * Removed max_stack calculations (moved to vector.c).
- * 
+ *
  * Revision 1.4  1992/07/29  18:05:12  pjames
  * $$ no longer = NULL when there is an illegal left hand side of an
  * expression.
- * 
+ *
  * Revision 1.3  1992/07/27  18:12:41  pjames
  * Changed name of ct_env to var_names and const_env to literals.
  * Modified call to vectorize to use new argument format.
  * Assignment statements now check left hand side properly for allowable
  * expressions, and now frees memory from reused expressions.
- * 
+ *
  * Revision 1.2  1992/07/21  00:05:16  pavel
  * Added rcsid_<filename-root> declaration to hold the RCS ident. string.
- * 
+ *
  * Revision 1.1  1992/07/20  23:23:12  pavel
  * Initial RCS-controlled version.
  */

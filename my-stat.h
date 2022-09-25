@@ -36,7 +36,7 @@ extern int mknod(const char *file, int mode, int dev);
 #define mkfifo(path, mode)	mknod(path, S_IFIFO | (mode), 0)
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:18:15  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

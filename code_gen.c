@@ -1352,7 +1352,7 @@ generate_code(Stmt * stmt, DB_Version version)
 
 char rcsid_code_gen[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.11  2002/09/15 23:21:01  xplat
  * GNU indent normalization.

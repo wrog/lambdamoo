@@ -114,7 +114,7 @@ free_program(Program * p)
 
 char rcsid_program[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.6  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
@@ -128,7 +128,7 @@ char rcsid_program[] = "$Id$";
  *
  * Revision 1.4  1997/07/07 03:24:54  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.3.2.1  1997/06/05 09:00:00  bjj
  * Cache one pc/lineno pair with each Program.  Hopefully most programs that
  * fail multiple times usually do it on the same line!

@@ -86,7 +86,7 @@ typedef struct Object {
  */
 
 #ifdef RONG
-#define db_priv_affected_callable_verb_lookup() (db_verb_generation++)  
+#define db_priv_affected_callable_verb_lookup() (db_verb_generation++)
                                  /* The choice of a new generation. */
 extern unsigned int db_verb_generation;
 #endif
@@ -94,7 +94,7 @@ extern unsigned int db_verb_generation;
 extern void db_priv_affected_callable_verb_lookup(void);
 
 #else /* no cache */
-#define db_priv_affected_callable_verb_lookup() 
+#define db_priv_affected_callable_verb_lookup()
 #endif
 
 /*********** Objects ***********/
@@ -160,7 +160,7 @@ extern Exception dbpriv_dbio_failed;
 extern void dbpriv_set_dbio_input(FILE *);
 extern void dbpriv_set_dbio_output(FILE *);
 
-/* 
+/*
  * $Log$
  * Revision 1.4  1998/12/14 13:17:37  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

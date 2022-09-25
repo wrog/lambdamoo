@@ -581,7 +581,7 @@ register_verbs(void)
 
 char rcsid_verbs[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2001/01/29 08:38:44  bjj
  * Fix Sourceforge Bug #127620: add_verb() should return verbindex

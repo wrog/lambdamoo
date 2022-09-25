@@ -38,7 +38,7 @@ extern int stream_length(Stream *);
 
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)

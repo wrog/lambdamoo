@@ -22,7 +22,7 @@
 extern void disassemble_to_file(FILE * fp, Program * program);
 extern void disassemble_to_stderr(Program * program);
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:17:43  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

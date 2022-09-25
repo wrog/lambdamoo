@@ -21,7 +21,7 @@
 extern Stmt *decompile_program(Program * program, int vector);
 extern int find_line_number(Program * program, int vector, int pc);
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:17:41  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

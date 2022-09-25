@@ -42,7 +42,7 @@ network_set_connection_option(network_handle nh, const char *option, Var value)
 }
 
 
-/* 
+/*
  * $Log$
  * Revision 1.3  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

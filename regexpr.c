@@ -1645,7 +1645,7 @@ main()
 
 char rcsid_regexpr[] = "$Id";
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2001/03/12 03:44:19  bjj
  * oops, more braces

@@ -72,7 +72,7 @@ typedef struct suspended_task {
 typedef struct {
     char *string;
     int length;
-    struct task *next_itail;	/* see tqueue.first_itail */ 
+    struct task *next_itail;	/* see tqueue.first_itail */
 } input_task;
 
 typedef struct task {
@@ -180,7 +180,7 @@ static ext_queue *external_queues = 0;
      : ttt->t.suspended.start_time)
 
 
-/* 
+/*
  *  ICMD_FOR_EACH(DEFINE,verb)
  *   expands to a table of intrinsic commands,
  *   each entry of the form
@@ -465,9 +465,9 @@ dequeue_input_task(tqueue * tq, enum dequeue_how how)
 		t->kind = TASK_INBAND;
 	}
 	else if (t->kind == TASK_QUOTED) {
-	    if (!tq->disable_oob) 
+	    if (!tq->disable_oob)
 		memmove(t->t.input.string,
-			t->t.input.string + oob_quote_prefix_length, 
+			t->t.input.string + oob_quote_prefix_length,
 			1 + strlen(t->t.input.string + oob_quote_prefix_length));
 	    t->kind = TASK_INBAND;
 	}
@@ -644,7 +644,7 @@ do_intrinsic_command(tqueue * tq, Parsed_Command * pc)
     if (!(icmd && (tq->icmds & (1<<icmd))))
 	return 0;
     switch (icmd) {
-    default: 
+    default:
 	panic("Bad return value from icmd_index()");
 	break;
     case ICMD_PROGRAM:
@@ -652,10 +652,10 @@ do_intrinsic_command(tqueue * tq, Parsed_Command * pc)
 	    return 0;
 	if (pc->args.v.list[0].v.num != 1)
 	    notify(tq->player, "Usage:  .program object:verb");
-	else	
+	else
 	    start_programming(tq, (char *) pc->args.v.list[1].v.str);
 	break;
-    case ICMD_PREFIX:	
+    case ICMD_PREFIX:
     case ICMD_OUTPUTPREFIX:
 	set_delimiter(&(tq->output_prefix), pc->argstr);
 	break;
@@ -2235,7 +2235,7 @@ register_tasks(void)
 
 char rcsid_tasks[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.14  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
@@ -2299,13 +2299,13 @@ char rcsid_tasks[] = "$Id$";
  *
  * Revision 1.4  1997/07/07 03:24:55  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.3.2.3  1998/12/06 07:13:22  bjj
  * Rationalize enqueue_forked_task interface and fix program_ref leak in
  * the case where fork fails with E_QUOTA.  Make .queued_task_limit=0 really
  * enforce a limit of zero tasks (for old behavior set it to 1, that's the
  * effect it used to have).
- * 
+ *
  * Revision 1.3.2.2  1998/11/23 01:10:55  bjj
  * Fix a server crash when force_input() fills the input queue of an
  * unconnected object.  No observable behavior has changed.

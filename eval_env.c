@@ -124,7 +124,7 @@ set_rt_env_var(Var * env, int slot, Var v)
 char rcsid_rt_env[] = "$Id$";
 
 
-/* 
+/*
  * $Log$
  * Revision 1.5  1998/12/14 13:17:44  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

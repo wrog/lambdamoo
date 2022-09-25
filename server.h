@@ -186,13 +186,13 @@ extern int read_active_connections(void);
 
 /* All of the above require a TABLE of connection options #defined
  * as follows
- * 
+ *
  * #define TABLE(DEFINE, HANDLE, VALUE, _)
  *    DEFINE(<name>, _, TYPE_<foo>, <member>,
  *           <get-value-expression>,
  *           <set-value-statement>)
  *    ...
- *    
+ *
  * where
  *   <get-value-expression>
  *     should extract from HANDLE a value for option <name>
@@ -241,7 +241,7 @@ extern int read_active_connections(void);
 
 #endif				/* Server_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

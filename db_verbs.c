@@ -762,7 +762,7 @@ db_verb_allows(db_verb_handle h, Objid progr, db_verb_flag flag)
 
 char rcsid_db_verbs[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.6  2001/01/29 08:38:44  bjj
  * Fix Sourceforge Bug #127620: add_verb() should return verbindex
@@ -775,7 +775,7 @@ char rcsid_db_verbs[] = "$Id$";
  * Revision 1.4  1997/09/07 23:58:37  nop
  * Bump up cache size to 7507, since lambdamoo has been running with that
  * for months.
- * 
+ *
  * Revision 1.3  1997/07/07 03:24:53  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
  *

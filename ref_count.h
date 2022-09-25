@@ -26,7 +26,7 @@ extern unsigned int delref(const void *p);
 #define refcount(X) (((int *)(X))[-1])
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.4  1998/12/14 13:18:55  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

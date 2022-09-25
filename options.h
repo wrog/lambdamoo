@@ -162,12 +162,12 @@
  * function.  If neither option is supplied, the definition given to
  * OUTBOUND_NETWORK here determines the default behavior
  * (use 0 to disable by default, 1 or blank to enable by default).
- * 
+ *
  * If OUTBOUND_NETWORK is not defined at all,
  * open_network_connection() is permanently disabled and +O is ignored.
  *
  * *** THINK VERY HARD BEFORE ENABLING THIS FUNCTION ***
- * In some contexts, this could represent a serious breach of security.  
+ * In some contexts, this could represent a serious breach of security.
  *
  * Note: OUTBOUND_NETWORK may not be defined if NETWORK_PROTOCOL is either
  *	 NP_SINGLE or NP_LOCAL.
@@ -229,7 +229,6 @@
  * .name and .location), define IGNORE_PROP_PROTECTED.  The extra
  * property lookups on every reference to a built-in property are
  * expensive.
- ****************************************************************************** 
  */
 
 #define IGNORE_PROP_PROTECTED
@@ -248,7 +247,7 @@
  * the next time (if it's in a loop) it will have the only reference to the
  * copy and then it can take advantage.
  *
- * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    
+ * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL
  *
  * This option affects the length of certain bytecode sequences.
  * Suspended tasks in a database from a server built with this option
@@ -259,9 +258,7 @@
  * lifted in a future version of the server software.  Consider this
  * option as being BETA QUALITY until then.
  *
- * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    
- *
- ******************************************************************************
+ * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL
  */
 /* #define BYTECODE_REDUCE_REF */
 
@@ -277,7 +274,6 @@
  *
  * You might want to turn this off if you see a large delay before the
  * INTERN: lines in the log at startup.
- ******************************************************************************
  */
 
 #define STRING_INTERNING /* */
@@ -285,7 +281,6 @@
 /******************************************************************************
  * Store the length of the string WITH the string rather than recomputing
  * it each time it is needed.
- ******************************************************************************
  */
 /* #define MEMO_STRLEN */
 
@@ -398,7 +393,7 @@
 
 #endif				/* !Options_h */
 
-/* 
+/*
  * $Log$
  * Revision 1.11  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)

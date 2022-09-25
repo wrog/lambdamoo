@@ -34,7 +34,7 @@ void fill_in_rt_consts(Var * env, DB_Version);
 
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:17:45  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

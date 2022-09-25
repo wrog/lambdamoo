@@ -160,10 +160,11 @@ mplex_is_writable(int fd)
 
 char rcsid_net_mp_fake[] = "$Id$";
 
-/* $Log$
-/* Revision 1.2  1997/03/03 04:19:03  nop
-/* GNU Indent normalization
 /*
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:03  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:02  nop
  * LambdaMOO 1.8.0p5
  *

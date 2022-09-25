@@ -57,7 +57,7 @@ extern int check_version(DB_Version);
 
 #endif				/* !Version_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:19:19  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

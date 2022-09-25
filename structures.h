@@ -111,14 +111,14 @@ extern Var zero;		/* useful constant */
 
 #endif				/* !Structures_h */
 
-/* 
+/*
  * $Log$
  * Revision 1.4  1998/12/14 13:19:04  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *
  * Revision 1.3  1997/07/07 03:24:55  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.2.2.2  1997/05/23 07:01:30  nop
  * Added experimental support for 32-bit pointer model on Alpha with DEC cc.
  *

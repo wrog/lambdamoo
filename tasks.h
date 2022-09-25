@@ -109,7 +109,7 @@ extern db_verb_handle find_verb_for_programming(Objid player,
 
 #endif				/* !Tasks_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

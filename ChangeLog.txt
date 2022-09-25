@@ -2412,13 +2412,13 @@ Version 1.8.3, in progress
           SUFFIX
           OUTPUTPREFIX
           OUTPUTSUFFIX
-       will be recognized on that connection.  Option value is a list 
+       will be recognized on that connection.  Option value is a list
        of strings, but set_connection_option() also accepts any numeric
        value, in which case all 5 intrinsic commands are enabled/disabled
        according to the value being true/false.
    (*) "disable-oob"
-       which, if set true, disables all out-of-band command processing 
-       on subsequent input lines, i.e., the server behaves for that 
+       which, if set true, disables all out-of-band command processing
+       on subsequent input lines, i.e., the server behaves for that
        connection as if OUT_OF_BAND_PREFIX had never been #defined.
        Out-of-band quoting (see below) is likewise disabled.
 -- If "disable-oob" is set false (as it is by default), then it is now the case
