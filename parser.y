@@ -1119,10 +1119,11 @@ check_loop_name(const char *name, enum loop_exit_kind kind)
 	error("Invalid loop name in `continue' statement: ", name);
 }
 
+extern int yyparse(void);
+
 Program *
 parse_program(DB_Version version, Parser_Client c, void *data)
 {
-    extern int	yyparse();
     Program    *prog;
 
     if (token_stream == 0)

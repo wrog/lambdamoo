@@ -20,6 +20,7 @@
 #include "bf_register.h"
 #include "config.h"
 #include "db_io.h"
+#include "execute.h"
 #include "functions.h"
 #include "list.h"
 #include "log.h"
@@ -27,6 +28,7 @@
 #include "storage.h"
 #include "streams.h"
 #include "structures.h"
+#include "tasks.h"
 #include "unparse.h"
 #include "utils.h"
 
@@ -39,7 +41,7 @@
  * files to the `CSRCS' line in the Makefile.
  ****************************************************************************/
 
-typedef void (*registry) ();
+typedef void (*registry) (void);
 
 static registry bi_function_registries[] =
 {
@@ -59,7 +61,7 @@ static registry bi_function_registries[] =
 };
 
 void
-register_bi_functions()
+register_bi_functions(void)
 {
     int loop, num_registries =
     sizeof(bi_function_registries) / sizeof(bi_function_registries[0]);
@@ -303,7 +305,7 @@ read_bi_func_data(Byte f_id, void **bi_func_state, Byte * bi_func_pc)
 
 
 package
-make_kill_pack()
+make_kill_pack(void)
 {
     package p;
 

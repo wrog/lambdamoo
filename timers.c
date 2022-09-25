@@ -97,7 +97,7 @@ virtual_wakeup_call(int signo)
 #endif
 
 static void
-stop_timers()
+stop_timers(void)
 {
     alarm(0);
     signal(SIGALRM, SIG_IGN);
@@ -122,7 +122,7 @@ stop_timers()
 }
 
 static void
-restart_timers()
+restart_timers(void)
 {
     if (active_timers) {
 	time_t now = time(0);
@@ -206,7 +206,7 @@ set_virtual_timer(unsigned seconds, Timer_Proc proc, Timer_Data data)
 }
 
 int
-virtual_timer_available()
+virtual_timer_available(void)
 {
 #ifdef ITIMER_VIRTUAL
     return 1;

@@ -23,6 +23,9 @@
 #include "my-time.h"
 
 #include "config.h"
+
+#include "numbers.h"
+
 #include "functions.h"
 #include "log.h"
 #include "random.h"

@@ -153,7 +153,7 @@ myrealloc(void *ptr, unsigned size, Memory_Type type)
 }
 
 void
-myfree(void *ptr, Memory_Type type)
+myfree(const void *ptr, Memory_Type type)
 {
     alloc_num[type]--;
 #ifdef USE_GNU_MALLOC

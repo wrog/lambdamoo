@@ -307,7 +307,7 @@ ensure_usage(tqueue * tq)
     }
 }
 
-char *
+static char *
 default_flush_command(void)
 {
     const char *str = server_string_option("default_flush_command", ".flush");

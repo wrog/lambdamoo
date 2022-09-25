@@ -126,6 +126,8 @@ Var *reorder_rt_env(Var * old_rt_env, const char **old_names,
 extern void write_activ(activation a);
 extern int read_activ(activation * a, int which_vector);
 
+extern void register_execute(void);
+
 #endif
 
 /*

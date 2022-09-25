@@ -52,6 +52,8 @@ typedef struct {
 } package;
 
 void register_bi_functions(void);
+void register_objects(void);
+void register_property(void);
 
 package make_kill_pack(void);
 package make_error_pack(enum error err);

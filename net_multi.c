@@ -26,11 +26,13 @@
 #include "my-unistd.h"
 
 #include "config.h"
+
+#include "net_multi.h"
+
 #include "exceptions.h"
 #include "list.h"
 #include "log.h"
 #include "net_mplex.h"
-#include "net_multi.h"
 #include "net_proto.h"
 #include "network.h"
 #include "options.h"
@@ -397,7 +399,7 @@ make_new_connection(server_listener sl, int rfd, int wfd,
 }
 
 static void
-get_pocket_descriptors()
+get_pocket_descriptors(void)
 {
     int i;
 

@@ -729,7 +729,7 @@ db_disk_size(void)
 }
 
 void
-db_shutdown()
+db_shutdown(void)
 {
     dump_database(DUMP_SHUTDOWN);
 

@@ -17,6 +17,8 @@
 
 #include <limits.h>
 
+#include "code_gen.h"
+
 #include "ast.h"
 #include "exceptions.h"
 #include "opcode.h"
