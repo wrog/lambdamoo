@@ -98,6 +98,11 @@ dnl *** was "-lsocket -lnsl" -lsocket -linet
 dnl *** (does nsl screw up non-sysV builds?)
 MOO_HAVE_FUNC_LIBS([t_open], [nsl nsl_s])
 MOO_HAVE_FUNC_LIBS([crypt], [crypt crypt_d])
+dnl
+MOO_ICONV_LIBS
+AS_VAR_IF([moo_cv_iconv_lib],[fail],
+  [AC_MSG_ERROR([[no library for iconv_open, may need to install]])
+])
 AC_CHECK_HEADERS([unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h])
 AC_CHECK_FUNCS([remove rename poll select strerror strftime strtoul matherr])
 AC_CHECK_FUNCS([random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse])
