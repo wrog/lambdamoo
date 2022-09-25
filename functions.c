@@ -417,7 +417,7 @@ function_description(int i)
 }
 
 static package
-bf_function_info(Var arglist, Byte next, void *vdata, Objid progr)
+bf_function_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
     int i;
@@ -480,7 +480,7 @@ load_server_options(void)
 }
 
 static package
-bf_load_server_options(Var arglist, Byte next, void *vdata, Objid progr)
+bf_load_server_options(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     free_var(arglist);
 

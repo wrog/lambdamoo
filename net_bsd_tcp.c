@@ -163,7 +163,7 @@ proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
 }
 
 void
-proto_close_connection(int read_fd, int write_fd)
+proto_close_connection(int read_fd, int write_fd UNUSED_)
 {
     /* read_fd and write_fd are the same, so we only need to deal with one. */
     close(read_fd);
@@ -183,7 +183,7 @@ proto_close_listener(int fd)
 static Exception timeout_exception;
 
 static void
-timeout_proc(Timer_ID id, Timer_Data data)
+timeout_proc(Timer_ID id UNUSED_, Timer_Data data UNUSED_)
 {
     RAISE(timeout_exception, 0);
 }

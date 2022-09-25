@@ -118,7 +118,13 @@ log_command_history(void)
 }
 
 void
-add_command_to_history(Objid player, const char *command)
+add_command_to_history(
+#ifdef LOG_COMMANDS
+    Objid player, const char *command
+#else
+    Objid player UNUSED_, const char *command UNUSED_
+#endif
+)
 {
 #ifdef LOG_COMMANDS
     time_t now = time(0);
@@ -134,7 +140,7 @@ add_command_to_history(Objid player, const char *command)
 /**** built in functions ****/
 
 static package
-bf_server_log(Var arglist, Byte next, void *vdata, Objid progr)
+bf_server_log(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     if (!is_wizard(progr)) {
 	free_var(arglist);
