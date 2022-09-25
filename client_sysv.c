@@ -30,7 +30,7 @@
 #include "config.h"
 #include "options.h"
 
-int
+static int
 set_non_blocking(int fd)
 {
     int flags;
@@ -42,7 +42,7 @@ set_non_blocking(int fd)
 	return 1;
 }
 
-int
+static int
 set_blocking(int fd)
 {
     int flags;
@@ -54,14 +54,14 @@ set_blocking(int fd)
 	return 1;
 }
 
-void
-kill_signal(int sig)
+static void
+kill_signal(int sig UNUSED_)
 {
     set_blocking(0);
     exit(0);
 }
 
-void
+static void
 write_all(int fd, const char *buffer, int length)
 {
     while (length) {

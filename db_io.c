@@ -63,7 +63,6 @@ dbio_scanf(const char *format,...)
 {
     va_list args;
     int count;
-    const char *ptr;
 
     va_start(args, format);
     count = vfscanf(input, format, args);
@@ -342,7 +341,7 @@ dbio_write_var(Var v)
 }
 
 static void
-receiver(void *data, const char *line)
+receiver(void *data UNUSED_, const char *line)
 {
     dbio_printf("%s\n", line);
 }

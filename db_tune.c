@@ -12,7 +12,7 @@
 #ifdef VERB_CACHE
 
 static package
-bf_verb_cache_stats(Var arglist, Byte next, void *vdata, Objid progr)
+bf_verb_cache_stats(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     Var r;
 
@@ -27,7 +27,7 @@ bf_verb_cache_stats(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_log_cache_stats(Var arglist, Byte next, void *vdata, Objid progr)
+bf_log_cache_stats(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     free_var(arglist);
 

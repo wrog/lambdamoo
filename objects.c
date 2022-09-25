@@ -185,7 +185,7 @@ bf_move_read(void)
 }
 
 static package
-bf_toobj(Var arglist, Byte next, void *vdata, Objid progr)
+bf_toobj(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
     Num i;
@@ -203,7 +203,7 @@ bf_toobj(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_typeof(Var arglist, Byte next, void *vdata, Objid progr)
+bf_typeof(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
     r.type = TYPE_INT;
@@ -213,7 +213,7 @@ bf_typeof(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_valid(Var arglist, Byte next, void *vdata, Objid progr)
+bf_valid(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* (object) */
     Var r;
 
@@ -224,7 +224,7 @@ bf_valid(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_max_object(Var arglist, Byte next, void *vdata, Objid progr)
+bf_max_object(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* () */
     Var r;
 
@@ -311,7 +311,7 @@ bf_create_read(void)
 }
 
 static package
-bf_chparent(Var arglist, Byte next, void *vdata, Objid progr)
+bf_chparent(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {				/* (object, new_parent) */
     Objid what = arglist.v.list[1].v.obj;
     Objid parent = arglist.v.list[2].v.obj;
@@ -338,7 +338,7 @@ bf_chparent(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_parent(Var arglist, Byte next, void *vdata, Objid progr)
+bf_parent(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* (object) */
     Var r;
     Objid obj = arglist.v.list[1].v.obj;
@@ -372,7 +372,7 @@ add_to_list(void *data, Objid child)
 }
 
 static package
-bf_children(Var arglist, Byte next, void *vdata, Objid progr)
+bf_children(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* (object) */
     Objid oid = arglist.v.list[1].v.obj;
 
@@ -527,14 +527,14 @@ bf_recycle_read(void)
 
 
 static package
-bf_players(Var arglist, Byte next, void *vdata, Objid progr)
+bf_players(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* () */
     free_var(arglist);
     return make_var_pack(var_ref(db_all_users()));
 }
 
 static package
-bf_is_player(Var arglist, Byte next, void *vdata, Objid progr)
+bf_is_player(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* (object) */
     Var r;
     Objid oid = arglist.v.list[1].v.obj;
@@ -550,7 +550,7 @@ bf_is_player(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_set_player_flag(Var arglist, Byte next, void *vdata, Objid progr)
+bf_set_player_flag(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {				/* (object, yes/no) */
     Var obj;
     char bool;
@@ -575,7 +575,7 @@ bf_set_player_flag(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static package
-bf_object_bytes(Var arglist, Byte next, void *vdata, Objid progr)
+bf_object_bytes(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     Objid oid = arglist.v.list[1].v.obj;
     Var v;
