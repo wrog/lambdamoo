@@ -1900,7 +1900,7 @@ do {    						    	\
 
 		case EOP_EXIT_ID:
 		    SKIP_BYTES(bv, bc.numbytes_var_name);	/* ignore id */
-		    /* fall thru */
+		    /* FALLS THROUGH */
 		case EOP_EXIT:
 		    {
 			Var v;
