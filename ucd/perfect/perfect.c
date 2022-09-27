@@ -749,6 +749,7 @@ static void initalen(uint32_t *alen, uint32_t *blen, uint32_t *smax, uint32_t nk
     case 0:
       *alen = 1;
       *blen = 1;
+      /* FALLS THROUGH */
     case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
       *alen = (form->perfect == NORMAL_HP) ? *smax : *smax/2;
       *blen = *smax/2;

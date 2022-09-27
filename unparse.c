@@ -679,7 +679,7 @@ unparse_scatter(Stream * str, Scatter * sc)
 	switch (sc->kind) {
 	case SCAT_REST:
 	    stream_add_char(str, '@');
-	    /* fall thru to ... */
+	    /* FALLS THROUGH */
 	case SCAT_REQUIRED:
 	    stream_add_string(str, prog->var_names[sc->id]);
 	    break;

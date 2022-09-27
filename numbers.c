@@ -180,7 +180,7 @@ matherr(struct exception *x)
     case DOMAIN:
     case SING:
 	errno = EDOM;
-	/* fall thru to... */
+	/* FALLS THROUGH */
     case OVERFLOW:
 	x->retval = HUGE_VAL;
 	return 1;

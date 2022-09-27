@@ -67,6 +67,7 @@ const char *translate(const char *moopat)
 	    case ')':
 	    case '{':
 		stream_add_char(s, '\\');
+		/* FALLS THROUGH */
 	    case '.':
 	    case '*':
 	    case '+':
@@ -93,6 +94,7 @@ const char *translate(const char *moopat)
 	    case '\\':
 	    case '[':
 		stream_add_char(s, '\\');
+		/* FALLS THROUGH */
 	    case '-':
 	    case ']':
 	    default:
@@ -112,6 +114,7 @@ const char *translate(const char *moopat)
 	    case '\\':
 	    case '[':
 		stream_add_char(s, '\\');
+		/* FALLS THROUGH */
 	    case '^':
 	    case '-':
 	    case ']':
@@ -127,6 +130,7 @@ const char *translate(const char *moopat)
 	    case '\\':
 	    case '[':
 		stream_add_char(s, '\\');
+		/* FALLS THROUGH */
 	    case '^':
 	    case '-':
 	    default:
@@ -152,6 +156,7 @@ const char *translate(const char *moopat)
 	    case '+':
 	    case '{':
 		stream_add_char(s, '\\');
+		/* FALLS THROUGH */
 	    case '|':
 	    case ')':
 	    default:

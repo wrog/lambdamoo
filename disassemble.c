@@ -267,7 +267,7 @@ disassemble(Program * prog, Printer p, void *data)
 		case EOP_EXIT_ID:
 		    stream_printf(insn, " %s",
 				  NAMES(ADD_BYTES(bc.numbytes_var_name)));
-		    /* fall thru */
+		    /* FALLS THROUGH */
 		case EOP_EXIT:
 		    a1 = ADD_BYTES(bc.numbytes_stack);
 		    a2 = ADD_BYTES(bc.numbytes_label);

@@ -322,7 +322,7 @@ print_to_stream(Var v, Stream * s)
 		case '"':
 		case '\\':
 		    stream_add_char(s, '\\');
-		    /* fall thru */
+		    /* FALLS THROUGH */
 		default:
 		    stream_add_char(s, *str++);
 		}
@@ -761,6 +761,7 @@ get_pattern(const char *string, int case_matters)
 }
 
 #define match_rebase(x) (x == 0 ? 0 : (subject_len - strlen_utf(subject + (x) - 1) + 1))
+
 Var
 do_match(Var arglist, int reverse)
 {

@@ -103,19 +103,19 @@ uint32_t lookup(register uint8_t *k, register uint32_t length, register uint32_t
 
    /*------------------------------------- handle the last 11 bytes */
    c += length;
-   switch(len)              /* all the case statements fall through */
+   switch(len)
    {
-   case 11: c+=((uint32_t)k[10]<<24);
-   case 10: c+=((uint32_t)k[9]<<16);
-   case 9 : c+=((uint32_t)k[8]<<8);
+   case 11: c+=((uint32_t)k[10]<<24);   /* FALLS THROUGH */
+   case 10: c+=((uint32_t)k[9]<<16);    /* FALLS THROUGH */
+   case 9 : c+=((uint32_t)k[8]<<8);     /* FALLS THROUGH */
       /* the first byte of c is reserved for the length */
-   case 8 : b+=((uint32_t)k[7]<<24);
-   case 7 : b+=((uint32_t)k[6]<<16);
-   case 6 : b+=((uint32_t)k[5]<<8);
-   case 5 : b+=k[4];
-   case 4 : a+=((uint32_t)k[3]<<24);
-   case 3 : a+=((uint32_t)k[2]<<16);
-   case 2 : a+=((uint32_t)k[1]<<8);
+   case 8 : b+=((uint32_t)k[7]<<24);    /* FALLS THROUGH */
+   case 7 : b+=((uint32_t)k[6]<<16);    /* FALLS THROUGH */
+   case 6 : b+=((uint32_t)k[5]<<8);     /* FALLS THROUGH */
+   case 5 : b+=k[4];                    /* FALLS THROUGH */
+   case 4 : a+=((uint32_t)k[3]<<24);    /* FALLS THROUGH */
+   case 3 : a+=((uint32_t)k[2]<<16);    /* FALLS THROUGH */
+   case 2 : a+=((uint32_t)k[1]<<8);     /* FALLS THROUGH */
    case 1 : a+=k[0];
      /* case 0: nothing left to add */
    }
@@ -198,36 +198,36 @@ void  checksum(register uint8_t *k, register uint32_t len, register uint32_t *st
    h += length;
    switch(len)
    {
-   case 31: h+=(k[30]<<24);
-   case 30: h+=(k[29]<<16);
-   case 29: h+=(k[28]<<8);
-   case 28: g+=(k[27]<<24);
-   case 27: g+=(k[26]<<16);
-   case 26: g+=(k[25]<<8);
-   case 25: g+=k[24];
-   case 24: f+=(k[23]<<24);
-   case 23: f+=(k[22]<<16);
-   case 22: f+=(k[21]<<8);
-   case 21: f+=k[20];
-   case 20: e+=(k[19]<<24);
-   case 19: e+=(k[18]<<16);
-   case 18: e+=(k[17]<<8);
-   case 17: e+=k[16];
-   case 16: d+=(k[15]<<24);
-   case 15: d+=(k[14]<<16);
-   case 14: d+=(k[13]<<8);
-   case 13: d+=k[12];
-   case 12: c+=(k[11]<<24);
-   case 11: c+=(k[10]<<16);
-   case 10: c+=(k[9]<<8);
-   case 9 : c+=k[8];
-   case 8 : b+=(k[7]<<24);
-   case 7 : b+=(k[6]<<16);
-   case 6 : b+=(k[5]<<8);
-   case 5 : b+=k[4];
-   case 4 : a+=(k[3]<<24);
-   case 3 : a+=(k[2]<<16);
-   case 2 : a+=(k[1]<<8);
+   case 31: h+=(k[30]<<24);     /* FALLS THROUGH */
+   case 30: h+=(k[29]<<16);     /* FALLS THROUGH */
+   case 29: h+=(k[28]<<8);      /* FALLS THROUGH */
+   case 28: g+=(k[27]<<24);     /* FALLS THROUGH */
+   case 27: g+=(k[26]<<16);     /* FALLS THROUGH */
+   case 26: g+=(k[25]<<8);      /* FALLS THROUGH */
+   case 25: g+=k[24];           /* FALLS THROUGH */
+   case 24: f+=(k[23]<<24);     /* FALLS THROUGH */
+   case 23: f+=(k[22]<<16);     /* FALLS THROUGH */
+   case 22: f+=(k[21]<<8);      /* FALLS THROUGH */
+   case 21: f+=k[20];           /* FALLS THROUGH */
+   case 20: e+=(k[19]<<24);     /* FALLS THROUGH */
+   case 19: e+=(k[18]<<16);     /* FALLS THROUGH */
+   case 18: e+=(k[17]<<8);      /* FALLS THROUGH */
+   case 17: e+=k[16];           /* FALLS THROUGH */
+   case 16: d+=(k[15]<<24);     /* FALLS THROUGH */
+   case 15: d+=(k[14]<<16);     /* FALLS THROUGH */
+   case 14: d+=(k[13]<<8);      /* FALLS THROUGH */
+   case 13: d+=k[12];           /* FALLS THROUGH */
+   case 12: c+=(k[11]<<24);     /* FALLS THROUGH */
+   case 11: c+=(k[10]<<16);     /* FALLS THROUGH */
+   case 10: c+=(k[9]<<8);       /* FALLS THROUGH */
+   case 9 : c+=k[8];            /* FALLS THROUGH */
+   case 8 : b+=(k[7]<<24);      /* FALLS THROUGH */
+   case 7 : b+=(k[6]<<16);      /* FALLS THROUGH */
+   case 6 : b+=(k[5]<<8);       /* FALLS THROUGH */
+   case 5 : b+=k[4];            /* FALLS THROUGH */
+   case 4 : a+=(k[3]<<24);      /* FALLS THROUGH */
+   case 3 : a+=(k[2]<<16);      /* FALLS THROUGH */
+   case 2 : a+=(k[1]<<8);       /* FALLS THROUGH */
    case 1 : a+=k[0];
    }
    mixc(a,b,c,d,e,f,g,h);
