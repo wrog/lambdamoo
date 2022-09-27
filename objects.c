@@ -115,8 +115,8 @@ do_move(Var arglist, Byte next, struct bf_move_data *data, Objid progr)
 	    if (e == E_MAXREC)
 		return make_error_pack(e);
 	}
-	/* e == E_INVIND or E_VERBNF, in both cases fall through */
-
+	/* e == E_INVIND or E_VERBNF, in both cases... */
+	/* FALLS THROUGH */
     case 3:			/* Returned from exitfunc call */
 	if (valid(where) && valid(what)
 	    && db_object_location(what) == where) {
@@ -133,6 +133,7 @@ do_move(Var arglist, Byte next, struct bf_move_data *data, Objid progr)
 		/* else e == E_VERBNF, fall through */
 	    }
 	}
+	/* FALLS THROUGH */
     case 4:			/* Returned from enterfunc call */
 	return no_var_pack();
 

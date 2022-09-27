@@ -291,7 +291,7 @@ unparse_value(Stream * s, Var v)
 		case '"':
 		case '\\':
 		    stream_add_char(s, '\\');
-		    /* fall thru */
+		    /* FALLS THROUGH */
 		default:
 		    stream_add_char(s, *str++);
 		}

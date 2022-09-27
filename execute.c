@@ -534,7 +534,7 @@ abort_task(enum abort_reason reason)
 					  root_activ_vector, 1);
 	value.v.list[3] = error_backtrace_list(msg);
 	save_handler_info("handle_task_timeout", value);
-	/* fall through */
+	/* FALLS THROUGH */
 
     case ABORT_KILL:
 	(void) unwind_stack(FIN_ABORT, zero, 0);
@@ -1970,7 +1970,7 @@ do {								\
 
 		case EOP_EXIT_ID:
 		    SKIP_BYTES(bv, bc.numbytes_var_name);	/* ignore id */
-		    /* fall thru */
+		    /* FALLS THROUGH */
 		case EOP_EXIT:
 		    {
 			Var v;
