@@ -516,7 +516,6 @@ abort_task(enum abort_reason reason)
     switch(reason) {
     default:
 	panic("Bad abort_reason");
-	/*NOTREACHED*/
 
     case ABORT_TICKS:
 	msg  = "Task ran out of ticks";
@@ -1729,7 +1728,6 @@ do {								\
 			STORE_STATE_VARIABLES();
 			abort_task(p.u.why);
 			return OUTCOME_ABORTED;
-			/* NOTREACHED */
 		    }
 		}
 	    }

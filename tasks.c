@@ -482,7 +482,7 @@ free_task(task * t, int strong)
     switch (t->kind) {
     default:
 	panic("Unknown task kind in free_task()");
-	break;
+
     case TASK_BINARY:
     case TASK_INBAND:
     case TASK_QUOTED:
@@ -646,7 +646,7 @@ do_intrinsic_command(tqueue * tq, Parsed_Command * pc)
     switch (icmd) {
     default:
 	panic("Bad return value from icmd_index()");
-	break;
+
     case ICMD_PROGRAM:
 	if (!is_programmer(tq->player))
 	    return 0;
@@ -1240,7 +1240,7 @@ run_ready_tasks(void)
 		switch (t->kind) {
 		default:
 		    panic("Unexpected task kind in run_ready_tasks()");
-		    break;
+
 		case TASK_OOB:
 		    do_out_of_band_command(tq, t->t.input.string);
 		    did_one = 1;

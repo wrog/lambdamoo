@@ -358,7 +358,6 @@ unparse_arg_spec(db_arg_spec spec)
 	return str_dup("this");
     default:
 	panic("UNPARSE_ARG_SPEC: Unknown db_arg_spec!");
-	return "";
     }
 }
 

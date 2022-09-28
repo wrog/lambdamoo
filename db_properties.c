@@ -498,7 +498,6 @@ db_set_property_value(db_prop_handle h, Var value)
 	case BP_CONTENTS:
 	  complain:
 	    panic("Inappropriate value in DB_SET_PROPERTY_VALUE!");
-	    break;
 	default:
 	    panic("Unknown built-in property in DB_SET_PROPERTY_VALUE!");
 	}
@@ -510,7 +509,6 @@ db_property_owner(db_prop_handle h)
 {
     if (h.built_in) {
 	panic("Built-in property in DB_PROPERTY_OWNER!");
-	return NOTHING;
     } else {
 	Pval *prop = h.ptr;
 
@@ -535,7 +533,6 @@ db_property_flags(db_prop_handle h)
 {
     if (h.built_in) {
 	panic("Built-in property in DB_PROPERTY_FLAGS!");
-	return 0;
     } else {
 	Pval *prop = h.ptr;
 
