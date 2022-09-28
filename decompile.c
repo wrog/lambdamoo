@@ -529,7 +529,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 	case OP_PUSH_TEMP:
 	case OP_JUMP:
 	    panic("Unexpected opcode in DECOMPILE!");
-	    break;
 	case OP_EXTENDED:
 	    {
 		Extended_Opcode eop = *ptr++;

@@ -1679,7 +1679,6 @@ do {    						    	\
 			STORE_STATE_VARIABLES();
 			unwind_stack(FIN_ABORT, zero, 0);
 			return OUTCOME_ABORTED;
-			/* NOTREACHED */
 		    }
 		}
 	    }

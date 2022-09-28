@@ -606,11 +606,10 @@ db_verb_definer(db_verb_handle vh)
 {
     handle *h = (handle *) vh.ptr;
 
-    if (h)
-	return h->definer;
+    if (!h)
+	panic("DB_VERB_DEFINER: Null handle!");
 
-    panic("DB_VERB_DEFINER: Null handle!");
-    return 0;
+    return h->definer;
 }
 
 const char *
@@ -618,11 +617,10 @@ db_verb_names(db_verb_handle vh)
 {
     handle *h = (handle *) vh.ptr;
 
-    if (h)
-	return h->verbdef->name;
+    if (!h)
+	panic("DB_VERB_NAMES: Null handle!");
 
-    panic("DB_VERB_NAMES: Null handle!");
-    return 0;
+    return h->verbdef->name;
 }
 
 void
@@ -632,12 +630,13 @@ db_set_verb_names(db_verb_handle vh, const char *names)
 
     db_priv_affected_callable_verb_lookup();
 
-    if (h) {
-	if (h->verbdef->name)
-	    free_str(h->verbdef->name);
-	h->verbdef->name = names;
-    } else
+    if (!h)
 	panic("DB_SET_VERB_NAMES: Null handle!");
+
+    if (h->verbdef->name)
+	free_str(h->verbdef->name);
+
+    h->verbdef->name = names;
 }
 
 Objid
@@ -645,11 +644,10 @@ db_verb_owner(db_verb_handle vh)
 {
     handle *h = (handle *) vh.ptr;
 
-    if (h)
-	return h->verbdef->owner;
+    if (!h)
+	panic("DB_VERB_OWNER: Null handle!");
 
-    panic("DB_VERB_OWNER: Null handle!");
-    return 0;
+    return h->verbdef->owner;
 }
 
 void
@@ -657,10 +655,10 @@ db_set_verb_owner(db_verb_handle vh, Objid owner)
 {
     handle *h = (handle *) vh.ptr;
 
-    if (h)
-	h->verbdef->owner = owner;
-    else
+    if (!h)
 	panic("DB_SET_VERB_OWNER: Null handle!");
+
+    h->verbdef->owner = owner;
 }
 
 unsigned
@@ -668,11 +666,10 @@ db_verb_flags(db_verb_handle vh)
 {
     handle *h = (handle *) vh.ptr;
 
-    if (h)
-	return h->verbdef->perms & PERMMASK;
+    if (!h)
+	panic("DB_VERB_FLAGS: Null handle!");
 
-    panic("DB_VERB_FLAGS: Null handle!");
-    return 0;
+    return h->verbdef->perms & PERMMASK;
 }
 
 void
@@ -682,11 +679,11 @@ db_set_verb_flags(db_verb_handle vh, unsigned flags)
 
     db_priv_affected_callable_verb_lookup();
 
-    if (h) {
-	h->verbdef->perms &= ~PERMMASK;
-	h->verbdef->perms |= flags;
-    } else
+    if (!h)
 	panic("DB_SET_VERB_FLAGS: Null handle!");
+
+    h->verbdef->perms &= ~PERMMASK;
+    h->verbdef->perms |= flags;
 }
 
 Program *
@@ -694,13 +691,11 @@ db_verb_program(db_verb_handle vh)
 {
     handle *h = (handle *) vh.ptr;
 
-    if (h) {
-	Program *p = h->verbdef->program;
+    if (!h)
+	panic("DB_VERB_PROGRAM: Null handle!");
 
-	return p ? p : null_program();
-    }
-    panic("DB_VERB_PROGRAM: Null handle!");
-    return 0;
+    Program *p = h->verbdef->program;
+    return p ? p : null_program();
 }
 
 void
@@ -712,12 +707,12 @@ db_set_verb_program(db_verb_handle vh, Program * program)
 
     /* db_priv_affected_callable_verb_lookup(); */
 
-    if (h) {
-	if (h->verbdef->program)
-	    free_program(h->verbdef->program);
-	h->verbdef->program = program;
-    } else
+    if (!h)
 	panic("DB_SET_VERB_PROGRAM: Null handle!");
+
+    if (h->verbdef->program)
+	free_program(h->verbdef->program);
+    h->verbdef->program = program;
 }
 
 void
@@ -726,12 +721,12 @@ db_verb_arg_specs(db_verb_handle vh,
 {
     handle *h = (handle *) vh.ptr;
 
-    if (h) {
-	*dobj = (h->verbdef->perms >> DOBJSHIFT) & OBJMASK;
-	*prep = h->verbdef->prep;
-	*iobj = (h->verbdef->perms >> IOBJSHIFT) & OBJMASK;
-    } else
+    if (!h)
 	panic("DB_VERB_ARG_SPECS: Null handle!");
+
+    *dobj = (h->verbdef->perms >> DOBJSHIFT) & OBJMASK;
+    *prep = h->verbdef->prep;
+    *iobj = (h->verbdef->perms >> IOBJSHIFT) & OBJMASK;
 }
 
 void
@@ -742,13 +737,13 @@ db_set_verb_arg_specs(db_verb_handle vh,
 
     db_priv_affected_callable_verb_lookup();
 
-    if (h) {
-	h->verbdef->perms = ((h->verbdef->perms & PERMMASK)
-			     | (dobj << DOBJSHIFT)
-			     | (iobj << IOBJSHIFT));
-	h->verbdef->prep = prep;
-    } else
+    if (!h)
 	panic("DB_SET_VERB_ARG_SPECS: Null handle!");
+
+    h->verbdef->perms = ((h->verbdef->perms & PERMMASK)
+			 | (dobj << DOBJSHIFT)
+			 | (iobj << IOBJSHIFT));
+    h->verbdef->prep = prep;
 }
 
 int

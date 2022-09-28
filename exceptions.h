@@ -191,7 +191,7 @@ extern void ES_RaiseException(Exception * exception, int value);
 /*      1) Too many EXCEPT clauses in a single TRY construct.            */
 /*      2) An unhandled exception is RAISEd.                             */
 
-extern void panic(const char *message);
+extern NORETURN_ panic(const char *message);
 
 #endif		/* !Exceptions_H */
 
