@@ -290,7 +290,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 		Expr *time = pop_expr();
 
 		fbc = READ_FORK();
-		id = (op == OP_FORK ? -1 : READ_ID());
+		id = (op == OP_FORK ? -1 : (int)READ_ID());
 		s = alloc_stmt(STMT_FORK);
 		s->s.fork.id = id;
 		s->s.fork.time = time;
@@ -817,7 +817,7 @@ program_to_tree(Program * prog, int vector, int pc_vector, unsigned pcnext)
 {
     Stmt *result;
     Bytecodes bc;
-    int i, sum;
+    unsigned i, sum;
 
     program = prog;
     bc = (pc_vector == MAIN_VECTOR

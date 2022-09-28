@@ -1259,8 +1259,12 @@ stmt_to_code(Stmt * stmt, GState * gstate)
 
     fixup = state.fixups;
     fix_i = 0;
-    for (old_i = new_i = 0; old_i < state.num_bytes; old_i++) {
-	if (fix_i < state.num_fixups && fixup->pc == old_i) {
+    /* in this part of the code old_i and fix_i are starting at 0
+     * and always incremented so casting to unsigned
+     * (to silence vs-signed warnings) will be safe.
+     * Not so in the previous loop. */
+    for (old_i = new_i = 0; (unsigned)old_i < state.num_bytes; old_i++) {
+	if ((unsigned)fix_i < state.num_fixups && fixup->pc == (unsigned)old_i) {
 	    unsigned value, size = 0;	/* initialized to silence warning */
 
 	    value = fixup->value;

@@ -198,7 +198,7 @@ static int expr_tables_initialized = 0;
 static void
 init_expr_tables(void)
 {
-    int i;
+    unsigned i;
 
     for (i = 0; i < Arraysize(prec_table); i++)
 	expr_prec[prec_table[i].kind] = prec_table[i].precedence;

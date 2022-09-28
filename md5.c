@@ -124,7 +124,7 @@ static uint8_t PADDING[64] =
  * Encodes input (uint32_t) into output (uint8_t). Assumes len is a multiple of 4.
  */
 static void
-md5_Encode(uint8_t * output, uint32_t * input, int len)
+md5_Encode(uint8_t * output, uint32_t * input, unsigned len)
 {
     unsigned int i, j;
 
@@ -140,7 +140,7 @@ md5_Encode(uint8_t * output, uint32_t * input, int len)
  * Decodes input (uint8_t) into output (uint32_t). Assumes len is a multiple of 4.
  */
 static void
-md5_Decode(uint32_t * output, uint8_t * input, int len)
+md5_Decode(uint32_t * output, uint8_t * input, unsigned len)
 {
     unsigned int i, j;
 
@@ -263,7 +263,7 @@ md5_Init(md5ctx_t * context)
  * processing another message block, and updating the context.
  */
 void
-md5_Update(md5ctx_t * context, uint8_t * buf, int len)
+md5_Update(md5ctx_t * context, uint8_t * buf, unsigned len)
 {
     unsigned int i, index, partLen;
 

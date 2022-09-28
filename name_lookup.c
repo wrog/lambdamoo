@@ -111,7 +111,7 @@ spawn_pipe(void (*child_proc) (int to_parent, int from_parent),
 }
 
 static void
-ensure_buffer(char **buffer, int *buflen, int len)
+ensure_buffer(char **buffer, unsigned *buflen, unsigned len)
 {
     if (len > *buflen) {
 	if (*buffer)
@@ -122,7 +122,7 @@ ensure_buffer(char **buffer, int *buflen, int len)
 }
 
 static int
-robust_read(int fd, void *buffer, int len)
+read_failed(int fd, void *buffer, unsigned len)
 {
     int count;
 
@@ -130,7 +130,7 @@ robust_read(int fd, void *buffer, int len)
 	count = read(fd, buffer, len);
     } while (count == -1 && errno == EINTR);
 
-    return count;
+    return count < 0 || (unsigned)count != len;
 }
 
 /******************************************************************************
@@ -163,7 +163,7 @@ lookup(int to_intermediary, int from_intermediary)
 {
     struct request req;
     static char *buffer = 0;
-    static int buflen = 0;
+    static unsigned buflen = 0;
     Timer_ID id;
     struct hostent *e;
 
@@ -172,12 +172,11 @@ lookup(int to_intermediary, int from_intermediary)
        expires, we exit (in timeout_proc, above).  The intermediary will
        restart us in that event. */
     for (;;) {
-	if (robust_read(from_intermediary, &req, sizeof(req)) != sizeof(req))
+	if (read_failed(from_intermediary, &req, sizeof(req)))
 	    _exit(1);
-	if (req.kind == REQ_ADDR_FROM_NAME) {
+	if (req.kind == (unsigned)REQ_ADDR_FROM_NAME) {
 	    ensure_buffer(&buffer, &buflen, req.u.length + 1);
-	    if (robust_read(from_intermediary, buffer, req.u.length)
-		!= req.u.length)
+	    if (read_failed(from_intermediary, buffer, req.u.length))
 		_exit(1);
 	    buffer[req.u.length] = 0;
 	    id = set_timer(req.timeout, timeout_proc, 0);
@@ -240,19 +239,19 @@ intermediary(int to_server, int from_server)
 {
     struct request req;
     static char *buffer = 0;
-    static int buflen = 0;
-    int len;
+    static unsigned buflen = 0;
+    unsigned len;
     uint32_t addr;
 
     set_server_cmdline("(MOO name-lookup master)");
     signal(SIGPIPE, SIG_IGN);
     restart_lookup();
     for (;;) {
-	if (robust_read(from_server, &req, sizeof(req)) != sizeof(req))
+	if (read_failed(from_server, &req, sizeof(req)))
 	    _exit(1);
-	if (req.kind == REQ_ADDR_FROM_NAME) {
+	if (req.kind == (unsigned)REQ_ADDR_FROM_NAME) {
 	    ensure_buffer(&buffer, &buflen, req.u.length);
-	    if (robust_read(from_server, buffer, req.u.length) != req.u.length)
+	    if (read_failed(from_server, buffer, req.u.length))
 		_exit(1);
 	}
 	if (!lookup_pid)	/* Restart lookup if it's died */
@@ -261,21 +260,19 @@ intermediary(int to_server, int from_server)
 	    write(to_lookup, &req, sizeof(req));
 	    if (req.kind == REQ_ADDR_FROM_NAME) {
 		write(to_lookup, buffer, req.u.length);
-		if (robust_read(from_lookup, &addr, sizeof(addr))
-		    != sizeof(addr)) {
+		if (read_failed(from_lookup, &addr, sizeof(addr))) {
 		    restart_lookup();
 		    addr = 0;
 		}
 		write(to_server, &addr, sizeof(addr));
 	    } else {
-		if (robust_read(from_lookup, &len, sizeof(len))
-		    != sizeof(len)) {
+		if (read_failed(from_lookup, &len, sizeof(len))) {
 		    restart_lookup();
 		    len = 0;
 		} else {
 		    ensure_buffer(&buffer, &buflen, len);
 		    if (len > 0
-			&& robust_read(from_lookup, buffer, len) != len) {
+			&& read_failed(from_lookup, buffer, len)) {
 			restart_lookup();
 			len = 0;
 		    }
@@ -354,7 +351,7 @@ lookup_name_from_addr(struct sockaddr_in *addr, unsigned timeout)
 {
     struct request req;
     static char *buffer = 0;
-    static int buflen = 0;
+    static unsigned buflen = 0;
     int len;
 
     if (timeout > 0 && check_intermediary()) {
@@ -363,12 +360,11 @@ lookup_name_from_addr(struct sockaddr_in *addr, unsigned timeout)
 	req.u.address = *addr;
 	if (write(to_intermediary, &req, sizeof(req)) != sizeof(req))
 	    abandon_intermediary("LOOKUP_NAME: Write to intermediary failed");
-	else if (robust_read(from_intermediary, &len, sizeof(len))
-		 != sizeof(len))
+	else if (read_failed(from_intermediary, &len, sizeof(len)))
 	    abandon_intermediary("LOOKUP_NAME: Read from intermediary failed");
 	else if (len != 0) {
 	    ensure_buffer(&buffer, &buflen, len + 1);
-	    if (robust_read(from_intermediary, buffer, len) != len)
+	    if (read_failed(from_intermediary, buffer, len))
 		abandon_intermediary("LOOKUP_NAME: "
 				   "Data-read from intermediary failed");
 	    else {
@@ -408,8 +404,7 @@ lookup_addr_from_name(const char *name, unsigned timeout)
 	if (write(to_intermediary, &req, sizeof(req)) != sizeof(req)
 	    || write(to_intermediary, name, req.u.length) != req.u.length)
 	    abandon_intermediary("LOOKUP_ADDR: Write to intermediary failed");
-	else if (robust_read(from_intermediary, &addr, sizeof(addr))
-		 != sizeof(addr))
+	else if (read_failed(from_intermediary, &addr, sizeof(addr)))
 	    abandon_intermediary("LOOKUP_ADDR: Read from intermediary failed");
     }
 

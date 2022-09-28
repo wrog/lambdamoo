@@ -57,7 +57,7 @@ typedef struct {
 } md5ctx_t;
 
 void md5_Init(md5ctx_t * context);
-void md5_Update(md5ctx_t * context, uint8_t * buf, int len);
+void md5_Update(md5ctx_t * context, uint8_t * buf, unsigned len);
 void md5_Final(md5ctx_t * context, uint8_t digest[16]);
 
 #endif		/* !MD5_h */

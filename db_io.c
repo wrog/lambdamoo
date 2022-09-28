@@ -279,9 +279,9 @@ dbio_printf(const char *format,...)
 }
 
 void
-dbio_write_num(int64_t n)
+dbio_write_num(Num n)
 {
-    dbio_printf("%"PRId64"\n", n);
+    dbio_printf("%"PRIdN"\n", n);
 }
 
 void

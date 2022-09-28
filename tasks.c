@@ -1465,7 +1465,8 @@ read_task_queue(void)
     }
     for (; count > 0; count--) {
 	unsigned first_lineno;
-	int id, old_size;
+	int id;
+	unsigned old_size;
 	long st;
 	char c;
 	time_t start_time;
@@ -1663,7 +1664,7 @@ activation_bytes(activation * ap)
 {
     int total = sizeof(activation);
     Var *v;
-    int i;
+    unsigned i;
 
     /* The MOO Way [tm] is double-billing to avoid the possibility
      * of not billing at all, so the size of the prog is counted here
@@ -1729,7 +1730,7 @@ static int
 suspended_task_bytes(vm the_vm)
 {
     int total = sizeof(vmstruct);
-    int i;
+    unsigned i;
 
     for (i = 0; i <= the_vm->top_activ_stack; i++)
 	total += activation_bytes(the_vm->activ_stack + i);

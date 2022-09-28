@@ -205,7 +205,7 @@ disassemble(Program * prog, Printer p, void *data)
     stream_printf(s, "First line number: %d", prog->first_lineno);
     output(s);
 
-    for (i = -1; i < 0 || i < prog->fork_vectors_size; i++) {
+    for (i = -1; i < 0 || (unsigned)i < prog->fork_vectors_size; i++) {
 	output(s);
 	if (i == -1) {
 	    stream_printf(s, "Main code vector:");
@@ -247,7 +247,7 @@ disassemble(Program * prog, Printer p, void *data)
 	    if (b != OP_EXTENDED)
 		stream_add_string(insn, COUNT_TICK(b) ? " * " : "   ");
 	    if (IS_OPTIM_NUM_OPCODE(b))
-		stream_printf(insn, "NUM %d", OPCODE_TO_OPTIM_NUM(b));
+		stream_printf(insn, "NUM %"PRIdN, OPCODE_TO_OPTIM_NUM(b));
 #ifdef BYTECODE_REDUCE_REF
 	    else if (IS_PUSH_CLEAR_n(b))
 		stream_printf(insn, "PUSH_CLEAR %s", NAMES(PUSH_CLEAR_n_INDEX(b)));

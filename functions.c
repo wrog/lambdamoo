@@ -456,7 +456,7 @@ static package
 bf_function_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
-    int i;
+    unsigned i;
 
     if (arglist.v.list[0].v.num == 1) {
 	i = number_func_by_name(arglist.v.list[1].v.str);
@@ -478,7 +478,7 @@ bf_function_info(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 static void
 load_server_protect_function_flags(void)
 {
-    int i;
+    unsigned i;
 
     for (i = 0; i < top_bf_table; i++) {
 	bf_table[i].protected

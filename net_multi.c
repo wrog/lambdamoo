@@ -283,7 +283,7 @@ pull_input(nhandle * h)
             h->excess_utf_count = 0;
 	} else {
 	    for (ptr = buffer, end = buffer + count; ptr < end && ptr + clearance_utf(*ptr) <= end;) {
-		int c = get_utf(&ptr);
+	        int c = get_utf((const char **) &ptr);
 
 		if (my_is_printable(c))
 		    stream_add_utf(s, c);
@@ -399,7 +399,7 @@ make_new_connection(server_listener sl, int rfd, int wfd,
 static void
 get_pocket_descriptors(void)
 {
-    int i;
+    unsigned i;
 
     if (!pocket_descriptors)
 	pocket_descriptors =
@@ -419,7 +419,8 @@ accept_new_connection(nlistener * l)
 {
     network_handle nh;
     nhandle *h;
-    int rfd, wfd, i;
+    int rfd, wfd;
+    unsigned i;
     const char *host_name;
 
     switch (proto_accept_connection(l->fd, l->slistener,
