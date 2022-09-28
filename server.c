@@ -176,7 +176,7 @@ send_shutdown_message(const char *msg)
     free_stream(s);
 }
 
-static void
+static NORETURN_
 abort_server(void)
 {
     signal(SIGINT, SIG_DFL);
@@ -196,7 +196,7 @@ abort_server(void)
     abort();
 }
 
-void
+NORETURN_
 panic(const char *message)
 {
     static int in_panic = 0;
