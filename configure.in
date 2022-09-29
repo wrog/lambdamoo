@@ -522,33 +522,21 @@ yes
 
 dnl ***************************************************************************
 dnl Find a usable PCRE library
-AC_ARG_WITH([included-pcre], AS_HELP_STRING([--with-included-pcre],
-			     [use the included PCRE library (default yes)]),
-    [], [with_included_pcre=yes])
-
-if test "$with_included_pcre" = yes
-then
-    AC_CONFIG_SUBDIRS(pcre)
-    CPPFLAGS="-Ipcre $CPPFLAGS"
-    OBJS="pcre/.libs/libpcre.a $OBJS"
-else
-    AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR([missing -lpcre
-*** The PCRE library cannot be found.  Try --with-included-pcre instead.])])
-    AC_MSG_CHECKING(whether -lpcre was built with required features)
-    AC_RUN_IFELSE(AC_LANG_PROGRAM([[# include <pcre.h>]],
-	[[  int have_utf8, have_props;
-
-	    pcre_config(PCRE_CONFIG_UTF8, &have_utf8);
-	    pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &have_props);
-
-	    return (have_utf8 && have_props) ? 0 : 1;
-	]]),
-	[AC_MSG_RESULT(yes)],
-	[AC_MSG_RESULT(no); AC_MSG_ERROR([-lpcre cannot be used
+AC_CHECK_LIB([pcre], [pcre_exec], [], [AC_MSG_ERROR([[missing -lpcre
+*** The PCRE library cannot be found. (must be PCRE1, not PCRE2)
+***   ('apt-get install libpcre3-dev' in Debian or Ubuntu)
+***   (Fedora, Red Hat, MacOS homebrew all have 'pcre' packages)]])])
+AC_MSG_CHECKING([whether -lpcre was built with required features])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[@%:@ include <pcre.h>]],[[
+  int have_utf8, have_props;
+  pcre_config(PCRE_CONFIG_UTF8, &have_utf8);
+  pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &have_props);
+  return (have_utf8 && have_props) ? 0 : 1;
+]])], [AC_MSG_RESULT(yes)], [AC_MSG_RESULT(no)
+AC_MSG_ERROR([[-lpcre cannot be used
 *** The installed PCRE library is missing either support for UTF-8 or support
-*** for Unicode character properties.  Try --with-included-pcre instead.])])
-fi
-AC_SUBST(OBJS)
+*** for Unicode character properties.  We need at least version 8.]])])
+dnl
 
 echo "----------------------------------------------------------------------"
 echo "| The following networking configurations will probably work on your"

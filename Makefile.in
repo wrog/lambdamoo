@@ -18,7 +18,7 @@ LIBS = ucd/libucd.a @LIBS@
 YACC = @YACC@
 
 CFLAGS = @CFLAGS@
-CPPFLAGS = -I. -Iucd @CPPFLAGS@
+CPPFLAGS = -Iucd @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 
 YFLAGS = -d
@@ -74,7 +74,7 @@ COBJS = $(CSRCS:.c=.o)
 
 YOBJS = $(YSRCS:.y=.o)
 
-OBJS = $(COBJS) $(YOBJS) @OBJS@
+OBJS = $(COBJS) $(YOBJS)
 
 DFILES = $(OBJS:.o=.d) $(CLIENT_SRCS:.c=.d)
 
@@ -93,9 +93,6 @@ client_bsd: client_bsd.o
 
 client_sysv: client_sysv.o
 	$(CC) $(CFLAGS) client_sysv.o $(LIBRARIES) -o $@
-
-pcre/.libs/libpcre.a:
-	$(MAKE) -C pcre libpcre.la
 
 # This rule gets around some "make"s' desire to `derive' it from `restart.sh'.
 restart:
@@ -148,11 +145,9 @@ tags:
 clean:
 	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output
 	cd ucd && $(MAKE) clean
-	test ! -e pcre/Makefile || $(MAKE) -C pcre $@
 
 distclean:	clean
 	rm -f config.h Makefile config.status
-	test ! -e pcre/Makefile || $(MAKE) -C pcre $@
 
 .SUFFIXES: .c .o .i .s
 .c.o:
