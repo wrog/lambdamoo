@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Keywords_H
+#define Keywords_H 1
+
 #include "config.h"
 #include "structures.h"
 #include "version.h"
@@ -28,7 +31,9 @@ struct keyword {
 
 typedef const struct keyword Keyword;
 
-extern Keyword *find_keyword(const char *);
+extern Keyword *find_keyword(const char *, size_t);
+
+#endif	/* Keywords_H */
 
 /*
  * $Log$

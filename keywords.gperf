@@ -17,35 +17,31 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#include "my-string.h"
-
-#include "config.h"
 #include "keywords.h"
 #include "tokens.h"
-#include "utils.h"
 
 %}
 struct keyword {};		/* bogus decl not copied into the output */
 %%
-if,		DBV_Prehistory, tIF
-else,		DBV_Prehistory, tELSE
-elseif,		DBV_Prehistory, tELSEIF
-endif,		DBV_Prehistory, tENDIF
-for,		DBV_Prehistory, tFOR
-in,		DBV_Prehistory, tIN
-endfor,		DBV_Prehistory, tENDFOR
-fork,		DBV_Prehistory, tFORK
-endfork,	DBV_Prehistory, tENDFORK
-return,		DBV_Prehistory, tRETURN
-while,		DBV_Prehistory, tWHILE
-endwhile,	DBV_Prehistory, tENDWHILE
-try,		DBV_Exceptions, tTRY
-except,		DBV_Exceptions, tEXCEPT
-finally,	DBV_Exceptions, tFINALLY
-endtry,		DBV_Exceptions, tENDTRY
-ANY,		DBV_Exceptions, tANY
-break,		DBV_BreakCont, tBREAK
-continue,	DBV_BreakCont, tCONTINUE
+if,		DBV_Prehistory, tIF,		-1
+else,		DBV_Prehistory, tELSE,		-1
+elseif,		DBV_Prehistory, tELSEIF,	-1
+endif,		DBV_Prehistory, tENDIF,		-1
+for,		DBV_Prehistory, tFOR,		-1
+in,		DBV_Prehistory, tIN,		-1
+endfor,		DBV_Prehistory, tENDFOR,	-1
+fork,		DBV_Prehistory, tFORK,		-1
+endfork,	DBV_Prehistory, tENDFORK,	-1
+return,		DBV_Prehistory, tRETURN,	-1
+while,		DBV_Prehistory, tWHILE,		-1
+endwhile,	DBV_Prehistory, tENDWHILE,	-1
+try,		DBV_Exceptions, tTRY,		-1
+except,		DBV_Exceptions, tEXCEPT,	-1
+finally,	DBV_Exceptions, tFINALLY,	-1
+endtry,		DBV_Exceptions, tENDTRY,	-1
+ANY,		DBV_Exceptions, tANY,		-1
+break,		DBV_BreakCont,  tBREAK,		-1
+continue,	DBV_BreakCont,  tCONTINUE,	-1
 E_NONE,		DBV_Prehistory, tERROR,	E_NONE
 E_TYPE,		DBV_Prehistory, tERROR,	E_TYPE
 E_DIV,		DBV_Prehistory, tERROR,	E_DIV
@@ -63,12 +59,6 @@ E_INVARG,	DBV_Prehistory, tERROR,	E_INVARG
 E_QUOTA,	DBV_Prehistory, tERROR,	E_QUOTA
 E_FLOAT,	DBV_Float,	tERROR,	E_FLOAT
 %%
-
-const struct keyword *
-find_keyword(const char *word)
-{
-    return in_word_set(word, strlen(word));
-}
 
 char rcsid_keywords[] = "$Id$";
 
