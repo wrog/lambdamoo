@@ -896,16 +896,15 @@ start_over:
     }
 
     if (isalpha(c) || c == '_') {
-	char	       *buf;
 	Keyword	       *k;
 
 	stream_add_char(token_stream, c);
 	while (isalnum(c = lex_getc()) || c == '_')
 	    stream_add_char(token_stream, c);
 	lex_ungetc(c);
-	buf = reset_stream(token_stream);
 
-	k = find_keyword(buf);
+	k = find_keyword(stream_contents(token_stream),
+			 stream_length(token_stream));
 	if (k) {
 	    if (k->version <= language_version) {
 		int	t = k->token;
@@ -915,12 +914,12 @@ start_over:
 		return t;
 	    } else {		/* New keyword being used as an identifier */
 		if (!must_rename_keywords)
-		    warning("Renaming old use of new keyword: ", buf);
+		    warning("Renaming old use of new keyword: ", k->name);
 		must_rename_keywords = 1;
 	    }
 	}
 
-	yylval.string = alloc_string(buf);
+	yylval.string = alloc_string(reset_stream(token_stream));
 	return tID;
     }
 
@@ -1151,10 +1150,15 @@ parse_program(DB_Version version, Parser_Client c, void *data)
 	     */
 	    unsigned i;
 
+	    /* yyparse() and hence yylex() have been called by now,
+	     * so token_stream could have garbage in it.
+	     */
+	    (void)reset_stream(token_stream);
+
 	    for (i = first_user_slot(version); i < local_names->size; i++) {
 		const char	*name = local_names->names[i];
 
-		if (find_keyword(name)) { /* Got one... */
+		if (find_keyword(name, strlen(name))) { /* Got one... */
 		    stream_add_string(token_stream, name);
 		    do {
 			stream_add_char(token_stream, '_');

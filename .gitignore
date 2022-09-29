@@ -4,6 +4,7 @@ autom4te.cache
 config.h
 config.log
 config.status
+keywords.c
 y.tab.h
 version_src*.h
 *.o

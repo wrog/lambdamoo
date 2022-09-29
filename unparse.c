@@ -469,7 +469,7 @@ ok_identifier(const char *name)
 
     if (*p != '\0' && (isalpha(*p) || *p == '_')) {
 	while (*++p != '\0' && (isalnum(*p) || *p == '_'));
-	if (*p == '\0' && !find_keyword(name))
+	if (*p == '\0' && !find_keyword(name, p - name))
 	    return 1;
     }
     return 0;
