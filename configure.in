@@ -263,6 +263,11 @@ dnl Start of actual configuration tests
 dnl ***************************************************************************
 
 AC_PROG_YACC
+AC_CHECK_PROGS([GPERF], [gperf])
+[test "x$ac_cv_prog_GPERF" = x &&] AC_MSG_ERROR([[We need gperf]])dnl
+AC_ARG_VAR([GPERF],
+[The perfect hash function generator to use.  Defaults to 'gperf'.])
+
 AC_PROG_CC
 AC_GCC_TRADITIONAL
 AC_GNU_SOURCE

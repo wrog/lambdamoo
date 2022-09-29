@@ -23,10 +23,11 @@ LDFLAGS = @LDFLAGS@
 
 YFLAGS = -d
 COMPILE.c = $(CC) $(CFLAGS) $(CPPFLAGS) -c
+GPERF = @GPERF@
 
 CSRCS = ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	db_tune.c db_verbs.c decompile.c disassemble.c eval_env.c \
-	eval_vm.c exceptions.c execute.c extensions.c functions.c keywords.c \
+	eval_vm.c exceptions.c execute.c extensions.c functions.c \
 	list.c log.c match.c md5.c name_lookup.c network.c net_mplex.c \
 	net_proto.c numbers.c objects.c parse_cmd.c pattern.c program.c \
 	property.c quota.c ref_count.c server.c storage.c \
@@ -74,7 +75,7 @@ COBJS = $(CSRCS:.c=.o)
 
 YOBJS = $(YSRCS:.y=.o)
 
-OBJS = $(COBJS) $(YOBJS)
+OBJS = $(COBJS) $(YOBJS) keywords.o
 
 DFILES = $(OBJS:.o=.d) $(CLIENT_SRCS:.c=.d)
 
@@ -118,10 +119,11 @@ y.tab.h: parser.o
 # hacked version 2.1 of GNU gperf, renamed 'pgperf', now removed;
 # see commit log for full history.
 keywords.c: keywords.gperf
-	gperf --language=C --ignore-case --readonly-tables --struct-type \
-		--omit-struct-type --key-positions=1,3,$$ keywords.gperf \
-		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/'   \
-		> keywords.c
+	$(GPERF) --language=ANSI-C --ignore-case --readonly-tables \
+		--struct-type --omit-struct-type -c -l \
+		--initializer-suffix=,0,0,-1 \
+		--lookup-function-name=find_keyword \
+		--output-file="$@" $<
 
 # the only dependences we have to add are
 # those on files that are automatically generated
@@ -147,7 +149,7 @@ tags:
 	etags -t $(SRCS)
 
 clean:
-	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output
+	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c
 	cd ucd && $(MAKE) clean
 
 distclean:	clean
