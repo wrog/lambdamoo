@@ -159,12 +159,22 @@ dist.tar.Z:	$(DISTFILES)
 tags:
 	etags -t $(SRCS)
 
+clean-all: clean
+	@for dir in $(XT_DIRS); do $(MAKE) -C $$dir clean; done
+
+distclean-all: distclean
+	@for dir in $(XT_DIRS); do $(MAKE) -C $$dir distclean; done
+
+gitclean-all: gitclean distclean-all
+
 clean:
 	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c
-	cd ucd && $(MAKE) clean
 
-distclean:	clean
-	rm -f config.h Makefile config.status
+distclean: clean
+	rm -f config.h Makefile config.status config.cache config.log
+
+gitclean: distclean
+	rm -rf configure autom4te.cache
 
 .SUFFIXES: .c .o .i .s
 .c.o:
