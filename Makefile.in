@@ -150,8 +150,11 @@ tags:
 clean:
 	rm -f $(OBJS) $(OPT_NET_OBJS) core parser.c y.tab.c y.tab.h y.output keywords.c makedep eddep
 
-distclean:	clean
-	rm -f config.h Makefile config.status
+distclean: clean
+	rm -f config.h Makefile config.status config.cache config.log
+
+gitclean: distclean
+	rm -rf autom4te.cache
 
 depend: ${ALL_CSRCS}
 	rm -f eddep makedep
