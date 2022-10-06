@@ -27,9 +27,6 @@
 #include "utils.h"
 
 static unsigned alloc_num[Sizeof_Memory_Type];
-#ifdef USE_GNU_MALLOC
-static unsigned alloc_size[Sizeof_Memory_Type], alloc_real_size[Sizeof_Memory_Type];
-#endif
 
 static inline int
 refcount_overhead(Memory_Type type)
@@ -73,15 +70,6 @@ mymalloc(unsigned size, Memory_Type type)
 	panic(msg);
     }
     alloc_num[type]++;
-#ifdef USE_GNU_MALLOC
-    {
-	extern unsigned malloc_real_size(void *ptr);
-	extern unsigned malloc_size(void *ptr);
-
-	alloc_size[type] += malloc_size(memptr);
-	alloc_real_size[type] += malloc_real_size(memptr);
-    }
-#endif
 
     if (offs) {
 	memptr += offs;
@@ -128,26 +116,11 @@ myrealloc(void *ptr, unsigned size, Memory_Type type)
     int offs = refcount_overhead(type);
     static char msg[100];
 
-#ifdef USE_GNU_MALLOC
-    {
-	extern unsigned malloc_real_size(void *ptr);
-	extern unsigned malloc_size(void *ptr);
-
-	alloc_size[type] -= malloc_size(ptr);
-	alloc_real_size[type] -= malloc_real_size(ptr);
-#endif
-
-	ptr = realloc((char *) ptr - offs, size + offs);
-	if (!ptr) {
-	    sprintf(msg, "memory re-allocation (size %u) failed!", size);
-	    panic(msg);
-	}
-#ifdef USE_GNU_MALLOC
-	alloc_size[type] += malloc_size(ptr);
-	alloc_real_size[type] += malloc_real_size(ptr);
+    ptr = realloc((char *) ptr - offs, size + offs);
+    if (!ptr) {
+	sprintf(msg, "memory re-allocation (size %u) failed!", size);
+	panic(msg);
     }
-#endif
-
     return (char *) ptr + offs;
 }
 
@@ -155,78 +128,13 @@ void
 myfree(void *ptr, Memory_Type type)
 {
     alloc_num[type]--;
-#ifdef USE_GNU_MALLOC
-    {
-	extern unsigned malloc_real_size(void *ptr);
-	extern unsigned malloc_size(void *ptr);
-
-	alloc_size[type] -= malloc_size(ptr);
-	alloc_real_size[type] -= malloc_real_size(ptr);
-    }
-#endif
-
     free((char *) ptr - refcount_overhead(type));
 }
-
-#ifdef USE_GNU_MALLOC
-struct mstats_value {
-    int blocksize;
-    int nfree;
-    int nused;
-};
-
-extern struct mstats_value malloc_stats(int size);
-#endif
-
-/* XXX stupid fix for non-gcc compilers, already in storage.h */
-#ifdef NEVER
-void
-free_str(const char *s)
-{
-    if (delref(s) == 0)
-	myfree((void *) s, M_STRING);
-}
-
-#endif
 
 Var
 memory_usage(void)
 {
-    Var r;
-
-#ifdef USE_GNU_MALLOC
-    int nsizes, i;
-
-    /* Discover how many block sizes there are. */
-    for (nsizes = 0;; nsizes++) {
-	struct mstats_value v;
-
-	v = malloc_stats(nsizes);
-	if (v.blocksize <= 0)
-	    break;
-    }
-
-    /* Get all of the allocation out of the way before getting the stats. */
-    r = new_list(nsizes);
-    for (i = 1; i <= nsizes; i++)
-	r.v.list[i] = new_list(3);
-
-    for (i = 0; i < nsizes; i++) {
-	struct mstats_value v;
-	Var l;
-
-	v = malloc_stats(i);
-	l = r.v.list[i + 1];
-	l.v.list[1].type = l.v.list[2].type = l.v.list[3].type = TYPE_INT;
-	l.v.list[1].v.num = v.blocksize;
-	l.v.list[2].v.num = v.nused;
-	l.v.list[3].v.num = v.nfree;
-    }
-#else
-    r = new_list(0);
-#endif
-
-    return r;
+    return new_list(0);
 }
 
 char rcsid_storage[] = "$Id$";
