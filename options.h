@@ -292,26 +292,6 @@
  */
 /* #define MEMO_STRLEN */
 
-/******************************************************************************
- * This package comes with a copy of the implementation of malloc() from GNU
- * Emacs.  This is a very nice and reasonably portable implementation, but some
- * systems, notably the NeXT machine, won't allow programs to provide their own
- * implementations of standard C functions.  Also, the GNU malloc()
- * implementation uses a fair amount more memory than some system-supplied
- * ones, though it does allow for better debugging support.  Define
- * USE_GNU_MALLOC to enable the use of the GNU malloc() implementation.
- ******************************************************************************
- * NOTE: This switch is now officially deprecated; it is recommended that you
- *	 avoid its use.  The GNU code is no longer as portable as once it might
- *	 have been, and it causes compilation errors on many systems.  If you
- *	 do enable it, and then experience compilation problems in the file
- *	 `gnu_malloc.c', your first step should be to re-disable its use.  This
- *	 option may be completely removed in a later release of the server.
- ******************************************************************************
- */
-
-/* #define USE_GNU_MALLOC */
-
 /*****************************************************************************
  ********** You shouldn't need to change anything below this point. **********
  *****************************************************************************/
