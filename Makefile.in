@@ -121,12 +121,10 @@ configure: configure.ac aclocal.m4 $(abs_srcdir)/ac_include/*.m4
 config.status: configure
 	./config.status --recheck
 
-Makefile: Makefile.in config.status
-	@echo "[ $@ : $? ]"
-	./config.status
+Makefile config.h: config.lastrun
 
-config.h: config.h.in config.status
-	@echo "[ $@ : $? ]"
+config.lastrun: config.status Makefile.in config.h.in
+	@echo "[ $? ]"
 	./config.status
 
 y.tab.h: parser.o
@@ -184,7 +182,7 @@ clean:
 	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c
 
 distclean: clean
-	rm -f config.h Makefile config.status config.cache config.log
+	rm -f config.h Makefile config.status config.cache config.log config.lastrun
 
 gitclean: distclean
 	rm -rf configure autom4te.cache

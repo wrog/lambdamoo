@@ -4,6 +4,8 @@ autom4te.cache
 config.h
 config.log
 config.status
+config.lastrun
+config.cache
 keywords.c
 y.tab.h
 *.o

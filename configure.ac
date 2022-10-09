@@ -24,6 +24,10 @@ AC_CONFIG_MACRO_DIR([ac_include])
 AC_CONFIG_SRCDIR([Minimal.db])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_COMMANDS([config.lastrun], [[
+  chmod -w Makefile config.h
+  date > config.lastrun
+]])
 
 dnl ***************************************************************************
 dnl Start of actual configuration tests
