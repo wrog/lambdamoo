@@ -16,6 +16,10 @@ dnl   Palo Alto, CA 94304
 dnl   Pavel@Xerox.Com
 dnl
 AC_INIT
+[if test "x$srcdir" != "x." && test -f "$srcdir/config.status" ; then]
+  AC_MSG_ERROR([[clean up the source directory (make distclean) before attempting a VPATH build]])[
+fi]
+
 AC_CONFIG_MACRO_DIR([ac_include])
 AC_CONFIG_SRCDIR([Minimal.db])
 AC_CONFIG_HEADERS([config.h])
@@ -36,6 +40,7 @@ dnl ***************************************************************************
 dnl Start of actual configuration tests
 dnl ***************************************************************************
 
+AC_PROG_MAKE_SET
 AC_PROG_YACC
 AC_CHECK_PROGS([GPERF], [gperf])
 [test "x$ac_cv_prog_GPERF" = x &&] AC_MSG_ERROR([[We need gperf]])dnl

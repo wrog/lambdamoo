@@ -13,12 +13,18 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
+VPATH = @srcdir@
+srcdir = @srcdir@
+abs_srcdir = @abs_srcdir@
+abs_builddir = @abs_builddir@
+@SET_MAKE@
+
 CC = @CC@
 LIBS = @LIBS@
 YACC = @YACC@
 
 CFLAGS = @CFLAGS@
-CPPFLAGS = @CPPFLAGS@
+CPPFLAGS = -I$(abs_builddir) -I$(abs_srcdir) @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 
 YFLAGS = -d
@@ -97,12 +103,12 @@ client_sysv: client_sysv.o
 restart:
 	touch restart
 
-configure version_options.h: configure.ac options.ac aclocal.m4 ac_include/*.m4
+configure version_options.h: configure.ac options.ac aclocal.m4 $(abs_srcdir)/ac_include/*.m4
 	@echo "[ $@ : $? ]"
 	autoconf
 
 config.status: configure
-	./config.status --recheck || ./configure --no-create
+	./config.status --recheck
 
 Makefile config.h options.h: config.lastrun
 
