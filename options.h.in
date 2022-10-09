@@ -15,6 +15,89 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+/*  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!! WARNING:  If you are about to edit this file,  !!!
+    !!! STOP.     READ AND UNDERSTAND THIS FIRST.      !!!
+
+As of 1.9.0, the recommended method for changing options.h settings
+is to use the ./configure 'Optional Features' arguments,
+which can be listed using ./configure --help=short  (./configure -hs)
+one or more of which will likely do what you need, e.g.,
+
+   ./configure --enable-net=tcp,8888,out
+
+to set all of NETWORK_PROTOCOL, DEFAULT_PORT, and OUTBOUND_NETWORK in
+a single argument.
+
+Individual #defined names may be set or unset using --enable-def-NAME=
+or --disable-def-NAME, which have priority over other --enable/disable
+settings (for if you want things a particular way and know what you're
+doing), e.g.,
+
+   ./configure --enable-def-LOG_COMMANDS \
+       --enable-def-DEFAULT_MAX_STACK_DEPTH=1000 \
+       --disable-def-INPUT_APPLY_BACKSPACE
+
+Note that some of the newer options that depend on ./configure to seek
+out necessary optional libraries may not compile *unless* you set them
+this way (options_epilog.h should complain in these cases).
+
+Settings made via ./configure persist until the next run of
+config.status, which the Makefile will invoke on any edit to the
+.in|.ac files, and which will OVERWRITE ALL EDITS MADE TO options.h.
+
+If what you want is to change the default setting for a #define,
+you need to edit options.ac and rerun autoconf; commentary there
+explains how that all works.
+
+The rest of this comment is for those of you stuck on a platform
+without autoconf, or if you are an Expert Who Prefers The Old Ways,
+or if you otherwise feel an urge to edit an options file by hand
+(the rest of you can stop reading now):
+
+(*) First, know which file you are editing.
+    *This* comment is repeated in BOTH options.h and options.h.in;
+    options.h is distinguished by being read-only.
+
+(*) options.h is what actually gets compiled into the server.  Since
+    it is always being overwritten by ./config.status, there usually
+    no point to editing it.  Which is WHY it is read-only.
+
+    But, if you are just wanting to try something out temporarily, you
+    can chmod +w and edit away.  Whatever you do will stay around as
+    long as you do not run ./configure or touch any of Makefile or
+    *.in, or anything that configure depends on (*.ac, or
+    anything under ac_include/).
+
+    Otherwise,
+
+(*) options.h.in, the template for options.h, is where the more
+    persistent changes need to be made.  It is edited in the same way
+    as config.h.in.
+
+(Essentially, when creating options.h, ./configure (actually
+config.status) reads options.h.in, and replaces each bare #undef line
+with either a #define or a comment; everything else is copied
+verbatim.
+
+Thus, changing an #undef to a #define will do what you expect, but in
+order to #undef an option that is #defined by default, you will need
+to COMMENT OUT OR DELETE the #undef line so that ./configure no longer
+has a place to substitute the default value it knows about.
+
+Note that either of these actions make it impossible for ./configure
+to affect this NAME thereafter (but you already guessed this).
+
+And, again, for any changes that are truly permanent and/or that you
+want to propagate upstream, you will want to get them into options.ac.
+
+Also note that a historically popular way of changing options.h
+settings by loading up CPPFLAGS or CFLAGS with -D arguments only ever
+worked for identifiers that were #undef by default.  Such practices
+should now be completely unnecessary given that
+--(enable|disable)-def-* is available.)
+*/
+
 #ifndef Options_H
 #define Options_H 1
 
@@ -25,7 +108,7 @@
  * panics.  Define LOG_COMMANDS to enable this logging.
  */
 
-/* #define LOG_COMMANDS */
+#undef LOG_COMMANDS
 
 /******************************************************************************
  * The server normally forks a separate process to make database checkpoints;
@@ -39,7 +122,7 @@
  * checkpoints.
  */
 
-/* #define UNFORKED_CHECKPOINTS */
+#undef UNFORKED_CHECKPOINTS
 
 /******************************************************************************
  * If OUT_OF_BAND_PREFIX is defined as a non-empty string, then any lines of
@@ -50,7 +133,7 @@
  * server.
  */
 
-#define OUT_OF_BAND_PREFIX "#$#"
+#undef OUT_OF_BAND_PREFIX
 
 /******************************************************************************
  * If OUT_OF_BAND_QUOTE_PREFIX is defined as a non-empty string, then any
@@ -61,41 +144,42 @@
  * that would otherwise spawn #0:do_out_of_band_command tasks
  */
 
-#define OUT_OF_BAND_QUOTE_PREFIX "#$\""
+#undef OUT_OF_BAND_QUOTE_PREFIX
 
 /******************************************************************************
  * The following constants define the execution limits placed on all MOO tasks.
- *
- * DEFAULT_MAX_STACK_DEPTH is the default maximum depth allowed for the MOO
- *	verb-call stack, the maximum number of dynamically-nested calls at any
- *	given time.  If defined in the database and larger than this default,
- *	$server_options.max_stack_depth overrides this default.
- * DEFAULT_FG_TICKS and DEFAULT_BG_TICKS are the default maximum numbers of
- *	`ticks' (basic operations) any task is allowed to use without
- *	suspending.  If defined in the database, $server_options.fg_ticks and
- *	$server_options.bg_ticks override these defaults.
- * DEFAULT_FG_SECONDS and DEFAULT_BG_SECONDS are the default maximum numbers of
- *	real-time seconds any task is allowed to use without suspending.  If
- *	defined in the database, $server_options.fg_seconds and
- *	$server_options.bg_seconds override these defaults.
  *
  * The *FG* constants are used only for `foreground' tasks (those started by
  * either player input or the server's initiative and that have never
  * suspended); the *BG* constants are used only for `background' tasks (forked
  * tasks and those of any kind that have suspended).
- *
- * The values given below are documented in the LambdaMOO Programmer's Manual,
- * so they should either be left as they are or else the manual should be
- * updated.
  */
 
-#define DEFAULT_MAX_STACK_DEPTH	50
+/* DEFAULT_MAX_STACK_DEPTH is the default maximum depth allowed for the MOO
+ *	verb-call stack, the maximum number of dynamically-nested calls at any
+ *	given time.  If defined in the database and larger than this default,
+ *	$server_options.max_stack_depth overrides this default.
+ */
 
-#define DEFAULT_FG_TICKS	30000
-#define DEFAULT_BG_TICKS	15000
+#undef DEFAULT_MAX_STACK_DEPTH
 
-#define DEFAULT_FG_SECONDS	5
-#define DEFAULT_BG_SECONDS	3
+/* DEFAULT_FG_TICKS and DEFAULT_BG_TICKS are the default maximum numbers of
+ *	`ticks' (basic operations) any task is allowed to use without
+ *	suspending.  If defined in the database, $server_options.fg_ticks and
+ *	$server_options.bg_ticks override these defaults.
+ */
+
+#undef DEFAULT_FG_TICKS
+#undef DEFAULT_BG_TICKS
+
+/* DEFAULT_FG_SECONDS and DEFAULT_BG_SECONDS are the default maximum numbers of
+ *	real-time seconds any task is allowed to use without suspending.  If
+ *	defined in the database, $server_options.fg_seconds and
+ *	$server_options.bg_seconds override these defaults.
+ */
+
+#undef DEFAULT_FG_SECONDS
+#undef DEFAULT_BG_SECONDS
 
 /******************************************************************************
  * Debug settings:
@@ -103,7 +187,7 @@
  * DEBUG_LOG_TRACEBACKS prints all tracebacks to the server log.
  */
 
-#define DEBUG_LOG_TRACEBACKS
+#undef DEBUG_LOG_TRACEBACKS
 
 /******************************************************************************
  * NETWORK_PROTOCOL must be defined as one of the following:
@@ -117,19 +201,22 @@
  *		to the machine on which the server is running.  Depending on
  *		the value of NETWORK_STYLE, below, this will be either UNIX-
  *		domain sockets (NS_BSD) or named pipes (NS_SYSV).
- *
- * If NP_TCP is selected, then DEFAULT_PORT is the TCP port number on which the
+ */
+
+#undef NETWORK_PROTOCOL
+
+/* If NP_TCP is selected, then DEFAULT_PORT is the TCP port number on which the
  * server listens when no port argument is given on the command line.
- *
- * If NP_LOCAL is selected, then DEFAULT_CONNECT_FILE is the name of the UNIX
+ */
+
+#undef DEFAULT_PORT
+
+/* If NP_LOCAL is selected, then DEFAULT_CONNECT_FILE is the name of the UNIX
  * pseudo-file through which the server will listen for connections when no
  * file name is given on the command line.
  */
 
-#define NETWORK_PROTOCOL 	NP_TCP
-
-#define DEFAULT_PORT 		7777
-#define DEFAULT_CONNECT_FILE	"/tmp/.MOO-server"
+#undef DEFAULT_CONNECT_FILE
 
 /******************************************************************************
  * If NETWORK_PROTOCOL is not defined as NP_SINGLE, then NETWORK_STYLE must be
@@ -141,7 +228,7 @@
  *		AT&T UNIX System V system.
  */
 
-#define NETWORK_STYLE NS_BSD
+#undef NETWORK_STYLE
 
 /******************************************************************************
  * If NETWORK_PROTOCOL is not defined as NP_SINGLE, then MPLEX_STYLE must be
@@ -159,7 +246,7 @@
  * the bottom of this file pick the right value.
  */
 
-/* #define MPLEX_STYLE MP_POLL */
+#undef MPLEX_STYLE
 
 /******************************************************************************
  * The built-in MOO function open_network_connection(), when enabled,
@@ -186,33 +273,38 @@
  *  in place of OBN_OFF/OBN_ON; do not rely on these going forward).
  */
 
-/* #define OUTBOUND_NETWORK OBN_OFF */
+#undef OUTBOUND_NETWORK
 
 /******************************************************************************
  * The following constants define certain aspects of the server's network
  * behavior if NETWORK_PROTOCOL is not defined as NP_SINGLE.
  *
- * MAX_QUEUED_OUTPUT is the maximum number of output characters the server is
- *		     willing to buffer for any given network connection before
- *		     discarding old output to make way for new.  The server
- *		     only discards output after attempting to send as much as
- *		     possible on the connection without blocking.
- * MAX_QUEUED_INPUT is the maximum number of input characters the server is
- *		    willing to buffer from any given network connection before
- *		    it stops reading from the connection at all.  The server
- *		    starts reading from the connection again once most of the
- *		    buffered input is consumed.
- * DEFAULT_CONNECT_TIMEOUT is the default number of seconds an un-logged-in
- *			   connection is allowed to remain idle without being
- *			   forcibly closed by the server; this can be
- *			   overridden by defining the `connect_timeout'
- *			   property on $server_options or on L, for connections
- *			   accepted by a given listener L.
+ * MAX_QUEUED_OUTPUT is the maximum number of output characters the
+ *   server is willing to buffer for any given network connection
+ *   before discarding old output to make way for new.  The server
+ *   only discards output after attempting to send as much as possible
+ *   on the connection without blocking.
  */
 
-#define MAX_QUEUED_OUTPUT	65536
-#define MAX_QUEUED_INPUT	MAX_QUEUED_OUTPUT
-#define DEFAULT_CONNECT_TIMEOUT	300
+#undef MAX_QUEUED_OUTPUT
+
+/* MAX_QUEUED_INPUT is the maximum number of input characters the
+ *   server is willing to buffer from any given network connection
+ *   before it stops reading from the connection at all.  The server
+ *   starts reading from the connection again once most of the
+ *   buffered input is consumed.
+ */
+
+#undef MAX_QUEUED_INPUT
+
+/* DEFAULT_CONNECT_TIMEOUT is the default number of seconds an
+ *   un-logged-in connection is allowed to remain idle without being
+ *   forcibly closed by the server; this can be overridden by defining
+ *   the `connect_timeout' property on $server_options or on L, for
+ *   connections accepted by a given listener L.
+ */
+
+#undef DEFAULT_CONNECT_TIMEOUT
 
 /******************************************************************************
  * On connections that have not been set to binary mode, the server normally
@@ -221,7 +313,8 @@
  * backspace and delete cause the preceding character (if any) to be removed
  * from the input stream.  (Comment this out to restore pre-1.8.3 behavior)
  */
-#define INPUT_APPLY_BACKSPACE
+
+#undef INPUT_APPLY_BACKSPACE
 
 /******************************************************************************
  * The server maintains a cache of the most recently used patterns from calls
@@ -230,7 +323,7 @@
  * number less than 1.
  */
 
-#define PATTERN_CACHE_SIZE	20
+#undef PATTERN_CACHE_SIZE
 
 /******************************************************************************
  * If you don't plan on using protecting built-in properties (like
@@ -239,7 +332,7 @@
  * expensive.
  */
 
-#define IGNORE_PROP_PROTECTED
+#undef IGNORE_PROP_PROTECTED
 
 /******************************************************************************
  * The code generator can now recognize situations where the code will not
@@ -268,11 +361,8 @@
  *
  * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL
  */
-/* #define BYTECODE_REDUCE_REF */
 
-#ifdef BYTECODE_REDUCE_REF
-#error Think carefully before enabling BYTECODE_REDUCE_REF.  This feature is still beta.  Comment out this line if you are sure.
-#endif
+#undef BYTECODE_REDUCE_REF
 
 /******************************************************************************
  * The server can merge duplicate strings on load to conserve memory.  This
@@ -284,103 +374,20 @@
  * INTERN: lines in the log at startup.
  */
 
-#define STRING_INTERNING /* */
+#undef STRING_INTERNING
 
 /******************************************************************************
  * Store the length of the string WITH the string rather than recomputing
  * it each time it is needed.
  */
-/* #define MEMO_STRLEN */
 
-/*****************************************************************************
- ********** You shouldn't need to change anything below this point. **********
- *****************************************************************************/
+#undef MEMO_STRLEN
 
-#define OBN_OFF		0
-#define OBN_ON		1
+/******************************************************************************
+ * Continue on to the part that ./configure should not be touching ...
+ */
 
-#ifndef OUT_OF_BAND_PREFIX
-#define OUT_OF_BAND_PREFIX ""
-#endif
-#ifndef OUT_OF_BAND_QUOTE_PREFIX
-#define OUT_OF_BAND_QUOTE_PREFIX ""
-#endif
-
-#if PATTERN_CACHE_SIZE < 1
-#  error Illegal match() pattern cache size!
-#endif
-
-#define NP_SINGLE	1
-#define NP_TCP		2
-#define NP_LOCAL	3
-
-#define NS_BSD		1
-#define NS_SYSV		2
-
-#define MP_SELECT	1
-#define MP_POLL		2
-#define MP_FAKE		3
-
-#include "config.h"
-
-#if NETWORK_PROTOCOL != NP_SINGLE  &&  !defined(MPLEX_STYLE)
-#  if NETWORK_STYLE == NS_BSD
-#    if HAVE_SELECT
-#      define MPLEX_STYLE MP_SELECT
-#    else
-       #error You cannot use BSD sockets without having select()!
-#    endif
-#  else				/* NETWORK_STYLE == NS_SYSV */
-#    if NETWORK_PROTOCOL == NP_LOCAL
-#      if SELECT_WORKS_ON_FIFOS
-#        define MPLEX_STYLE MP_SELECT
-#      else
-#        if POLL_WORKS_ON_FIFOS
-#	   define MPLEX_STYLE MP_POLL
-#	 else
-#	   if FSTAT_WORKS_ON_FIFOS
-#	     define MPLEX_STYLE MP_FAKE
-#	   else
-	     #error I need to be able to do a multiplexing wait on FIFOs!
-#	   endif
-#	 endif
-#      endif
-#    else			/* It's a TLI-based networking protocol */
-#      if HAVE_POLL
-#        define MPLEX_STYLE MP_POLL
-#      else
-         #error You cannot use TLI without having poll()!
-#      endif
-#    endif
-#  endif
-#endif
-
-#if (NETWORK_PROTOCOL == NP_LOCAL || NETWORK_PROTOCOL == NP_SINGLE) && defined(OUTBOUND_NETWORK)
-#  error You cannot define "OUTBOUND_NETWORK" with that "NETWORK_PROTOCOL"
-#endif
-
-/* make sure OUTBOUND_NETWORK has a value;
-   for backward compatibility, use 1 if none given */
-#if defined(OUTBOUND_NETWORK) && (( 0 * OUTBOUND_NETWORK - 1 ) == 0)
-#undef OUTBOUND_NETWORK
-#define OUTBOUND_NETWORK 1
-#endif
-
-
-#if NETWORK_PROTOCOL != NP_LOCAL && NETWORK_PROTOCOL != NP_SINGLE && NETWORK_PROTOCOL != NP_TCP
-#  error Illegal value for "NETWORK_PROTOCOL"
-#endif
-
-#if NETWORK_STYLE != NS_BSD && NETWORK_STYLE != NS_SYSV
-#  error Illegal value for "NETWORK_STYLE"
-#endif
-
-#if defined(MPLEX_STYLE) 	\
-    && MPLEX_STYLE != MP_SELECT \
-    && MPLEX_STYLE != MP_POLL \
-    && MPLEX_STYLE != MP_FAKE
-#  error Illegal value for "MPLEX_STYLE"
-#endif
+#include "options_epilog.h"
 
 #endif		/* !Options_H */
 
@@ -403,7 +410,8 @@
  * New server options max_*_concat and max_concat_catchable
  *
  * Revision 1.11  2006/12/06 23:57:51  wrog
- * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
+ * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters
+ * on nonbinary connections (patch 1571939)
  *
  * Revision 1.10  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to

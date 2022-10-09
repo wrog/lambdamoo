@@ -2,6 +2,7 @@ Makefile
 configure
 autom4te.cache
 config.h
+options.h
 config.log
 config.status
 config.lastrun

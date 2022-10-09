@@ -23,11 +23,14 @@ fi]
 AC_CONFIG_MACRO_DIR([ac_include])
 AC_CONFIG_SRCDIR([Minimal.db])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([options.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_COMMANDS([config.lastrun], [[
-  chmod -w Makefile config.h
+  chmod -w Makefile config.h options.h
   date > config.lastrun
 ]])
+m4_include([options.ac])
+MOO_ARG_ENABLE_ALL()
 
 dnl ***************************************************************************
 dnl Start of actual configuration tests

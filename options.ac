@@ -1,0 +1,126 @@
+dnl  -*- autoconf -*-
+dnl -----------------------------------------------------------------
+dnl  Things to know about this file:
+dnl
+dnl  Whatever editing you do, nothing will take effect until you
+dnl  (re)run 'autoconf' (no arguments needed) to generate a new
+dnl  ./configure.
+dnl
+dnl  The autoconf flavor of M4 uses [] for quoting.
+dnl  (You need to do lots of quoting to survive in M4.)
+dnl
+dnl  Each argument to MOO_DECLARE_OPTIONS is an M4-quoted list of
+dnl  four M4-quoted values
+dnl
+dnl    [ [NAME], [TYPE], [[VALUE]], [HELPSTRING]]
+dnl
+dnl  that will (usually) result in
+dnl
+dnl     #define NAME VALUE
+dnl
+dnl  appearing in options.h if no --enable-* flags
+dnl  (e.g., --enable-def-NAME=OTHERVALUE) change anything.
+dnl
+dnl  HELPSTRING is for describing --enable|disable-def-NAME in the
+dnl  --help message.  Try to keep this under 37 characters.
+dnl  Anyone wanting the long version of what NAME does can read
+dnl  options.h{.in}.
+dnl
+dnl  see MOO_DECLARE_OPTIONS (moo_options.m4) for full details
+dnl  (e.g., what the TYPEs mean, etc.)
+dnl
+dnl  VALUE should be double-quoted if it's anything other than 'yes',
+dnl  'no', or numeric.  If you single-quote something that references
+dnl  an M4 macro, that macro will be expanded, and you most likely do
+dnl  not want that.  In theory, single-vs-double quoting should not
+dnl  otherwise make any difference, but if you are in doubt, you can
+dnl  change the quoting, rerun autoconf and diff the new ./configure
+dnl  with the old one to see if it made any difference.)
+dnl
+dnl  If you are a developer looking to add new options:
+dnl
+dnl  (*) Each option specification needs a corresponding
+dnl      options.h.in line that does '#undef FOO'
+dnl      -- even if the default for FOO is to be #defined to something
+dnl      (./configure, when it builds options.h, replaces all exposed
+dnl      #undefs and verbatim copies everything else).
+dnl
+dnl      options.h.in should also contain a full description
+dnl      of what FOO does.
+dnl
+dnl  (*) The  values 'yes' and 'no' get special treatment in ./configure
+dnl      (--enable-def-FOO=no  is the same as --disable-def-FOO)
+dnl      (--enable-def-FOO=yes is the same as --enable-def-FOO
+dnl      without an =, both of which we convert to '#define FOO 1'
+dnl      by the time it reaches C code).  Thus far, nobody has used
+dnl      'yes' or 'no' explicitly in C code for options.
+dnl      Please preserve this state of affairs.
+
+
+MOO_DECLARE_OPTIONS(
+
+dnl These only ever get used in #ifdef/#ifndef:
+dnl
+ [[LOG_COMMANDS],         [bool], no,  [log player commands]],
+ [[UNFORKED_CHECKPOINTS], [bool], no,  [do checkpoints in the foreground]],
+ [[DEBUG_LOG_TRACEBACKS], [bool], yes, [print tracebacks to the server log]],
+ [[INPUT_APPLY_BACKSPACE],[bool], yes, [BKSP/DEL edits nonbinary connections]],
+ [[IGNORE_PROP_PROTECTED],[bool], yes, [ignore builtin property protection]],
+ [[BYTECODE_REDUCE_REF],  [bool], no,  [do bytecode refcount optimization]],
+ [[STRING_INTERNING],     [bool], yes, [do interning of identical strings]],
+ [[MEMO_STRLEN],          [bool], no,  [memoize string lengths]],
+
+dnl
+dnl Everything from here on is only used in #if/#elif or substitutions
+dnl
+
+dnl  These default values are per the MCP 2.0 standard and are
+dnl  unlikely to ever change.
+dnl
+dnl  The wacky bracketing is to keep M4 from doing stupid things with
+dnl  $@ or $#.  Also, '@%:@' is the quadrigraph for '#', the M4
+dnl  comment character, which can cause boundless confusion when it
+dnl  appears raw outside of actual comments (quadrigraphs, translated
+dnl  very late in the game, provide a way to not have to use '#'
+dnl  directly).
+dnl
+ [[OUT_OF_BAND_PREFIX],       [str], ["[@%:@][$][@%:@]"], dnl "#$#"
+  [set prefix for out-of-band commands]],
+ [[OUT_OF_BAND_QUOTE_PREFIX], [str], ["[@%:@][$][\"]"],   dnl "#$\""
+  [set prefix for quoted inband lines]],
+
+dnl  These default values are documented in the LambdaMOO Programmers
+dnl  Manual.  If you change them here, change them there, too.
+dnl
+ [[DEFAULT_BG_SECONDS],     [int], 3,     [max seconds for background tasks]],
+ [[DEFAULT_BG_TICKS],       [int], 15000, [max ticks for background tasks]],
+ [[DEFAULT_FG_SECONDS],     [int], 5,     [max seconds for foreground tasks]],
+ [[DEFAULT_FG_TICKS],       [int], 30000, [max ticks for foreground tasks]],
+ [[DEFAULT_MAX_STACK_DEPTH],[int], 50,    [max frames for evaluation stack]],
+
+dnl  Network options
+dnl
+[[NETWORK_PROTOCOL],     [NP_TCP NP_LOCAL NP_SINGLE], [[NP_TCP]],
+ [NP_TCP vs NP_LOCAL vs NP_SINGLE]],
+[[NETWORK_STYLE],        [NS_BSD NS_SYSV],            [[NS_BSD]],
+ [NS_BSD vs NS_SYSV]],
+[[MPLEX_STYLE],          [MP_SELECT MP_POLL MP_FAKE], no,
+ [MP_SELECT vs MP_POLL vs MP_FAKE]],
+[[DEFAULT_PORT],         [int],                       7777,
+ [initial listening port for NP_TCP]],
+[[DEFAULT_CONNECT_FILE], [str],                       [["/tmp/.MOO-server"]],
+ [initial socket file for NP_LOCAL]],
+[[OUTBOUND_NETWORK],     [OBN_OFF OBN_ON],            no,
+ [allow outgoing network connections]],
+
+dnl  Misc value options
+dnl
+ [[MAX_QUEUED_OUTPUT],      [int], 65536,
+  [server outgoing buffer size]],
+ [[MAX_QUEUED_INPUT],       [int], [[MAX_QUEUED_OUTPUT]],
+  [server incoming buffer size]],
+ [[DEFAULT_CONNECT_TIMEOUT],[int], 300,
+  [not-logged-in max idle time]],
+ [[PATTERN_CACHE_SIZE],     [int], 20,
+  [number of remembered match() patterns]],
+)
