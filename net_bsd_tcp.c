@@ -199,7 +199,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
     static const char *host_name;
     static int port;
     static Timer_ID id;
-    size_t length;
+    socklen_t length;
     int s, result;
     int timeout = server_int_option("name_lookup_timeout", 5);
     static struct sockaddr_in addr;
