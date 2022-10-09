@@ -13,8 +13,14 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
+VPATH = @srcdir@
+srcdir = @srcdir@
+abs_srcdir = @abs_srcdir@
+abs_builddir = @abs_builddir@
+@SET_MAKE@
+
 # XT_MAKEVARS -----
-ucd_dir = ucd
+ucd_dir = $(abs_srcdir)/ucd
 XT_DIRS = $(ucd_dir)
 XT_LOBJS = $(ucd_dir)/libucd.a
 
@@ -23,7 +29,7 @@ LIBS = @LIBS@
 YACC = @YACC@
 
 CFLAGS = @CFLAGS@
-CPPFLAGS = -I$(ucd_dir) @CPPFLAGS@
+CPPFLAGS = -I$(abs_builddir) -I$(abs_srcdir) -I$(ucd_dir) @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 
 YFLAGS = -d
@@ -106,7 +112,7 @@ configure: configure.in
 	autoconf
 
 config.status: configure
-	./config.status --recheck || ./configure --no-create
+	./config.status --recheck
 
 Makefile: Makefile.in config.status
 	@echo "[ $@ : $? ]"
