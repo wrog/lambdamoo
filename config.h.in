@@ -144,19 +144,6 @@
 
 #undef const
 
-/* Some sites have installed GCC improperly or incompletely, thereby requiring
- * the server to be compiled with the `-traditional' switch.  That disables the
- * `const', `volatile' or `signed' keywords, which we need.  Thus, for GCC, we
- * do these little substitutions to always refer to its `hidden' names for
- * these keywords.
- */
-
-#if defined(__GNUC__) && !HAVE_SYS_CDEFS_H
-#  define const __const__
-#  define volatile __volatile__
-#  define signed __signed__
-#endif
-
 /* Certain functions used by the server are `optional', in the sense that the
  * server can provide its own definition if necessary.  In some cases, there
  * are a number of common ways to do the same thing, differing by system type
@@ -249,25 +236,8 @@
 
 #undef POSIX_NONBLOCKING_WORKS
 
-/* The following code figures out how to express a 32-bit integer type on your
- * machine.
- */
-
-#include <limits.h>
-
-#if INT_MAX == 2147483647
-   typedef int		int32;
-   typedef unsigned	unsigned32;
-#  define INT32_MAX	INT_MAX
-#else
-#  if LONG_MAX == 2147483647
-     typedef long int		int32;
-     typedef unsigned long	unsigned32;
-#    define INT32_MAX		LONG_MAX
-#  else
-#    error I cannot figure out how to express a 32-bit integer on your machine.
-#  endif
-#endif
+/* continue on to the part that ./configure should not be touching */
+#include "config_epilog.h"
 
 #endif		/* !Config_H */
 
