@@ -1,0 +1,136 @@
+/**********************************************************
+ * config_epilog.h -- epilogue for config.h
+ *
+ * Additional preprocessing for the hooks defined in config.h
+ * This needs to be a separate file, since we need to be
+ * certain ./configure is not overwriting any of this.
+ *
+ * Resolution of defaults/conflicts in config parameters must be dealt
+ * with HERE without outside help.  config.h is the first inclusion
+ * for many modules; introducing dependencies on particular modules
+ * here risks circularity.  Also, config.h-#defined identifiers must
+ * not be re-#defined in any other file, since config.h could be
+ * included without the other file, leading to inconsistencies.
+ */
+
+/* Some sites have installed GCC improperly or incompletely, thereby requiring
+ * the server to be compiled with the `-traditional' switch.  That disables the
+ * `const', `volatile' or `signed' keywords, which we need.  Thus, for GCC, we
+ * do these little substitutions to always refer to its `hidden' names for
+ * these keywords.
+ */
+
+#if defined(__GNUC__) && !HAVE_SYS_CDEFS_H
+#  define const __const__
+#  define volatile __volatile__
+#  define signed __signed__
+#endif
+
+/*
+ * The following code figures out how to express 32- and 64-bit integer
+ * types on your machine.
+ */
+
+#ifdef NEED_INTTYPES_H
+# include <inttypes.h>
+#endif
+#ifdef NEED_STDINT_H
+# include <stdint.h>
+#endif
+
+#include <limits.h>
+
+#ifndef HAVE_INT32_T
+#  if INT_MAX == 2147483647
+     typedef int	int32_t;
+     typedef unsigned	uint32_t;
+#    define INT32_MAX	INT_MAX
+#    define PRId32 "d"
+#    define PRIi32 "i"
+#    define PRIo32 "o"
+#    define PRIu32 "u"
+#    define PRIx32 "x"
+#    define PRIX32 "X"
+#    define SCNd32 "d"
+#    define SCNi32 "i"
+#    define SCNo32 "o"
+#    define SCNu32 "u"
+#    define SCNx32 "x"
+#  elif LONG_MAX == 2147483647
+     typedef long int		int32_t;
+     typedef unsigned long	uint32_t;
+#    define INT32_MAX		LONG_MAX
+#    define PRId32 "ld"
+#    define PRIi32 "li"
+#    define PRIo32 "lo"
+#    define PRIu32 "lu"
+#    define PRIx32 "lx"
+#    define PRIX32 "lX"
+#    define SCNd32 "ld"
+#    define SCNi32 "li"
+#    define SCNo32 "lo"
+#    define SCNu32 "lu"
+#    define SCNx32 "lx"
+#  else
+#    error I cannot figure out how to express a 32-bit integer on your machine.
+#  endif
+#endif
+
+#ifndef HAVE_INT64_T
+#  if LONG_MAX == 9223372036854775807
+     typedef long          int64_t;
+     typedef unsigned long uint64_t;
+#    define INT64_MAX      LONG_MAX
+#    define PRId64 "ld"
+#    define PRIi64 "li"
+#    define PRIo64 "lo"
+#    define PRIu64 "lu"
+#    define PRIx64 "lx"
+#    define PRIX64 "lX"
+#    define SCNd64 "ld"
+#    define SCNi64 "li"
+#    define SCNo64 "lo"
+#    define SCNu64 "lu"
+#    define SCNx64 "lx"
+#  elif defined(HAVE_LONG_LONG) && LONG_LONG_MAX == 9223372036854775807
+     typedef long long     int64;
+     typedef unsigned long long unsigned64;
+#    define INT64_MAX      LONG_LONG_MAX
+#    define PRId64 "lld"
+#    define PRIi64 "lli"
+#    define PRIo64 "llo"
+#    define PRIu64 "llu"
+#    define PRIx64 "llx"
+#    define PRIX64 "llX"
+#    define SCNd64 "lld"
+#    define SCNi64 "lli"
+#    define SCNo64 "llo"
+#    define SCNu64 "llu"
+#    define SCNx64 "llx"
+#  else
+#    error I cannot figure out how to express a 64-bit integer on your machine.
+#  endif
+#endif
+
+#ifndef HAVE_STRTOIMAX
+# ifdef HAVE_LONG_LONG
+#  define strtoimax strtoll
+#  define strtoumax strtoull
+# else
+#  define strtoimax strtol
+#  define strtoumax strtoul
+# endif
+#endif
+
+#ifndef HAVE_UINT8_T
+typedef unsigned char uint8_t;
+#endif
+
+/* Let the C compiler warn us if we do something silly with printf or
+ * scanf, even if they are our own variants...
+ */
+#if defined(__GNUC__) && __GNUC__ >= 3
+#  define FORMAT(x,y,z) __attribute__((format (x,y,z)))
+#else
+#  define FORMAT(x,y,z)
+#endif

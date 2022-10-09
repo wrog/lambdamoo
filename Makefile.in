@@ -42,7 +42,7 @@ OPT_CSRCS = gnu-malloc.c $(OPT_NET_SRCS)
 
 YSRCS = parser.y
 
-HDRS =  ast.h bf_register.h code_gen.h \
+HDRS =  ast.h bf_register.h code_gen.h config_epilog.h \
 	db.h db_io.h db_private.h decompile.h db_tune.h \
 	disassemble.h eval_env.h eval_vm.h exceptions.h execute.h \
 	functions.h getpagesize.h keywords.h list.h log.h match.h \
