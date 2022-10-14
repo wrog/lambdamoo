@@ -85,7 +85,7 @@ ALL_SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) \
 DISTFILES = $(ALL_SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
 	ChangeLog.txt README configure.ac configure config.h.in \
-	aclocal.m4 \
+	ac_include/*.m4 aclocal.m4 \
 	MOOCodeSequences.txt AddingNewMOOTypes.txt
 
 COBJS = $(COMMON_CSRCS:.c=.o) $(XT_CSRCS:.c=.o)
@@ -114,7 +114,8 @@ client_sysv: client_sysv.o
 restart:
 	touch restart
 
-configure: configure.ac
+configure: configure.ac aclocal.m4 $(abs_srcdir)/ac_include/*.m4
+	@echo "[ $@ : $? ]"
 	autoconf
 
 config.status: configure
