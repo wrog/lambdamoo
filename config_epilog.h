@@ -147,13 +147,26 @@
 typedef unsigned char uint8_t;
 #endif
 
-/* Let the C compiler warn us if we do something silly with printf or
- * scanf, even if they are our own variants...
+/*
+ *  Cope with compilers that do not understand
+ *  gcc function and variable attributes
  */
-#if defined(__GNUC__) && __GNUC__ >= 3
+#if HAVE_FUNC_ATTRIBUTE_FORMAT
 #  define FORMAT(x,y,z) __attribute__((format (x,y,z)))
 #else
 #  define FORMAT(x,y,z)
+#endif
+
+#if HAVE_FUNC_ATTRIBUTE_NORETURN
+#  define NORETURN_ void __attribute__((noreturn))
+#else
+#  define NORETURN_ void
+#endif
+
+#if HAVE_VAR_ATTRIBUTE_UNUSED
+#  define UNUSED_ __attribute__((__unused__))
+#else
+#  define UNUSED_
 #endif
 
 #endif		/* !Config_Epilog_H */

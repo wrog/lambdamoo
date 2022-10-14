@@ -147,6 +147,12 @@
 
 #undef const
 
+/* If GCC-style attributes are available, use them
+ */
+#undef HAVE_FUNC_ATTRIBUTE_FORMAT
+#undef HAVE_FUNC_ATTRIBUTE_NORETURN
+#undef HAVE_VAR_ATTRIBUTE_UNUSED
+
 /* Certain functions used by the server are `optional', in the sense that the
  * server can provide its own definition if necessary.  In some cases, there
  * are a number of common ways to do the same thing, differing by system type

@@ -54,6 +54,9 @@ AC_SEARCH_LIBS([strerror],[cposix])
 AC_FUNC_STRFTIME
 MOO_AUX
 MOO_HPUX
+AX_GCC_VAR_ATTRIBUTE([unused])
+AX_GCC_FUNC_ATTRIBUTE([noreturn])
+AX_GCC_FUNC_ATTRIBUTE([format])
 MOO_ADD_CFLAGS([-Wall])
 MOO_ADD_CFLAGS([-Wextra],[-W])
 MOO_ADD_CFLAGS([-Wwritable-strings],[-Wwrite-strings])
