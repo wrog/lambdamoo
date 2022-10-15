@@ -49,7 +49,7 @@ HDRS =  ast.h bf_register.h code_gen.h config_epilog.h \
 	disassemble.h eval_env.h eval_vm.h exceptions.h execute.h \
 	functions.h getpagesize.h keywords.h list.h log.h match.h \
 	md5.h name_lookup.h network.h net_mplex.h net_multi.h \
-	net_proto.h numbers.h opcode.h options.h \
+	net_proto.h numbers.h opcode.h options_epilog.h \
 	parse_cmd.h parser.h pattern.h program.h quota.h random.h \
 	ref_count.h regexpr.h server.h storage.h streams.h structures.h \
 	str_intern.h sym_table.h tasks.h timers.h tokens.h \
@@ -69,7 +69,7 @@ SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) $(HDRS) $(SYSHDRS)
 DISTFILES = $(SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
 	ChangeLog.txt README configure.ac configure config.h.in \
-	aclocal.m4 \
+	options.ac options.h.in ac_include/*.m4 aclocal.m4 \
 	MOOCodeSequences.txt AddingNewMOOTypes.txt
 
 COBJS = $(CSRCS:.c=.o)
@@ -94,18 +94,17 @@ client_sysv: client_sysv.o
 restart:
 	touch restart
 
-configure: configure.ac
+configure: configure.ac options.ac aclocal.m4 ac_include/*.m4
+	@echo "[ $@ : $? ]"
 	autoconf
 
 config.status: configure
 	./config.status --recheck || ./configure --no-create
 
-Makefile: Makefile.in config.status
-	@echo "[ $@ : $? ]"
-	./config.status
+Makefile config.h options.h: config.lastrun
 
-config.h: config.h.in config.status
-	@echo "[ $@ : $? ]"
+config.lastrun: config.status Makefile.in config.h.in options.h.in
+	@echo "[ $? ]"
 	./config.status
 
 y.tab.h: parser.o
@@ -143,10 +142,10 @@ clean:
 	rm -f $(OBJS) $(OPT_NET_OBJS) core parser.c y.tab.c y.tab.h y.output keywords.c makedep eddep
 
 distclean: clean
-	rm -f config.h Makefile config.status config.cache config.log
+	rm -f config.h options.h Makefile config.status config.cache config.log config.lastrun
 
 gitclean: distclean
-	rm -rf autom4te.cache
+	rm -rf configure autom4te.cache
 
 depend: ${ALL_CSRCS}
 	rm -f eddep makedep

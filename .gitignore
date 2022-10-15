@@ -2,8 +2,11 @@ Makefile
 configure
 autom4te.cache
 config.h
+options.h
 config.log
 config.status
+config.lastrun
+config.cache
 keywords.c
 y.tab.h
 *.o

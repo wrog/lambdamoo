@@ -143,4 +143,26 @@
 typedef unsigned char uint8_t;
 #endif
 
+/*
+ *  Cope with compilers that do not understand
+ *  gcc function and variable attributes
+ */
+#if HAVE_FUNC_ATTRIBUTE_FORMAT
+#  define FORMAT(x,y,z) __attribute__((format (x,y,z)))
+#else
+#  define FORMAT(x,y,z)
+#endif
+
+#if HAVE_FUNC_ATTRIBUTE_NORETURN
+#  define NORETURN_ void __attribute__((noreturn))
+#else
+#  define NORETURN_ void
+#endif
+
+#if HAVE_VAR_ATTRIBUTE_UNUSED
+#  define UNUSED_ __attribute__((__unused__))
+#else
+#  define UNUSED_
+#endif
+
 #endif		/* !Config_Epilog_H */

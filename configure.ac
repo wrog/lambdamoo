@@ -15,248 +15,18 @@ dnl   3333 Coyote Hill Rd.
 dnl   Palo Alto, CA 94304
 dnl   Pavel@Xerox.Com
 dnl
-AC_INIT(Makefile.in)
-AC_CONFIG_HEADER(config.h)
-
-dnl ***************************************************************************
-dnl	MOO_AUX
-dnl Defines _POSIX_SOURCE if this machine is running A/UX; this appears to be
-dnl necessary in order to get declarations of POSIX functions.
-define(MOO_AUX, [
-echo checking for A/UX
-AC_PROGRAM_EGREP(yes, [
-#if defined(AUX)
-  yes
-#endif
-], AC_DEFINE(_POSIX_SOURCE))])
-
-dnl ***************************************************************************
-dnl	MOO_HPUX
-dnl Defines _HPUX_SOURCE if this machine is running HP/UX; this appears to be
-dnl necessary in order to get declarations of POSIX functions.
-define(MOO_HPUX, [
-echo checking for HP/UX
-AC_PROGRAM_EGREP(yes, [
-#if defined(__hpux)
-  yes
-#endif
-], AC_DEFINE(_HPUX_SOURCE))])
-
-dnl ***************************************************************************
-dnl	MOO_ALPHA
-dnl If this machine is a DEC Alpha running OSF/1, and we're not using GCC, then
-dnl add `-Olimit 1000' to the `cc' switches, to allow the compiler to run the
-dnl optimizer over large functions, like the main MOO interpreter loop.
-define(MOO_ALPHA, [
-echo checking for the DEC Alpha running OSF/1
-AC_PROGRAM_EGREP(yes, [
-#if defined(__osf__) && defined(__alpha) && !defined(__GNUC__)
-  yes
-#endif
-], CC="$CC -Olimit 2500")])
-
-dnl ***************************************************************************
-dnl	MOO_SGI
-dnl If this machine is an SGI running IRIX, and we're not using GCC, then
-dnl add `-Olimit 2500' to the `cc' switches, to allow the compiler to run the
-dnl optimizer over large functions, like the main MOO interpreter loop.  Also,
-dnl even if we are using GCC, undefine __EXTENSIONS__ to keep from seeing a
-dnl bunch of interfering declarations.
-define(MOO_SGI, [
-echo checking for the SGI compiler
-AC_PROGRAM_EGREP(yes, [
-#if defined(sgi) && !defined(__GNUC__)
-  yes
-#endif
-], CC="$CC -Olimit 2500")
-AC_PROGRAM_EGREP(yes, [
-#if defined(sgi)
-  yes
-#endif
-], CC="$CC -U__EXTENSIONS__")])
-
-dnl ***************************************************************************
-dnl	MOO_NEXT
-dnl On NeXT, we need to make sure that _NEXT_SOURCE and _POSIX_SOURCE are
-dnl defined.
-define(MOO_NEXT, [
-echo checking for NeXT
-AC_PROGRAM_EGREP(yes, [
-#ifdef NeXT
-  yes
-#endif
-], AC_DEFINE(_NEXT_SOURCE)
-   AC_DEFINE(_POSIX_SOURCE))])
-
-dnl ***************************************************************************
-dnl	MOO_FUNC_DECL_CHECK(header, func,
-dnl			    if-declared [, if-not-declared[, extra-hdr]])
-dnl Do `if-declared' is `func' is declared in `header', and if-not-declared
-dnl otherwise.  If `extra-hdr' is provided, it is added after the #include of
-dnl `header'.
-define(MOO_FUNC_DECL_CHECK, [
-changequote(,)dnl
-pattern="[^_a-zA-Z0-9]$2 *\("
-changequote([,])dnl
-AC_PROGRAM_EGREP($pattern, [
-#include <$1>
-$5
-], $3, $4)])
-
-dnl ***************************************************************************
-dnl 	MOO_NDECL_FUNCS(header, func1 func2 ...[, extra-hdr])
-dnl Defines NDECL_func1, NDECL_func2, ... if they are not declared in header.
-dnl
-define(MOO_NDECL_FUNCS, [
-changequote(,)dnl
-trfrom='[a-z]' trto='[A-Z]'
-changequote([,])dnl
-for func in $2
-do
-echo "checking whether $func is declared in $1"
-MOO_FUNC_DECL_CHECK($1, $func, ,
-	AC_DEFINE(NDECL_`echo $func | tr "$trfrom" "$trto"`), $3)
-done
-])
-
-dnl ***************************************************************************
-dnl	MOO_VAR_DECL_CHECK(header, variable,
-dnl			   if-declared [, if-not-declared[, extra-hdr]])
-dnl Do `if-declared' is `variable' is declared in `header', and if-not-declared
-dnl otherwise.  If `extra-hdr' is provided, it is added after the #include of
-dnl `header'.
-define(MOO_VAR_DECL_CHECK, [
-changequote(,)dnl
-pattern="[^_a-zA-Z0-9]$2"
-changequote([,])dnl
-AC_PROGRAM_EGREP($pattern, [
-#include <$1>
-$5
-], $3, $4)])
-
-dnl ***************************************************************************
-dnl 	MOO_NDECL_VARS(header, var1 var2 ...[, extra-hdr])
-dnl Defines NDECL_var1, NDECL_var2, ... if they are not declared in header.
-dnl
-define(MOO_NDECL_VARS, [
-changequote(,)dnl
-trfrom='[a-z]' trto='[A-Z]'
-changequote([,])dnl
-for var in $2
-do
-echo "checking whether $var is declared in $1"
-MOO_VAR_DECL_CHECK($1, $var, ,
-	AC_DEFINE(NDECL_`echo $var | tr "$trfrom" "$trto"`), $3)
-done
-])
-
-dnl ***************************************************************************
-dnl 	MOO_HEADER_STANDS_ALONE(header [, extra-code])
-dnl Defines header_NEEDS_HELP if can't be compiled all by itself.
-define(MOO_HEADER_STANDS_ALONE, [
-changequote(,)dnl
-trfrom='[a-z]./' trto='[A-Z]__'
-changequote([,])dnl
-AC_COMPILE_CHECK(self-sufficiency of $1, [
-#include <$1>
-$2
-], , , AC_DEFINE(`echo $1 | tr "$trfrom" "$trto"`_NEEDS_HELP))
-])
-
-dnl ***************************************************************************
-dnl	MOO_HAVE_FUNC_LIBS(func1 func2 ..., lib1 "lib2a lib2b" lib3 ...)
-dnl For each `func' in turn, if `func' is defined using the current LIBS value,
-dnl leave LIBS alone.  Otherwise, try adding each of the given libs to LIBS in
-dnl turn, stopping when one of them succeeds in providing `func'.  Define
-dnl HAVE_func if `func' is eventually found.
-define(MOO_HAVE_FUNC_LIBS, [
-for func in $1
-do
-  changequote(,)dnl
-  trfrom='[a-z]' trto='[A-Z]'
-  var=HAVE_`echo $func | tr "$trfrom" "$trto"`
-  changequote([,])dnl
-  AC_FUNC_CHECK($func, AC_DEFINE_UNQUOTED($var), [
-    SAVELIBS="$LIBS"
-    for lib in $2
-    do
-      LIBS="$LIBS $lib"
-      AC_FUNC_CHECK($func, [AC_DEFINE_UNQUOTED($var)
-			 break],
-		    LIBS="$SAVELIBS")
-    done
-    ])
-done
-])
-
-dnl ***************************************************************************
-dnl	MOO_HAVE_HEADER_DIRS(header1 header2 ..., dir1 dir2 ...)
-dnl For each `header' in turn, if `header' is found using the current CC value
-dnl leave CC alone.  Otherwise, try adding each of the given `dir's to CC in
-dnl turn, stopping when one of them succeeds in providing `header'.  Define
-dnl HAVE_header if `header' is eventually found.
-define(MOO_HAVE_HEADER_DIRS, [
-for hdr in $1
-do
-  changequote(,)dnl
-  trfrom='[a-z]./' trto='[A-Z]__'
-  var=HAVE_`echo $hdr | tr "$trfrom" "$trto"`
-  changequote([,])dnl
-  AC_HEADER_CHECK($hdr, AC_DEFINE($var), [
-    SAVECC="$CC"
-    for dir in $2
-    do
-      CC="$CC $dir"
-      AC_HEADER_CHECK($hdr, [AC_DEFINE($var)
-			     break],
-		      CC="$SAVECC")
-    done
-    ])
-done
-])
-
-dnl ***************************************************************************
-dnl	MOO_ANSI_C
-dnl Check whether or not the C compiler handles ANSI C (i.e., allows function
-dnl prototypes and the `void *' type) and try to make it do so by adding
-dnl command-line options like -Aa and -Xa, which some compilers require.  If
-dnl nothing works, abort configuration.
-define(MOO_ANSI_C, [
-echo "checking that the C compiler handles important ANSI C constructs"
-for opt in "" -Aa -Xa -ansi
-do
-SAVECC="$CC"
-CC="$CC $opt"
-AC_TEST_PROGRAM([
-int main(int argc, char **argv) { void *ptr; return 0; }
-],
-[have_ansi=1
-break],
-[CC="$SAVECC"])
-done
-if test -z "$have_ansi"; then
-echo ""
-echo "*** Sorry, but I can't figure out how to find an ANSI C compiler here."
-echo "*** Compiling this program requires such a compiler."
-exit 1
-fi
-])
-
-dnl --------------------------------------------------------------------------
-dnl MOO_ADD_CFLAGS()
-dnl
-dnl Attempt to add the given option to CFLAGS, if it doesn't break compilation
-dnl --------------------------------------------------------------------------
-AC_DEFUN([MOO_ADD_CFLAGS],
-[AC_MSG_CHECKING([if $CC accepts $1])
- pa_add_cflags__old_cflags="$CFLAGS"
- CFLAGS="$CFLAGS $1"
- AC_TRY_LINK([#include <stdio.h>],
- [printf("Hello, World!\n");],
- AC_MSG_RESULT([yes]),
- AC_MSG_RESULT([no])
- CFLAGS="$pa_add_cflags__old_cflags")])
-
+AC_INIT
+AC_CONFIG_MACRO_DIR([ac_include])
+AC_CONFIG_SRCDIR([Minimal.db])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([options.h])
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_COMMANDS([config.lastrun], [[
+  chmod -w Makefile config.h options.h
+  date > config.lastrun
+]])
+m4_include([options.ac])
+MOO_ARG_ENABLE_ALL()
 
 dnl ***************************************************************************
 dnl Start of actual configuration tests
@@ -269,273 +39,138 @@ AC_ARG_VAR([GPERF],
 [The perfect hash function generator to use.  Defaults to 'gperf'.])
 
 AC_PROG_CC
-AC_GCC_TRADITIONAL
-AC_GNU_SOURCE
-AC_PROGRAM_EGREP(yes, [
-#if __GNUC__==2
-  yes
-#endif
-], [CC="$CC -Wall -Wwrite-strings"])
-test -n "$GCC" && CC="$CC -g"
+dnl  prior to 2.70 only tests for C89
+dnl    and AC_PROG_CC_C99 is needed to test for C99
+dnl  2.70+ rolled that behavior into AC_PROG_CC
+dnl    and made AC_PROG_CC_C99 immediately obsolete; nice!
+m4_version_prereq([2.70],[],[AC_PROG_CC_C99])[
+test x$ac_cv_prog_cc_c99 = xno &&]
+  AC_MSG_ERROR([[We need a C compiler that knows about C99]])dnl
+
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CPP
 MOO_NEXT
 MOO_ALPHA
 MOO_SGI
-AC_AIX
-AC_ISC_POSIX
-AC_MINIX
-AC_SCO_INTL
+AC_SEARCH_LIBS([strerror],[cposix])
+AC_FUNC_STRFTIME
 MOO_AUX
 MOO_HPUX
-MOO_ANSI_C
-MOO_ADD_CFLAGS(-Wall)
-MOO_ADD_CFLAGS(-W)
-MOO_ADD_CFLAGS(-Wwrite-strings)
-MOO_ADD_CFLAGS(-Wpointer-arith)
-MOO_ADD_CFLAGS(-Wbad-function-cast)
-MOO_ADD_CFLAGS(-Wcast-equal)
-MOO_ADD_CFLAGS(-Wstrict-prototypes)
-MOO_ADD_CFLAGS(-Wmissing-prototypes)
-MOO_ADD_CFLAGS(-Wmissing-declarations)
-MOO_ADD_CFLAGS(-Wnested-externs)
-MOO_ADD_CFLAGS(-Winline)
-MOO_ADD_CFLAGS(-Wwrite-strings)
-dnl MOO_ADD_CFLAGS(-Wundef)
-dnl MOO_ADD_CFLAGS(-Wshadow)
-dnl MOO_ADD_CFLAGS(-Wsign-compare)
-MOO_ADD_CFLAGS(-pipe)
-MOO_ADD_CFLAGS(-O3)
+AX_GCC_VAR_ATTRIBUTE([unused])
+AX_GCC_FUNC_ATTRIBUTE([noreturn])
+AX_GCC_FUNC_ATTRIBUTE([format])
+MOO_ADD_CFLAGS([-Wall])
+MOO_ADD_CFLAGS([-Wextra],[-W])
+MOO_ADD_CFLAGS([-Wwritable-strings],[-Wwrite-strings])
+MOO_ADD_CFLAGS([-Wgnu-pointer-arith],[-Wpointer-arith])
+MOO_ADD_CFLAGS([-Wbad-function-cast])
+dnl MOO_ADD_CFLAGS([-Wcast-qual])
+MOO_ADD_CFLAGS([-Wstrict-prototypes])
+MOO_ADD_CFLAGS([-Wmissing-prototypes])
+MOO_ADD_CFLAGS([-Wmissing-declarations])
+MOO_ADD_CFLAGS([-Wnested-externs])
+MOO_ADD_CFLAGS([-Winline])
+MOO_ADD_CFLAGS([-Wwrite-strings])
+dnl MOO_ADD_CFLAGS([-Wundef])
+dnl MOO_ADD_CFLAGS([-Wshadow])
+dnl MOO_ADD_CFLAGS([-Wsign-compare])
+MOO_ADD_CFLAGS([-pipe])
+MOO_ADD_CFLAGS([-O3])
 AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
 AC_SYS_LARGEFILE
-AC_HEADER_CHECK(malloc.h, AC_DEFINE(NEED_MALLOC_H))
-AC_HEADER_CHECK(sys/bsdtypes.h, AC_DEFINE(NEED_BSDTYPES_H))
-AC_HEADER_CHECK(sys/select.h, AC_DEFINE(NEED_SELECT_H))
-AC_HEADER_CHECK(memory.h, AC_DEFINE(NEED_MEMORY_H))
-AC_HEADER_CHECK(inttypes.h, AC_DEFINE(NEED_INTTYPES_H))
-AC_HEADER_CHECK(stdint.h, AC_DEFINE(NEED_STDINT_H))
-AC_PID_T
-AC_MODE_T
-AC_SIZE_T
+AC_CHECK_HEADER([malloc.h],[AC_DEFINE([NEED_MALLOC_H])])
+AC_CHECK_HEADER([sys/bsdtypes.h],[AC_DEFINE([NEED_BSDTYPES_H])])
+AC_CHECK_HEADER([sys/select.h],[AC_DEFINE([NEED_SELECT_H])])
+AC_CHECK_HEADER([memory.h],[AC_DEFINE([NEED_MEMORY_H])])
+AC_CHECK_HEADER([inttypes.h],[AC_DEFINE([NEED_INTTYPES_H])])
+AC_CHECK_HEADER([stdint.h],[AC_DEFINE([NEED_STDINT_H])])
+AC_TYPE_PID_T
+AC_TYPE_MODE_T
+AC_TYPE_SIZE_T
 AC_STRUCT_TM
-AC_TIMEZONE
-MOO_HAVE_FUNC_LIBS(atan2 asinh expm1 erfc j1, -lm /lib/libm.a "-static -lm")
-MOO_HAVE_FUNC_LIBS(mkfifo waitpid sigemptyset, -lposix /lib/libposix.a)
-MOO_HAVE_FUNC_LIBS(accept, "-lsocket -lnsl" -lsocket -linet)
-MOO_HAVE_FUNC_LIBS(t_open, -lnsl -lnsl_s)
-MOO_HAVE_FUNC_LIBS(crypt, -lcrypt -lcrypt_d)
-AC_HAVE_HEADERS(unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h)
-AC_HAVE_FUNCS(remove rename poll select strerror strftime strtoul matherr)
-AC_HAVE_FUNCS(random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse)
-AC_HAVE_FUNCS(strtoimax)
-MOO_NDECL_FUNCS(ctype.h, tolower)
-MOO_NDECL_FUNCS(fcntl.h, fcntl)
-MOO_NDECL_FUNCS(netinet/in.h, htonl)
-dnl *** this next should really be some variety of AC_CHECK_TYPE
-dnl *** but this is just a grep test anyway   --wrog
-AC_CHECK_TYPES(long long)
-AC_CHECK_TYPES(uint8_t)
-AC_CHECK_TYPES(int32_t)
-AC_CHECK_TYPES(int64_t)
+AC_STRUCT_TIMEZONE
+MOO_HAVE_FUNC_LIBS([atan2 asinh expm1 erfc j1], [m])
+dnl *** was -lm /lib/libm.a "-static -lm" (is this still needed?)
+MOO_HAVE_FUNC_LIBS([mkfifo waitpid sigemptyset], [posix])
+dnl *** was -lposix /lib/libposix.a (is this still needed?)
+MOO_HAVE_FUNC_LIBS([crypt], [crypt crypt_d])
+AC_CHECK_HEADERS([unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h])
+AC_CHECK_FUNCS([remove rename poll select strerror strftime strtoul matherr])
+AC_CHECK_FUNCS([random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse])
+AC_CHECK_FUNCS([strtoimax])
+MOO_NDECL_FUNCS([ctype.h], [tolower])
+MOO_NDECL_FUNCS([fcntl.h], [fcntl])
+MOO_NDECL_FUNCS([netinet/in.h], [htonl])
+AC_CHECK_TYPES([long long])
+AC_CHECK_TYPES([uint8_t])
+AC_CHECK_TYPES([int32_t])
+AC_CHECK_TYPES([int64_t])
 AC_CHECK_TYPES([int128_t])
 AC_CHECK_TYPES([__int128])
-MOO_NDECL_VARS(netinet/in.h, in_addr_t)
-MOO_NDECL_FUNCS(sys/ioctl.h, ioctl)
-MOO_NDECL_FUNCS(poll.h, poll)
-MOO_NDECL_FUNCS(signal.h, kill sigemptyset sigprocmask sigrelse)
-MOO_NDECL_FUNCS(sys/socket.h, accept bind shutdown)
-MOO_NDECL_FUNCS(sys/stat.h, fstat)
-MOO_NDECL_FUNCS(stdio.h, fclose perror remove vfprintf)
-MOO_NDECL_FUNCS(stdlib.h, random srandom strtod strtol strtoul)
-MOO_NDECL_FUNCS(string.h, bzero memcpy memset strerror, [
+AC_CHECK_TYPE([in_addr_t], [], [AC_DEFINE([NDECL_IN_ADDR_T])],
+  [[@%:@include <netinet/in.h>]])
+MOO_NDECL_FUNCS([sys/ioctl.h], [ioctl])
+MOO_NDECL_FUNCS([poll.h],      [poll])
+MOO_NDECL_FUNCS([signal.h],    [kill sigemptyset sigprocmask sigrelse])
+MOO_NDECL_FUNCS([sys/socket.h],[accept bind shutdown])
+MOO_NDECL_FUNCS([sys/stat.h],  [fstat])
+MOO_NDECL_FUNCS([stdio.h],  [fclose perror remove vfprintf])
+MOO_NDECL_FUNCS([stdlib.h], [random srandom strtod strtol strtoul])
+MOO_NDECL_FUNCS([string.h], [memcpy memset strerror], [[
 #if NEED_MEMORY_H
 #include <memory.h>
-#endif
-])
-echo checking for bzero being declared in stdlib.h
-MOO_FUNC_DECL_CHECK(stdlib.h, bzero, AC_DEFINE(BZERO_IN_STDLIB_H))
-MOO_NDECL_FUNCS(sys/time.h, getitimer setitimer select, [
+@%:@endif]])
+MOO_WHERE_THE_HELL_IS_BZERO()
+MOO_NDECL_FUNCS([sys/time.h], [getitimer setitimer select], [[
 #if NEED_SELECT_H
 #include <sys/types.h>
 #include <sys/select.h>
-#endif
-])
-MOO_NDECL_FUNCS(time.h, strftime time)
-MOO_NDECL_VARS(time.h, tzname)
-MOO_NDECL_FUNCS(tiuser.h, t_open)
-MOO_NDECL_VARS(tiuser.h, t_errlist)
-MOO_NDECL_FUNCS(unistd.h, fork)
-MOO_NDECL_FUNCS(sys/wait.h, waitpid)
+@%:@endif]])
+MOO_NDECL_FUNCS([time.h], [strftime time])
+MOO_NDECL_VARS([time.h], [tzname])
+MOO_NDECL_FUNCS([tiuser.h], [t_open])
+MOO_NDECL_VARS([tiuser.h], [t_errlist])
+MOO_NDECL_FUNCS([unistd.h], [fork])
+MOO_NDECL_FUNCS([sys/wait.h], [waitpid])
 
-MOO_HEADER_STANDS_ALONE(arpa/inet.h, [struct in_addr foo;])
-MOO_HEADER_STANDS_ALONE(signal.h)
-MOO_HEADER_STANDS_ALONE(sys/socket.h)
-MOO_HEADER_STANDS_ALONE(sys/stat.h)
-MOO_HEADER_STANDS_ALONE(time.h)
+MOO_HEADER_STANDS_ALONE([arpa/inet.h], [struct in_addr foo;])
+MOO_HEADER_STANDS_ALONE([signal.h])
+MOO_HEADER_STANDS_ALONE([sys/socket.h])
+MOO_HEADER_STANDS_ALONE([sys/stat.h])
+MOO_HEADER_STANDS_ALONE([time.h])
 
 dnl ***************************************************************************
-echo checking for string.h declaring some functions incorrectly
-echo "
+AC_MSG_CHECKING([[for string.h declaring some functions incorrectly]])[
+cat >conftest.c <<'_MOOEOF'
 #include <sys/types.h>
 #include <string.h>
 #if NEED_MEMORY_H
 #include <memory.h>
 #endif
-" > conftest.c
+_MOOEOF
 $CC $DEFS conftest.c -o conftest $LIBS > conftest.out 2>&1
-if grep "conflicting types for built-in function" conftest.out >/dev/null; then
-  AC_DEFINE(USE_OWN_STRING_H)
+if grep "conflicting types for built-in function" conftest.out >/dev/null; then]
+  AC_MSG_RESULT([yes])
+  AC_DEFINE(USE_OWN_STRING_H)[
+else]
+  AC_MSG_RESULT([no])[
 fi
-rm -f conftest*
+rm -f conftest*]
 
 dnl ***************************************************************************
-echo "checking for incompatibility between <sys/ioctl.h> and <stropts.h>"
-AC_TEST_CPP([
+AC_MSG_CHECKING([[for incompatibility between <sys/ioctl.h> and <stropts.h>]])
+AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #include <sys/ioctl.h>
 #include <stropts.h>
-], , AC_DEFINE(UNDEF_IO_IN_STROPTS_H))
+]])],[AC_MSG_RESULT([no])],[AC_MSG_RESULT([yes])
+AC_DEFINE([UNDEF_IO_IN_STROPTS_H],[1])])
 
-dnl ***************************************************************************
-echo "checking whether or not fstat() can tell how much data is in a FIFO"
-AC_TEST_PROGRAM([#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-main()
-{
-#ifdef NeXT
-/* The NeXT claims to have FIFOs, but using them panics the kernel... */
-  exit(-1);
-#endif
-  int	rfd, wfd, result; struct stat st;
-  unlink("/tmp/conftest-fifo");
-  result = (mknod("/tmp/conftest-fifo", 0666 | S_IFIFO, 0) < 0
-	    || (rfd = open("/tmp/conftest-fifo", O_RDONLY | O_NDELAY)) < 0
-	    || (wfd = open("/tmp/conftest-fifo", O_WRONLY)) < 0
-	    || write(wfd, "foo", 3) != 3
-	    || fstat(rfd, &st) < 0
-	    || st.st_size != 3);
-  unlink("/tmp/conftest-fifo");
-  exit(result);
-}
-], AC_DEFINE(FSTAT_WORKS_ON_FIFOS))
-
-dnl ***************************************************************************
-echo "checking whether or not select() can be used on FIFOs"
-AC_TEST_PROGRAM([#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#ifndef FD_ZERO
-#define	NFDBITS		(sizeof(fd_set)*8)
-#define	FD_ZERO(p)	bzero((char *)(p), sizeof(*(p)))
-#define	FD_SET(n, p)	((p)->fds_bits[0] |= (1L<<((n)%NFDBITS)))
-#define	FD_ISSET(n, p)	((p)->fds_bits[0] &  (1L<<((n)%NFDBITS)))
-#endif /* FD_ZERO */
-main()
-{
-#ifdef NeXT
-/* The NeXT claims to have FIFOs, but using them panics the kernel... */
-  exit(-1);
-#endif
-  int	rfd, wfd, result; fd_set input; struct timeval tv;
-  tv.tv_sec = 2;
-  tv.tv_usec = 0;
-  unlink("/tmp/conftest-fifo");
-  result = (mknod("/tmp/conftest-fifo", 0666 | S_IFIFO, 0) < 0
-	    || (rfd = open("/tmp/conftest-fifo", O_RDONLY | O_NDELAY)) < 0
-	    || (wfd = open("/tmp/conftest-fifo", O_WRONLY)) < 0
-	    || (FD_ZERO(&input), FD_SET(rfd, &input),
-		select(rfd + 1, &input, 0, 0, &tv) != 0)
-	    || write(wfd, "foo", 3) != 3
-	    || (FD_ZERO(&input), FD_SET(rfd, &input),
-		select(rfd + 1, &input, 0, 0, &tv) != 1)
-	    || !FD_ISSET(rfd, &input));
-  unlink("/tmp/conftest-fifo");
-  exit(result);
-}
-], AC_DEFINE(SELECT_WORKS_ON_FIFOS))
-
-dnl ***************************************************************************
-echo "checking whether or not poll() can be used on FIFOs"
-AC_TEST_PROGRAM([#include <sys/types.h>
-#include <poll.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-main()
-{
-  int	rfd, wfd, result; struct pollfd fds[1];
-  unlink("/tmp/conftest-fifo");
-  result = (mknod("/tmp/conftest-fifo", 0666 | S_IFIFO, 0) < 0
-	    || (rfd = open("/tmp/conftest-fifo", O_RDONLY | O_NDELAY)) < 0
-	    || (wfd = open("/tmp/conftest-fifo", O_WRONLY)) < 0
-	    || write(wfd, "foo", 3) != 3
-	    || (fds[0].fd = rfd, fds[0].events = POLLIN, poll(fds, 1, 1) != 1)
-	    || (fds[0].revents & POLLIN) == 0);
-  unlink("/tmp/conftest-fifo");
-  exit(result);
-}
-], AC_DEFINE(POLL_WORKS_ON_FIFOS))
-
-dnl ***************************************************************************
-echo checking whether POSIX-style non-blocking I/O works
-AC_TEST_PROGRAM([#include <sys/types.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <signal.h>
-handler(int sig) { }
-main ()
-{ /* Testing a POSIX feature, so assume FIFOs */
-#ifdef NeXT
-/* The NeXT claims to have FIFOs, but using them panics the kernel... */
-  exit(-1);
-#endif
-  int	rfd, wfd, flags, result; char buffer[10];
-  unlink("/tmp/conftest-fifo");
-  signal(SIGALRM, handler);
-  result = (mknod("/tmp/conftest-fifo", 0666 | S_IFIFO, 0) < 0
-	    || (rfd = open("/tmp/conftest-fifo", O_RDONLY | O_NONBLOCK)) < 0
-	    || (wfd = open("/tmp/conftest-fifo", O_WRONLY)) < 0
-	    || (flags = fcntl(rfd, F_GETFL, 0)) < 0
-	    || fcntl(rfd, F_SETFL, flags | O_NONBLOCK) < 0
-	    || (alarm(3), read(rfd, buffer, 10) >= 0)
-	    || (alarm(0), errno != EAGAIN));
-  unlink("/tmp/conftest-fifo");
-  exit(result);
-}
-], AC_DEFINE(POSIX_NONBLOCKING_WORKS))
-
-dnl ***************************************************************************
-echo checking which MOO networking configurations are likely to work...
-define(MOO_ADD_NET_CONFIG,[
-    NETWORK_CONFIGURATIONS="$NETWORK_CONFIGURATIONS $1"])
-NETWORK_CONFIGURATIONS="NP_SINGLE"
-
-AC_HEADER_CHECK(sys/socket.h, [
-	MOO_ADD_NET_CONFIG(NS_BSD/NP_LOCAL)
-	AC_PROGRAM_CHECK(have_telnet, telnet, yes, no)
-        test x$have_telnet = xyes && MOO_ADD_NET_CONFIG(NS_BSD/NP_TCP)])
-AC_PROGRAM_EGREP(yes-there-are-FIFOs, [#include <sys/stat.h>
-#if defined(S_IFIFO) && !defined(NeXT) && \
-    (SELECT_WORKS_ON_FIFOS || POLL_WORKS_ON_FIFOS || FSTAT_WORKS_ON_FIFOS)
-	yes-there-are-FIFOs
-#endif
-], MOO_ADD_NET_CONFIG(NS_SYSV/NP_LOCAL))
-AC_PROGRAM_EGREP(yes, [
-#if HAVE_TIUSER_H && HAVE_T_OPEN && HAVE_POLL
-yes
-#endif
-], test -r /dev/tcp && MOO_ADD_NET_CONFIG(NS_SYSV/NP_TCP))
-
-echo "----------------------------------------------------------------------"
-echo "| The following networking configurations will probably work on your"
-echo "| system; any configuration *not* listed here almost certainly will"
-echo "| *not* work on your system:"
-echo "|"
-echo "|   $NETWORK_CONFIGURATIONS"
-echo "----------------------------------------------------------------------"
-
-AC_OUTPUT(Makefile)
+MOO_NET_FIFO_WORKS
+MOO_NET_POSIX_NONBLOCKING
+MOO_NET_DO_REPORT
+AC_OUTPUT
 
 # $Log$
 # Revision 1.2  2004/05/22 01:25:43  wrog
@@ -594,7 +229,3 @@ AC_OUTPUT(Makefile)
 #
 # Revision 1.2  1992/10/21  03:09:41  pavel
 # Added this log.
-
-# Local Variables:
-# mode: c
-# End:
