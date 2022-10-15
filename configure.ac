@@ -53,7 +53,6 @@ AC_SEARCH_LIBS([strerror],[cposix])
 AC_FUNC_STRFTIME
 MOO_AUX
 MOO_HPUX
-MOO_ANSI_C
 MOO_ADD_CFLAGS([-Wall])
 MOO_ADD_CFLAGS([-W])
 MOO_ADD_CFLAGS([-Wwrite-strings])

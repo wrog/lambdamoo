@@ -1,41 +1,48 @@
-dnl ***************************************************************************
-dnl	MOO_ANSI_C
-dnl Check whether or not the C compiler handles ANSI C (i.e., allows function
-dnl prototypes and the `void *' type) and try to make it do so by adding
-dnl command-line options like -Aa and -Xa, which some compilers require.  If
-dnl nothing works, abort configuration.
-define(MOO_ANSI_C, [
-echo "checking that the C compiler handles important ANSI C constructs"
-for opt in "" -Aa -Xa -ansi
-do
-SAVECC="$CC"
-CC="$CC $opt"
-AC_TEST_PROGRAM([
-int main(int argc, char **argv) { void *ptr; return 0; }
-],
-[have_ansi=1
-break],
-[CC="$SAVECC"])
-done
-if test -z "$have_ansi"; then
-echo ""
-echo "*** Sorry, but I can't figure out how to find an ANSI C compiler here."
-echo "*** Compiling this program requires such a compiler."
-exit 1
-fi
-])
-
-dnl --------------------------------------------------------------------------
-dnl MOO_ADD_CFLAGS()
-dnl
-dnl Attempt to add the given option to CFLAGS, if it doesn't break compilation
-dnl --------------------------------------------------------------------------
+# --------------------------------------------------------------------
+# MOO_ADD_CFLAGS(-OPTION,[-OPTION2,...])
+#
+#  Add -OPTION to CFLAGS, but only if compilation does not break
+#  If multiple -OPTIONs are given, adds the first one that works.
+#  Sets cache variable(s)  moo_cc_cv_grok_OPTION.
+#
 AC_DEFUN([MOO_ADD_CFLAGS],
-[AC_MSG_CHECKING([if $CC accepts $1])
- pa_add_cflags__old_cflags="$CFLAGS"
- CFLAGS="$CFLAGS $1"
- AC_TRY_LINK([#include <stdio.h>],
- [printf("Hello, World!\n");],
- AC_MSG_RESULT([yes]),
- AC_MSG_RESULT([no])
- CFLAGS="$pa_add_cflags__old_cflags")])
+[m4_if([$2],[],
+[_MOO_ADD_CFLAG([$1],[nobreak])],
+[[while : ; do]m4_map_args([
+  _MOO_ADD_CFLAG],$@)[
+  break
+done]])])dnl
+#
+#  _MOO_ADD_CFLAG(-OPTION,[nobreak])
+#    does the actual work;
+#    adds a 'break' if successful unless 'nobreak' is specified
+#
+#  (the mechanics are annoying because clang warns but otherwise
+#   happily continues with -Wfoos that it doesn't recognize,
+#   so we have to set -Werror to get it to fail.  But this
+#   causes -Wstrict-prototypes to make 'int main() {...}' fail,
+#   so we cannot use AC_LANG_PROGRAM, and we also have to deal
+#   with -Wunused (enabled by -Wall and -Wextra (nee -W))
+#   killing us unless argc and argv are given something to do).
+#
+m4_define([_MOO_ADD_CFLAG],
+[AS_VAR_PUSHDEF([_moo_Flag], [moo_cc_cv_grok$1])dnl
+AC_CACHE_CHECK([if $CC accepts $1],m4_dquote(_moo_Flag),[[
+ _moo_save_cflags="$CFLAGS"
+ CFLAGS="$CFLAGS -Werror $1"]
+ AC_LINK_IFELSE([AC_LANG_SOURCE([[
+#include <stdio.h>
+int
+main (int argc, char **argv)
+{
+  printf("Hello %d, World %s!", argc, argv[0]);
+  return 0;
+}
+]])],[AS_VAR_SET(m4_dquote(_moo_Flag),[yes])],[AS_VAR_SET(m4_dquote(_moo_Flag),[no])])[
+ CFLAGS="$_moo_save_cflags"
+]])
+AS_VAR_IF(m4_dquote(_moo_Flag),[yes],
+[[CFLAGS="$CFLAGS $1"]m4_if([$2],[],[[
+  break]],[])])
+AS_VAR_POPDEF([_moo_Flag])])
+dnl
