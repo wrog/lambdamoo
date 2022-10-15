@@ -97,8 +97,9 @@
 #undef NDECL_FORK		/* <unistd.h>	  */
 #undef NDECL_WAITPID		/* <sys/wait.h>	  */
 
-/* Some systems declare bzero() in <stdlib.h> instead of in <string.h>. */
+/* Some systems declare bzero() in places other than <string.h>. */
 
+#undef BZERO_IN_STRINGS_H
 #undef BZERO_IN_STDLIB_H
 
 /* Some header files are only present on certain kinds of UNIXes (e.g., BSD,
@@ -145,6 +146,12 @@
  */
 
 #undef const
+
+/* If GCC-style attributes are available, use them
+ */
+#undef HAVE_FUNC_ATTRIBUTE_FORMAT
+#undef HAVE_FUNC_ATTRIBUTE_NORETURN
+#undef HAVE_VAR_ATTRIBUTE_UNUSED
 
 /* Certain functions used by the server are `optional', in the sense that the
  * server can provide its own definition if necessary.  In some cases, there

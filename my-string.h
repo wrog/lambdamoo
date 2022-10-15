@@ -71,7 +71,9 @@ extern const char *sys_errlist[];
 #endif
 
 #if NDECL_BZERO && !defined(bzero)
-#  if BZERO_IN_STDLIB_H
+#  if BZERO_IN_STRINGS_H
+#    include "strings.h"
+#  elif BZERO_IN_STDLIB_H
 #    include "my-stdlib.h"
 #  else
 extern void bzero(char *, int);
