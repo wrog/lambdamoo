@@ -158,27 +158,27 @@
  * allows (only) wizard-owned MOO code to make outbound network connections
  * from the server.  When disabled, it raises E_PERM whenever called.
  *
- * The +O and -O command line options can explicitly enable and disable this
- * function.  If neither option is supplied, the definition given to
- * OUTBOUND_NETWORK here determines the default behavior
- * (use 0 to disable by default, 1 or blank to enable by default).
+ * SECURITY WARNING: If your server will be hosting untrusted users,
+ *   and in-database checks on use of this function are inadequate,
+ *   then enabling this function will have security implications for
+ *   your local network.
  *
- * If OUTBOUND_NETWORK is not defined at all,
- * open_network_connection() is permanently disabled and +O is ignored.
+ * Whether open_network_connection() is enabled or disabled
+ * is controlled by the server command line +O and -O options
+ * and the definition given here:
  *
- * *** THINK VERY HARD BEFORE ENABLING THIS FUNCTION ***
- * In some contexts, this could represent a serious breach of security.
+ * (#undef)     always disabled, +O logs a warning but has no effect.
+ *  OBN_OFF     disabled by default, +O enables
+ *  OBN_ON      enabled by default,  -O disables
  *
- * Note: OUTBOUND_NETWORK may not be defined if NETWORK_PROTOCOL is either
- *	 NP_SINGLE or NP_LOCAL.
+ * OUTBOUND_NETWORK is only relevant when NETWORK_PROTOCOL == NP_TCP;
+ * open_network_connection() is not available otherwise.
+ *
+ * (note: prior server versions used explicit numerical values
+ *  in place of OBN_OFF/OBN_ON; do not rely on these going forward).
  */
 
-/* disable by default, +O enables: */
-/* #define OUTBOUND_NETWORK 0 */
-
-/* enable by default, -O disables: */
-/* #define OUTBOUND_NETWORK 1 */
-
+/* #define OUTBOUND_NETWORK OBN_OFF */
 
 /******************************************************************************
  * The following constants define certain aspects of the server's network
@@ -321,6 +321,9 @@
  ********** You shouldn't need to change anything below this point. **********
  *****************************************************************************/
 
+#define OBN_OFF		0
+#define OBN_ON		1
+
 #ifndef OUT_OF_BAND_PREFIX
 #define OUT_OF_BAND_PREFIX ""
 #endif
@@ -400,7 +403,7 @@
 #  error Illegal value for "NETWORK_PROTOCOL"
 #endif
 
-#if NETWORK_STYLE != NS_BSD && NETWORK_STYLE != NS_SYSV
+#if NETWORK_STYLE != NS_BSD && NETWORK_STYLE != NS_SYSV && !(NETWORK_PROTOCOL == NP_SINGLE && !defined(NETWORK_STYLE))
 #  error Illegal value for "NETWORK_STYLE"
 #endif
 
