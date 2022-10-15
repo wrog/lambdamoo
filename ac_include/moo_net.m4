@@ -1,22 +1,50 @@
+# -*- autoconf -*-
+
+# ********************************************************************
+#  MOO_SYS_FIFO
+#  check whether fifo is available as a file type
+#    cache variable:  moo_sys_cv_fifo
+#
+AC_DEFUN([MOO_SYS_FIFO],
+  [AC_CACHE_CHECK([whether FIFOs are available], [moo_sys_cv_fifo],
+                  [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/stat.h>
+#if (!defined(S_IFIFO) || defined(NeXT))
+/* The NeXT claims to have FIFOs, but using them panics the kernel... */
+#emote no FIFOs
+#endif
+]])], [[moo_sys_cv_fifo=yes]], [[moo_sys_cv_fifo=no]])])])
+
+m4_define([_MOO_NET_FUD],
+  [AC_CACHE_CHECK([$3],[$2],
+     [AC_RUN_IFELSE([AC_LANG_SOURCE([$4])],[$2[=yes]],[$2[=no]])])
+  m4_ifval([$1],[[test "$]$2[" = yes &&]
+    AC_DEFINE([$1])])
+])
 # *******************************************************************
 #  MOO_NET_FIFO_WORKS
 #  check the ways in which FIFOs can be used for sysv networking
-#  (1) #define FSTAT_WORKS_ON_FIFOS
-#  (2) #define SELECT_WORKS_ON_FIFOS
-#  (3) #define POLL_WORKS_ON_FIFOS
+#  (1) cache:  moo_net_cv_fifo_fstat
+#      #define FSTAT_WORKS_ON_FIFOS
+#  (2) cache:  moo_net_cv_fifo_select
+#      #define SELECT_WORKS_ON_FIFOS
+#  (3) cache:  moo_net_cv_fifo_poll
+#      #define POLL_WORKS_ON_FIFOS
 #
-AC_DEFUN([MOO_NET_FIFO_WORKS],[dnl
-dnl ***************************************************************************
-echo "checking whether or not fstat() can tell how much data is in a FIFO"
-AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
+AC_DEFUN([MOO_NET_FIFO_WORKS],
+  [AC_REQUIRE([MOO_SYS_FIFO])dnl
+AS_VAR_IF([moo_sys_cv_fifo],[no],[[
+  moo_net_cv_fifo_fstat=no
+  moo_net_cv_fifo_select=no
+  moo_net_cv_fifo_poll=no
+]],[dnl
+_MOO_NET_FUD([FSTAT_WORKS_ON_FIFOS],[moo_net_cv_fifo_fstat],
+    [[whether or not fstat() can tell how much data is in a FIFO]],[[
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 main()
 {
-#ifdef NeXT
-/* The NeXT claims to have FIFOs, but using them panics the kernel... */
-  exit(-1);
-#endif
   int	rfd, wfd, result; struct stat st;
   unlink("/tmp/conftest-fifo");
   result = (mknod("/tmp/conftest-fifo", 0666 | S_IFIFO, 0) < 0
@@ -28,11 +56,10 @@ main()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-]])], [AC_DEFINE([FSTAT_WORKS_ON_FIFOS],[1])], [], [])
-
-dnl ***************************************************************************
-echo "checking whether or not select() can be used on FIFOs"
-AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
+]])
+  _MOO_NET_FUD([SELECT_WORKS_ON_FIFOS],[moo_net_cv_fifo_select],
+    [[whether or not select() can be used on FIFOs]],[[
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -44,10 +71,6 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
 #endif /* FD_ZERO */
 main()
 {
-#ifdef NeXT
-/* The NeXT claims to have FIFOs, but using them panics the kernel... */
-  exit(-1);
-#endif
   int	rfd, wfd, result; fd_set input; struct timeval tv;
   tv.tv_sec = 2;
   tv.tv_usec = 0;
@@ -64,11 +87,10 @@ main()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-]])], [AC_DEFINE([SELECT_WORKS_ON_FIFOS],[1])],[],[])
-
-dnl ***************************************************************************
-echo "checking whether or not poll() can be used on FIFOs"
-AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
+]])
+  _MOO_NET_FUD([POLL_WORKS_ON_FIFOS],[moo_net_cv_fifo_poll],
+    [[whether or not poll() can be used on FIFOs]],[[
+#include <sys/types.h>
 #include <poll.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -85,28 +107,28 @@ main()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-]])],[AC_DEFINE([POLL_WORKS_ON_FIFOS],[1])],[],[])
-])
-
+]])])])dnl
+dnl
 # *******************************************************************
 #  MOO_NET_POSIX_NONBLOCKING
 #  check whether or not select() can be used on FIFOs
+#    cache:  moo_net_cv_posix_nonblocking
 #    #define POSIX_NONBLOCKING_WORKS
 #
-AC_DEFUN([MOO_NET_POSIX_NONBLOCKING],[dnl
-dnl ***************************************************************************
-echo checking whether POSIX-style non-blocking I/O works
-AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <sys/types.h>
+AC_DEFUN([MOO_NET_POSIX_NONBLOCKING],
+  [AC_REQUIRE([MOO_SYS_FIFO])dnl
+AS_VAR_IF([moo_sys_cv_fifo],[no],[[
+  moo_net_cv_posix_nonblocking=no
+]],[
+  _MOO_NET_FUD([POSIX_NONBLOCKING_WORKS],[moo_net_cv_posix_nonblocking],
+    [[whether POSIX-style non-blocking I/O works]],[[
+#include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 handler(int sig) { }
 main ()
-{ /* Testing a POSIX feature, so assume FIFOs */
-#ifdef NeXT
-/* The NeXT claims to have FIFOs, but using them panics the kernel... */
-  exit(-1);
-#endif
+{
   int	rfd, wfd, flags, result; char buffer[10];
   unlink("/tmp/conftest-fifo");
   signal(SIGALRM, handler);
@@ -120,5 +142,4 @@ main ()
   unlink("/tmp/conftest-fifo");
   exit(result);
 }
-]])],[AC_DEFINE([POSIX_NONBLOCKING_WORKS],[1])],[],[])
-])
+]])])])
