@@ -63,7 +63,7 @@ dnl These only ever get used in #ifdef/#ifndef:
 dnl
  [[LOG_COMMANDS],         [bool], no,  [log player commands]],
  [[UNFORKED_CHECKPOINTS], [bool], no,  [do checkpoints in the foreground]],
- [[DEBUG_LOG_TRACEBACKS], [bool], yes, [print tracebacks to the server log]],
+ [[DEBUG_LOG_TRACEBACKS], [bool], no,  [print tracebacks to the server log]],
  [[INPUT_APPLY_BACKSPACE],[bool], yes, [BKSP/DEL edits nonbinary connections]],
  [[IGNORE_PROP_PROTECTED],[bool], yes, [ignore builtin property protection]],
  [[BYTECODE_REDUCE_REF],  [bool], no,  [do bytecode refcount optimization]],
@@ -110,7 +110,7 @@ dnl
  [initial listening port for NP_TCP]],
 [[DEFAULT_CONNECT_FILE], [str],                       [["/tmp/.MOO-server"]],
  [initial socket file for NP_LOCAL]],
-[[OUTBOUND_NETWORK],     [OBN_OFF OBN_ON],            no,
+[[OUTBOUND_NETWORK],     [OBN_OFF OBN_ON],            [[OBN_OFF]],
  [allow outgoing network connections]],
 
 dnl  Misc value options
