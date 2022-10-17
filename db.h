@@ -531,7 +531,7 @@ extern void db_delete_verb(db_verb_handle);
 				 * this call returns.
 				 */
 
-#endif				/* !DB_h */
+#endif		/* !DB_h */
 
 /*
  * $Log$

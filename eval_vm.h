@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Eval_VM_H
+#define Eval_VM_H 1
+
 #include "config.h"
 #include "execute.h"
 #include "structures.h"
@@ -28,6 +31,8 @@ extern void free_vm(vm the_vm, int stack_too);
 extern activation top_activ(vm);
 extern Objid progr_of_cur_verb(vm);
 extern unsigned suspended_lineno_of_vm(vm);
+
+#endif		/* !Eval_VM_H */
 
 /*
  * $Log$

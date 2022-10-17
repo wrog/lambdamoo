@@ -84,7 +84,7 @@ extern void bzero(char *, int);
 extern void *memset(void *, int, size_t);
 #endif
 
-#endif				/* !My_String_H */
+#endif		/* !My_String_H */
 
 /*
  * $Log$

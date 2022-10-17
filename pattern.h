@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Pattern_H
+#define Pattern_H 1
+
 #include "config.h"
 
 typedef struct {
@@ -33,6 +36,8 @@ extern Pattern new_pattern(const char *pattern, int case_matters);
 extern Match_Result match_pattern(Pattern p, const char *string,
 				Match_Indices * indices, int is_reverse);
 extern void free_pattern(Pattern p);
+
+#endif		/* !Pattern_H */
 
 /*
  * $Log$

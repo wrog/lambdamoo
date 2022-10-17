@@ -13,6 +13,11 @@
  * included without the other file, leading to inconsistencies.
  */
 
+#if defined(Config_Epilog_H) || !defined(Config_H)
+#  error config_epilog.h must only be included from config.h
+#else
+#  define Config_Epilog_H 1
+
 /* Some sites have installed GCC improperly or incompletely, thereby requiring
  * the server to be compiled with the `-traditional' switch.  That disables the
  * `const', `volatile' or `signed' keywords, which we need.  Thus, for GCC, we
@@ -150,3 +155,5 @@ typedef unsigned char uint8_t;
 #else
 #  define FORMAT(x,y,z)
 #endif
+
+#endif		/* !Config_Epilog_H */

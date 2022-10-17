@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Ref_Count_H
+#define Ref_Count_H 1
+
 #include "config.h"
 
 #if 0
@@ -25,6 +28,8 @@ extern unsigned int delref(const void *p);
 #define delref(X) (--((int *)(X))[-1])
 #define refcount(X) (((int *)(X))[-1])
 #endif
+
+#endif		/* !Ref_Count_H */
 
 /*
  * $Log$

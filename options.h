@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Options_h
-#define Options_h 1
+#ifndef Options_H
+#define Options_H 1
 
 /******************************************************************************
  * The server is prepared to keep a log of every command entered by players
@@ -379,7 +379,7 @@
 #  error Illegal value for "MPLEX_STYLE"
 #endif
 
-#endif				/* !Options_h */
+#endif		/* !Options_H */
 
 /*
  * $Log$

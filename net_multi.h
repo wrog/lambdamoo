@@ -50,7 +50,7 @@ extern void network_set_client_echo(network_handle nh, int is_on);
 				 * client what the echo state should be
 				 */
 
-#endif				/* !Net_Multi_H */
+#endif		/* !Net_Multi_H */
 
 /*
  * $Log$

@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Structures_h
-#define Structures_h 1
+#ifndef Structures_H
+#define Structures_H 1
 
 #include "my-stdio.h"
 
@@ -150,7 +150,7 @@ struct Var {
 
 extern Var zero;		/* useful constant */
 
-#endif				/* !Structures_h */
+#endif		/* !Structures_H */
 
 /*
  * $Log$

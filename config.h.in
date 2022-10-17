@@ -263,7 +263,7 @@
 /* continue on to the part that ./configure should not be touching */
 #include "config_epilog.h"
 
-#endif /* !Config_H */
+#endif		/* !Config_H */
 
 /*
  * $Log$

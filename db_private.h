@@ -19,6 +19,9 @@
  * Private interface for internal communication in the DB implementation
  *****************************************************************************/
 
+#ifndef DB_Private_H
+#define DB_Private_H 1
+
 #include "config.h"
 #include "exceptions.h"
 #include "program.h"
@@ -159,6 +162,8 @@ extern Exception dbpriv_dbio_failed;
 
 extern void dbpriv_set_dbio_input(FILE *);
 extern void dbpriv_set_dbio_output(FILE *);
+
+#endif		/* !DB_Private_H */
 
 /*
  * $Log$

@@ -19,6 +19,9 @@
  * Routines for use by non-DB modules with persistent state stored in the DB
  *****************************************************************************/
 
+#ifndef DB_IO_h
+#define DB_IO_h 1
+
 #include "program.h"
 #include "structures.h"
 #include "version.h"
@@ -95,6 +98,8 @@ extern void dbio_write_var(Var);
 
 extern void dbio_write_program(Program *);
 extern void dbio_write_forked_program(Program * prog, int f_index);
+
+#endif		/* !DB_IO_h */
 
 /*
  * $Log$

@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Eval_env_h
-#define Eval_env_h 1
+#ifndef Eval_Env_H
+#define Eval_Env_H 1
 
 #include "config.h"
 #include "structures.h"
@@ -32,7 +32,7 @@ void set_rt_env_var(Var * env, int slot, Var v);
 
 void fill_in_rt_consts(Var * env, DB_Version);
 
-#endif
+#endif		/* !Eval_Env_H */
 
 /*
  * $Log$

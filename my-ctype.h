@@ -14,8 +14,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef My_Ctype_H
-#define My_Ctype_H 1
+#ifndef My_CType_H
+#define My_CType_H 1
 
 #include "config.h"
 
@@ -26,7 +26,7 @@ extern int tolower(int);
 extern int toupper(int);
 #endif
 
-#endif				/* !My_Ctype_H */
+#endif		/* !My_CType_H */
 
 /*
  * $Log$

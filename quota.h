@@ -15,10 +15,15 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Quota_H
+#define Quota_H 1
+
 #include "structures.h"
 
 extern int decr_quota(Objid player);
 extern void incr_quota(Objid player);
+
+#endif		/* !Quota_H */
 
 /*
  * $Log$

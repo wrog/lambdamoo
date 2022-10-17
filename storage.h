@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Storage_h
-#define Storage_h 1
+#ifndef Storage_H
+#define Storage_H 1
 
 #include "my-string.h"
 
@@ -66,7 +66,7 @@ free_str(const char *s)
 
 #endif /* MEMO_STRLEN */
 
-#endif				/* Storage_h */
+#endif		/* !Storage_h */
 
 /*
  * $Log$

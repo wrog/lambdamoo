@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Numbers_H
+#define Numbers_H 1
+
 #include "structures.h"
 
 extern Var new_float(double);
@@ -30,6 +33,8 @@ extern Var do_multiply(Var, Var);
 extern Var do_divide(Var, Var);
 extern Var do_modulus(Var, Var);
 extern Var do_power(Var, Var);
+
+#endif		/* !Numbers_H */
 
 /*
  * $Log$

@@ -4,8 +4,8 @@
  * Prototypes for UTF-8 handling
  */
 
-#ifndef UTF_H
-#define UTF_H
+#ifndef UTF_h
+#define UTF_h 1
 
 #define INVALID_RUNE	0xfffd
 
@@ -17,4 +17,4 @@ int strlen_utf(const char *);
 int clearance_utf(const unsigned char);
 const char *recode_chars(const char *, int *, const char *, const char *);
 
-#endif /* UTF_H */
+#endif		/* !UTF_h */
