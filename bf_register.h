@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef BF_Register_H
+#define BF_Register_H 1
+
 extern void register_db_tune(void);
 extern void register_disassemble(void);
 extern void register_extensions(void);
@@ -28,6 +31,8 @@ extern void register_property(void);
 extern void register_server(void);
 extern void register_tasks(void);
 extern void register_verbs(void);
+
+#endif		/* !BF_Register_H */
 
 /*
  * $Log$

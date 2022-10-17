@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Utils_h
-#define Utils_h 1
+#ifndef Utils_H
+#define Utils_H 1
 
 #include "my-stdio.h"
 
@@ -82,7 +82,7 @@ extern int value_bytes(Var);
 extern const char *raw_bytes_to_binary(const char *buffer, int buflen);
 extern const char *binary_to_raw_bytes(const char *binary, int *rawlen);
 
-#endif
+#endif		/* !Utils_H */
 
 /*
  * $Log$

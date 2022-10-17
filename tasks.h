@@ -111,7 +111,7 @@ extern void register_tasks(void);
 
 
 
-#endif				/* !Tasks_H */
+#endif		/* !Tasks_H */
 
 /*
  * $Log$

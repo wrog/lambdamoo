@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Execute_h
-#define Execute_h 1
+#ifndef Execute_H
+#define Execute_H 1
 
 #include "config.h"
 #include "db.h"
@@ -128,7 +128,7 @@ extern int read_activ(activation * a, int which_vector);
 
 extern void register_execute(void);
 
-#endif
+#endif		/* !Execute_H */
 
 /*
  * $Log$

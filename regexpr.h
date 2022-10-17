@@ -16,8 +16,8 @@
 
  */
 
-#ifndef REGEXPR_H
-#define REGEXPR_H
+#ifndef RegExpr_H
+#define RegExpr_H 1
 
 #define RE_NREGS	100	/* number of registers available */
 
@@ -116,7 +116,7 @@ int re_exec(char *s);
 
 #endif
 
-#endif				/* REGEXPR_H */
+#endif		/* !RegExpr_H */
 
 /* RCS stuff added for LambdaMOO
 

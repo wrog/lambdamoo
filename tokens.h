@@ -15,14 +15,15 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef tENDWHILE
+#ifndef Tokens_H
+#define Tokens_H 1
 
 #include "ast.h"
 #include "structures.h"
 
 #include "y.tab.h"
 
-#endif
+#endif		/* !Tokens_H */
 
 /*
  * $Log$

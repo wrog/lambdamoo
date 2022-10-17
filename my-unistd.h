@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_UniStd_H
+#define My_UniStd_H 1
+
 #include "config.h"
 
 #if HAVE_UNISTD_H  &&  !NDECL_FORK
@@ -42,6 +45,8 @@ extern int write(int, const void *, unsigned);
 extern int fsync(int);
 
 #endif
+
+#endif		/* !My_UniStd_H */
 
 /*
  * $Log$

@@ -44,8 +44,8 @@
    documentation and/or software.
  */
 
-#ifndef _MD5_H_
-#define _MD5_H_
+#ifndef MD5_h
+#define MD5_h 1
 
 #include "config.h"
 
@@ -63,7 +63,7 @@ void md5_Init(md5ctx_t * context);
 void md5_Update(md5ctx_t * context, uint8 * buf, int len);
 void md5_Final(md5ctx_t * context, uint8 digest[16]);
 
-#endif
+#endif		/* !MD5_h */
 
 /*
  * $Log$

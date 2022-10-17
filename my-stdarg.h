@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_StdArg_H
+#define My_StdArg_H 1
+
 #include "config.h"
 
 /* The server no longer uses variable-length argument lists of large (size > 8
@@ -31,9 +34,6 @@
  * the one on your machine won't work.
  */
 
-#ifndef STDARG_H
-#define STDARG_H 1
-
 #ifndef _VA_LIST_
 #define _VA_LIST_ 1
 typedef void *va_list;
@@ -47,13 +47,13 @@ typedef void *va_list;
 
 #define va_end(ptr)
 
-#endif				/* STDARG_H */
-
 #else
 
 #include <stdarg.h>
 
-#endif				/* BUGGY_STDARG */
+#endif		/* BUGGY_STDARG */
+
+#endif		/* !My_StdArg_H */
 
 /*
  * $Log$

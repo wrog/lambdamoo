@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Functions_h
-#define Functions_h 1
+#ifndef Functions_H
+#define Functions_H 1
 
 #include "my-stdio.h"
 
@@ -93,7 +93,7 @@ extern Byte *pc_for_bi_func_data(void);
 
 extern void load_server_options(void);
 
-#endif
+#endif		/* !Functions_H */
 
 /*
  * $Log$

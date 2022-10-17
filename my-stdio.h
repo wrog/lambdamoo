@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef My_Stdio_H
-#define My_Stdio_H 1
+#ifndef My_StdIO_H
+#define My_StdIO_H 1
 
 #include "config.h"
 
@@ -64,7 +64,7 @@ extern int vfscanf(FILE *, const char *, va_list);
 #  define rename(old, new)	(link(old, new) && unlink(old))
 #endif
 
-#endif				/* !My_Stdio_H */
+#endif		/* !My_StdIO_H */
 
 /*
  * $Log$

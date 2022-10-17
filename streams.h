@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Stream_h
-#define Stream_h 1
+#ifndef Streams_H
+#define Streams_H 1
 
 #include "config.h"
 
@@ -36,7 +36,7 @@ extern char *stream_contents(Stream *);
 extern char *reset_stream(Stream *);
 extern int stream_length(Stream *);
 
-#endif
+#endif		/* !Streams_H */
 
 /*
  * $Log$

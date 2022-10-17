@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef List_H
+#define List_H 1
+
 #include "structures.h"
 
 extern Var listappend(Var list, Var value);
@@ -33,6 +36,8 @@ extern Var strget(Var str, Var i);
 extern Var new_list(int size);
 extern const char *value2str(Var);
 extern const char *value_to_literal(Var);
+
+#endif		/* !List_H */
 
 /*
  * $Log$

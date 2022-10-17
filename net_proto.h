@@ -156,7 +156,7 @@ extern void proto_close_listener(int fd);
 				 * protocol.
 				 */
 
-#endif				/* !Net_Proto_H */
+#endif		/* !Net_Proto_H */
 
 /*
  * $Log$

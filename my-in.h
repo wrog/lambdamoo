@@ -46,7 +46,7 @@ typedef unsigned32 in_addr_t;
 #    define INADDR_NONE ((in_addr_t)-1)
 #  endif
 
-#endif
+#endif		/* !My_In_H */
 
 /*
  * $Log$

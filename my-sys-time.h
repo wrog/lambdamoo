@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_Sys_Time_H
+#define My_Sys_Time_H 1
+
 #include "config.h"
 #include "options.h"
 
@@ -38,6 +41,8 @@ extern int setitimer(int, struct itimerval *, struct itimerval *);
 
 extern int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 #endif
+
+#endif		/* !My_Sys_Time_H */
 
 /*
  * $Log$

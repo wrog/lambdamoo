@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_IOCtl_H
+#define My_IOCtl_H 1
+
 #include "config.h"
 
 #include <sys/ioctl.h>
@@ -22,6 +25,8 @@
 #if NDECL_IOCTL
 extern int ioctl(int, int,...);
 #endif
+
+#endif		/* !My_IOCtl_H */
 
 /*
  * $Log$

@@ -55,7 +55,7 @@ extern int check_version(DB_Version);
 				 * known range.
 				 */
 
-#endif				/* !Version_H */
+#endif		/* !Version_H */
 
 /*
  * $Log$

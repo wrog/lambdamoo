@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef My_Types_h
-#define My_Types_h 1
+#ifndef My_Types_H
+#define My_Types_H 1
 
 #include "config.h"
 
@@ -37,9 +37,9 @@
 #define	FD_ZERO(p)	bzero((char *)(p), sizeof(*(p)))
 #define	FD_SET(n, p)	((p)->fds_bits[0] |= (1L<<((n)%NFDBITS)))
 #define	FD_ISSET(n, p)	((p)->fds_bits[0] &  (1L<<((n)%NFDBITS)))
-#endif				/* FD_ZERO */
+#endif		/* FD_ZERO */
 
-#endif				/* !My_Types_h */
+#endif		/* !My_Types_H */
 
 /*
  * $Log$

@@ -42,7 +42,7 @@ extern Var parse_into_wordlist(const char *command);
 extern Parsed_Command *parse_command(const char *command, Objid user);
 extern void free_parsed_command(Parsed_Command *);
 
-#endif				/* !Parse_Cmd_H */
+#endif		/* !Parse_Cmd_H */
 
 /*
  * $Log$

@@ -11,8 +11,8 @@
  * else can do this.
  * */
 
-#ifndef Str_Intern_h
-#define Str_Intern_h
+#ifndef Str_Intern_H
+#define Str_Intern_H 1
 
 /* 0 for a default size */
 extern void str_intern_open(int table_size);
@@ -22,4 +22,4 @@ extern void str_intern_close(void);
    possibly share storage. */
 extern const char *str_intern(const char *s);
 
-#endif
+#endif		/* !Str_Intern_H */

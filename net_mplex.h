@@ -68,7 +68,7 @@ extern int mplex_is_writable(int fd);
 				 * had become possible on the given descriptor.
 				 */
 
-#endif				/* !Net_MPlex_H */
+#endif		/* !Net_MPlex_H */
 
 /*
  * $Log$

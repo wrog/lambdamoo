@@ -15,11 +15,18 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Verbs_H
+#define Verbs_H 1
+
 #include "db.h"
 #include "structures.h"
 
 extern enum error validate_verb_descriptor(Var desc);
 extern db_verb_handle find_described_verb(Objid oid, Var desc);
+
+extern void register_verbs(void);
+
+#endif		/* !Verbs_H */
 
 /*
  * $Log$

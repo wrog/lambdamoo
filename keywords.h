@@ -33,7 +33,7 @@ typedef const struct keyword Keyword;
 
 extern Keyword *find_keyword(const char *, size_t);
 
-#endif	/* Keywords_H */
+#endif		/* !Keywords_H */
 
 /*
  * $Log$

@@ -15,10 +15,15 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Match_H
+#define Match_H 1
+
 #include "config.h"
 #include "structures.h"
 
 extern Objid match_object(Objid player, const char *name);
+
+#endif		/* !Match_H */
 
 /*
  * $Log$

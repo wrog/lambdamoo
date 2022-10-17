@@ -2,6 +2,9 @@
  * will eventually live here.
  */
 
+#ifndef DB_Tune_H
+#define DB_Tune_H 1
+
 #include "db_private.h"
 
 #ifdef VERB_CACHE
@@ -12,3 +15,5 @@ extern Var db_verb_cache_stats(void);
 #endif /* VERB_CACHE */
 
 extern void register_db_tune(void);
+
+#endif		/* !DB_Tune_H */
