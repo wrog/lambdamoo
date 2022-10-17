@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_StrOpts_H
+#define My_StrOpts_H 1
+
 #include "config.h"
 
 #if UNDEF_IO_IN_STROPTS_H
@@ -23,6 +26,8 @@
 #endif
 
 #include <stropts.h>
+
+#endif		/* !My_StrOpts_H */
 
 /*
  * $Log$

@@ -15,12 +15,17 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Disassemble_H
+#define Disassemble_H 1
+
 #include "my-stdio.h"
 
 #include "program.h"
 
 extern void disassemble_to_file(FILE * fp, Program * program);
 extern void disassemble_to_stderr(Program * program);
+
+#endif		/* !Disassemble_H */
 
 /*
  * $Log$

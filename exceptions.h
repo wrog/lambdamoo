@@ -193,7 +193,7 @@ extern void ES_RaiseException(Exception * exception, int value);
 
 extern void panic(const char *message);
 
-#endif				/* !Exceptions_H */
+#endif		/* !Exceptions_H */
 
 /*
  *$Log$

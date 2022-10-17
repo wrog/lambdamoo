@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_Wait_H
+#define My_Wait_H 1
+
 #include "config.h"
 #include <sys/wait.h>
 
@@ -23,6 +26,8 @@
 
 extern pid_t waitpid(pid_t, int *, int);
 #endif
+
+#endif		/* !My_Wait_H */
 
 /*
  * $Log$

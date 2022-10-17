@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Random_H
+#define Random_H 1
+
 #include "config.h"
 
 #if HAVE_LRAND48
@@ -32,6 +35,8 @@ extern void srand48(long);
 #    define SRANDOM	srand
 #  endif
 #endif
+
+#endif		/* !Random_H */
 
 /*
  * $Log$

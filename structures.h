@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Structures_h
-#define Structures_h 1
+#ifndef Structures_H
+#define Structures_H 1
 
 #include "my-stdio.h"
 
@@ -125,7 +125,7 @@ extern Var zero;		/* useful constant */
 #define MAX_STRING (INT32_MAX - 9)
 
 
-#endif				/* !Structures_h */
+#endif		/* !Structures_H */
 
 /*
  * $Log$

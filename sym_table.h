@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Sym_Table_h
-#define Sym_Table_h 1
+#ifndef Sym_Table_H
+#define Sym_Table_H 1
 
 #include "config.h"
 #include "version.h"
@@ -55,7 +55,7 @@ extern void free_names(Names *);
 #define SLOT_INT	16
 #define SLOT_FLOAT	17
 
-#endif				/* !Sym_Table_h */
+#endif		/* !Sym_Table_H */
 
 /*
  * $Log$

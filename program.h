@@ -16,7 +16,7 @@
  *****************************************************************************/
 
 #ifndef Program_H
-#define Program_H
+#define Program_H 1
 
 #include "structures.h"
 #include "version.h"
@@ -60,7 +60,7 @@ extern Program *program_ref(Program *);
 extern int program_bytes(Program *);
 extern void free_program(Program *);
 
-#endif				/* !Program_H */
+#endif		/* !Program_H */
 
 /*
  * $Log$

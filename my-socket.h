@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_Socket_H
+#define My_Socket_H 1
+
 #include "config.h"
 
 #if SYS_SOCKET_H_NEEDS_HELP
@@ -42,6 +45,8 @@ extern int connect(int, struct sockaddr *, int);
 #if NDECL_SHUTDOWN
 extern int shutdown(int, int);
 #endif
+
+#endif		/* !My_Socket_H */
 
 /*
  * $Log$

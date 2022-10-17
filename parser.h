@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Parser_h
-#define Parser_h 1
+#ifndef Parser_H
+#define Parser_H 1
 
 #include "config.h"
 #include "program.h"
@@ -31,7 +31,7 @@ typedef struct {
 extern Program *parse_program(DB_Version, Parser_Client, void *);
 extern Program *parse_list_as_program(Var code, Var * errors);
 
-#endif
+#endif		/* !Parser_H */
 
 /*
  * $Log$

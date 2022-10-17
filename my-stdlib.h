@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef My_Stdlib_H
-#define My_Stdlib_H 1
+#ifndef My_StdLib_H
+#define My_StdLib_H 1
 
 #include "config.h"
 
@@ -67,7 +67,7 @@ extern int random(void);
 extern int srandom(unsigned);
 #endif
 
-#endif
+#endif		/* !My_StdLib_H */
 
 /*
  * $Log$

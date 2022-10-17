@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Unparse_h
-#define Unparse_h 1
+#ifndef Unparse_H
+#define Unparse_H 1
 
 #include "my-stdio.h"
 
@@ -39,7 +39,7 @@ extern void unparse_to_stderr(Program *, int fully_parenthesize,
 extern const char *error_name(enum error);	/* E_NONE -> "E_NONE" */
 extern const char *unparse_error(enum error);	/* E_NONE -> "No error" */
 
-#endif
+#endif		/* !Unparse_H */
 
 /*
  * $Log$

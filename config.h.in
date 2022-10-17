@@ -269,7 +269,7 @@
 #  endif
 #endif
 
-#endif /* !Config_H */
+#endif		/* !Config_H */
 
 /*
  * $Log$

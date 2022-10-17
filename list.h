@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef List_H
+#define List_H 1
+
 #include "structures.h"
 #include "streams.h"
 
@@ -34,6 +37,8 @@ extern Var strget(Var str, Var i);
 extern Var new_list(int size);
 extern const char *value2str(Var);
 extern void unparse_value(Stream *, Var);
+
+#endif		/* !List_H */
 
 /*
  * $Log$

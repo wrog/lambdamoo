@@ -15,15 +15,15 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Math_h
-#define Math_h 1
+#ifndef My_Math_H
+#define My_Math_H 1
 
 #include <float.h>
 #include <math.h>
 
 #define IS_REAL(x)	(-DBL_MAX <= (x) && (x) <= DBL_MAX)
 
-#endif
+#endif		/* !My_Math_H */
 
 /*
  * $Log$

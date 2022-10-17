@@ -15,8 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-#ifndef Opcode_h
-#define Opcode_h 1
+#ifndef OpCode_H
+#define OpCode_H 1
 
 #include "options.h"
 
@@ -120,7 +120,7 @@ enum Opcode {
 typedef enum Opcode Opcode;
 typedef enum Extended_Opcode Extended_Opcode;
 
-#endif
+#endif		/* !OpCode_H */
 
 /*
  * $Log$

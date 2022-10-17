@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_FCntl_H
+#define My_FCntl_H 1
+
 #include "config.h"
 
 #include <fcntl.h>
@@ -30,6 +33,8 @@ extern int open(const char *, int,...);
 #else
 #define NONBLOCK_FLAG O_NDELAY
 #endif
+
+#endif		/* !My_FCntl_H */
 
 /*
  * $Log$

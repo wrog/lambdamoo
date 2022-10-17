@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef GetPageSize_H
+#define GetPageSize_H 1
+
 #ifdef BSD
 #ifndef BSD4_1
 #define HAVE_GETPAGESIZE
@@ -39,6 +42,8 @@
 #endif				/* no EXEC_PAGESIZE */
 
 #endif				/* not HAVE_GETPAGESIZE */
+
+#endif		/* !GetPageSize_H */
 
 
 /*

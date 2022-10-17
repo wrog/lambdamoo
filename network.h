@@ -242,7 +242,7 @@ extern void network_shutdown(void);
 				 * never make another call on the network.
 				 */
 
-#endif				/* Network_H */
+#endif		/* !Network_H */
 
 /*
  * $Log$

@@ -51,7 +51,7 @@ extern size_t strftime(char *s, size_t smax, const char *fmt,
 extern char *tzname;
 #endif
 
-#endif				/* !My_Time_H */
+#endif		/* !My_Time_H */
 
 /*
  * $Log$

@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_Poll_H
+#define My_Poll_H 1
+
 #include "config.h"
 
 #include <poll.h>
@@ -22,6 +25,8 @@
 #if NDECL_POLL
 extern int poll(struct pollfd *, unsigned long, int);
 #endif
+
+#endif		/* !My_Poll_H */
 
 /*
  * $Log$

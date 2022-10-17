@@ -320,7 +320,7 @@ extern void register_server(void);
     }								\
 
 
-#endif				/* Server_H */
+#endif		/* !Server_H */
 
 /*
  * $Log$

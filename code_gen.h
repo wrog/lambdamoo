@@ -15,11 +15,16 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef Code_Gen_H
+#define Code_Gen_H 1
+
 #include "ast.h"
 #include "program.h"
 #include "version.h"
 
 extern Program *generate_code(Stmt *, DB_Version);
+
+#endif		/* !Code_Gen_H */
 
 /*
  * $Log$

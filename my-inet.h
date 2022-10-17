@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_INet_H
+#define My_INet_H 1
+
 #include "config.h"
 
 #if ARPA_INET_H_NEEDS_HELP
@@ -23,6 +26,8 @@
 #endif
 
 #include <arpa/inet.h>
+
+#endif		/* !My_INet_H */
 
 /*
  * $Log$

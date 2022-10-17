@@ -211,7 +211,7 @@ extern void dealloc_node(void *);
 extern void dealloc_string(char *);
 extern void free_stmt(Stmt *);
 
-#endif				/* !AST_h */
+#endif		/* !AST_h */
 
 /*
  * $Log$

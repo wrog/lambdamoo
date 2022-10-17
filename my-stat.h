@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_Stat_H
+#define My_Stat_H 1
+
 #include "config.h"
 
 #if SYS_STAT_H_NEEDS_HELP
@@ -35,6 +38,8 @@ extern int mkfifo(const char *, mode_t);
 extern int mknod(const char *file, int mode, int dev);
 #define mkfifo(path, mode)	mknod(path, S_IFIFO | (mode), 0)
 #endif
+
+#endif		/* !My_Stat_H */
 
 /*
  * $Log$

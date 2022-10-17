@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_Signal_H
+#define My_Signal_H 1
+
 #include "config.h"
 
 #if SIGNAL_H_NEEDS_HELP
@@ -46,6 +49,8 @@ extern int sigrelse(int);
 #ifndef SIGCHLD
 #define SIGCHLD SIGCLD
 #endif
+
+#endif		/* !My_Signal_H */
 
 /*
  * $Log$

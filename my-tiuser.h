@@ -15,6 +15,9 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#ifndef My_TIUser_H
+#define My_TIUser_H 1
+
 #include "config.h"
 
 #include <tiuser.h>
@@ -34,6 +37,8 @@ extern int t_errno;
 #if NDECL_T_ERRLIST
 extern char *t_errlist[];
 #endif
+
+#endif		/* !My_TIUser_H */
 
 /*
  * $Log$
