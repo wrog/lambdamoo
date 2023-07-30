@@ -8,6 +8,7 @@ config.status
 config.lastrun
 config.cache
 keywords.c
+version_options.h
 y.tab.h
 *.o
 moo

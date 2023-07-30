@@ -29,6 +29,8 @@ AC_CONFIG_COMMANDS([config.lastrun], [[
   chmod -w Makefile config.h options.h
   date > config.lastrun
 ]])
+AC_CONFIG_COMMANDS_POST([MOO_WRITE_VERSION_OPTIONS([version_options.h])])
+
 m4_include([options.ac])
 MOO_ARG_ENABLE_ALL()
 
