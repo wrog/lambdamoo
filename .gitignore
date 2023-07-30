@@ -8,8 +8,12 @@ config.status
 config.lastrun
 config.cache
 keywords.c
+version_options.h
+version.lastck
+version_src.h
+version_make.h
+version_make.t
 y.tab.h
-version_src*.h
 *.o
 moo
 *.db

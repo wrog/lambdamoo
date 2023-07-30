@@ -28,6 +28,9 @@ AS_HELP_STRING([--enable-prop-protect],[/enable  protection of builtin propertie
   [no],[[moo_d_IGNORE_PROP_PROTECTED=yes]],
   [[moo_d_IGNORE_PROP_PROTECTED=no]])])
 
+# --(enable|disable)-svf-*  for server-version-full settings
+MOO_SVF_ARG_ENABLES()
+
 # --(enable|disable)-def-*  for options.h settings
 MOO_OPTION_ARG_ENABLES()
 

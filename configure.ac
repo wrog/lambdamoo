@@ -21,10 +21,14 @@ AC_CONFIG_SRCDIR([Minimal.db])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_HEADERS([options.h])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_COMMANDS([version.lastck],
+  [[moo_write_lastck]],[[$moo_init_lastck]])
 AC_CONFIG_COMMANDS([config.lastrun], [[
   chmod -w Makefile config.h options.h
   date > config.lastrun
 ]])
+AC_CONFIG_COMMANDS_POST([MOO_WRITE_VERSION_OPTIONS([version_options.h])])
+
 m4_include([options.ac])
 MOO_ARG_ENABLE_ALL()
 
@@ -170,6 +174,8 @@ AC_DEFINE([UNDEF_IO_IN_STROPTS_H],[1])])
 MOO_NET_FIFO_WORKS
 MOO_NET_POSIX_NONBLOCKING
 MOO_NET_DO_REPORT
+MOO_SVF_SUBST_VERSION_MAKE
+MOO_SVF_LASTCK_INIT([moo_init_lastck],[moo_write_lastck])
 AC_OUTPUT
 
 # $Log$

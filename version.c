@@ -50,6 +50,7 @@
  * Server executable version
  */
 
+#include "version_make.h"
 #include "version_src.h"
 #ifndef VERSION_MAJOR
 #  define VERSION_MAJOR 1
@@ -72,7 +73,8 @@ const char *server_version = VERSION_STRING;
 
 static Var *version_structure = 0;
 
-static void init_version_structure()
+static void
+init_version_structure(void)
 {
 
 #define SET_INT(W,value)  (W).type = TYPE_INT;  (W).v.num = (value)
@@ -194,14 +196,14 @@ server_version_full(Var arg)
 	    default:
 		break;
 	    case TYPE_STR:
-		if (memo_strlen(tree[0].v.str) == e - s &&
+	        if (memo_strlen(tree[0].v.str) == (size_t)(e - s) &&
 		    strncmp(tree[0].v.str, s, e - s) == 0)
 		    goto found;
 		break;
 	    case TYPE_LIST:
 		if (tree[0].v.list[0].v.num == 2 &&
 		    tree[0].v.list[1].type == TYPE_STR &&
-		    memo_strlen(tree[0].v.list[1].v.str) == e - s &&
+		    memo_strlen(tree[0].v.list[1].v.str) == (size_t)(e - s) &&
 		    strncmp(tree[0].v.list[1].v.str, s, e - s) == 0) {
 
 		    if (tree[0].v.list[0].v.num > 1)
