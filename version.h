@@ -19,8 +19,19 @@
 #define Version_H 1
 
 #include "config.h"
+#include "structures.h"
+
+/*****************************************************************
+ * Server Executable Version
+ */
 
 extern const char *server_version;
+extern Var server_version_full(Var);
+
+
+/*****************************************************************
+ * Language / Database-Format Version
+ */
 
 /* The following list must never be reordered, only appended to.  There is one
  * element per version of the database format (including incompatible changes
