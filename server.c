@@ -1285,10 +1285,18 @@ static package
 bf_server_version(Var arglist, Byte next, void *vdata, Objid progr)
 {
     Var r;
-    r.type = TYPE_STR;
-    r.v.str = str_dup(server_version);
+    if (arglist.v.list[0].v.num > 0) {
+	r = server_version_full(arglist.v.list[1]);
+    }
+    else {
+	r.type = TYPE_STR;
+	r.v.str = str_dup(server_version);
+    }
     free_var(arglist);
-    return make_var_pack(r);
+    if (r.type == TYPE_ERR)
+	return make_error_pack(r.v.err);
+    else
+	return make_var_pack(r);
 }
 
 static package
@@ -1765,7 +1773,7 @@ bf_buffered_output_length(Var arglist, Byte next, void *vdata, Objid progr)
 void
 register_server(void)
 {
-    register_function("server_version", 0, 0, bf_server_version);
+    register_function("server_version", 0, 1, bf_server_version, TYPE_ANY);
     register_function("renumber", 1, 1, bf_renumber, TYPE_OBJ);
     register_function("reset_max_object", 0, 0, bf_reset_max_object);
     register_function("memory_usage", 0, 0, bf_memory_usage);

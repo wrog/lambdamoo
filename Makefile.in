@@ -199,6 +199,8 @@ gitclean: distclean
 #  -MP: include 'dep1:','dep2:'... lines in target.d (rm depN forces remake)
 sinclude $(DFILES)
 
+version.o: version_options.h version_src.h version_make.h
+
 version_src.h: version.lastck
 	./version.lastck >$@
 
