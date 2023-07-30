@@ -9,6 +9,8 @@ config.lastrun
 config.cache
 keywords.c
 version_options.h
+version.lastck
+version_src.h
 y.tab.h
 *.o
 moo

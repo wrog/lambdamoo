@@ -179,10 +179,10 @@ distclean-all: distclean
 gitclean-all: gitclean distclean-all
 
 clean:
-	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c
+	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c version_src.h
 
 distclean: clean
-	rm -f config.h options.h Makefile config.status config.cache config.log config.lastrun
+	rm -f config.h options.h Makefile config.status config.cache config.log version.lastck config.lastrun
 
 gitclean: distclean
 	rm -rf configure autom4te.cache version.fixed version_options.*
@@ -198,6 +198,14 @@ gitclean: distclean
 # -MMD: write 'target.o: dep1 dep2 ...' into target.d
 #  -MP: include 'dep1:','dep2:'... lines in target.d (rm depN forces remake)
 sinclude $(DFILES)
+
+version_src.h: version.lastck
+	./version.lastck >$@
+
+version.lastck: FORCE
+	@./config.status $@
+
+FORCE:
 
 ###############################################################################
 # $Log$

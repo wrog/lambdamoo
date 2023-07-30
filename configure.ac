@@ -25,6 +25,8 @@ AC_CONFIG_SRCDIR([Minimal.db])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_HEADERS([options.h])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_COMMANDS([version.lastck],
+  [[moo_write_lastck]],[[$moo_init_lastck]])
 AC_CONFIG_COMMANDS([config.lastrun], [[
   chmod -w Makefile config.h options.h
   date > config.lastrun
@@ -202,6 +204,7 @@ fi]
 MOO_NET_FIFO_WORKS
 MOO_NET_POSIX_NONBLOCKING
 MOO_NET_DO_REPORT
+MOO_SVF_LASTCK_INIT([moo_init_lastck],[moo_write_lastck])
 AC_OUTPUT
 
 # $Log$
