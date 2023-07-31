@@ -11,6 +11,8 @@ keywords.c
 version_options.h
 version.lastck
 version_src.h
+version_make.h
+version_make.t
 y.tab.h
 *.o
 moo

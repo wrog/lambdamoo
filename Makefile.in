@@ -179,7 +179,7 @@ distclean-all: distclean
 gitclean-all: gitclean distclean-all
 
 clean:
-	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c version_src.h
+	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c version_src.h version_make.*
 
 distclean: clean
 	rm -f config.h options.h Makefile config.status config.cache config.log version.lastck config.lastrun
@@ -206,6 +206,8 @@ version.lastck: FORCE
 	@./config.status $@
 
 FORCE:
+
+@version_make_frag@
 
 ###############################################################################
 # $Log$

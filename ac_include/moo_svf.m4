@@ -20,6 +20,7 @@ AC_DEFUN([MOO_SVF_ARG_ENABLES],
 AC_ARG_ENABLE([svf-source],
 [AS_HELP_STRING([--(en|dis)able-svf-source],[include/exclude 'source' group],[30])],
 [],[enable_svf_source=yes])
+MOO_SVF_ARG_MAKE
 AC_ARG_ENABLE([svf-diff],
 [AS_HELP_STRING([--enable-svf-diff=yes],[check for modified source],[30])
 AS_HELP_STRING( [                 =?],[no check, assume modified],[30])
