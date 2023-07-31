@@ -22,6 +22,30 @@ m4_define([_MOO_NET_FUD],
     AC_DEFINE([$1])])
 ])
 # *******************************************************************
+#  MOO_NET_PREREQUISITES
+#   check prerequisites for networking
+#   needed for */NS_BSD
+#     cache:  ac_cv_header_sys_socket_h
+#     cache:  ac_cv_search_accept
+#   needed for NP_TCP/*
+#     cache:  ac_cv_search_gethostbyname
+#   needed for NP_TCP/NS_SYSV
+#     cache:  ac_cv_search_t_open
+#   (amend LIBS only if network protocol/style needs it)
+#
+AC_DEFUN([MOO_NET_PREREQUISITES],
+[AC_CHECK_HEADER([sys/socket.h])
+[_moo_save_LIBS=$LIBS]
+AC_SEARCH_LIBS([gethostbyname],[nsl nsl_s],
+[AS_IF([[test x"$enable_def_NETWORK_PROTOCOL" = xNP_TCP]],[],[[LIBS=$_moo_save_LIBS]])])
+[_moo_save_LIBS=$LIBS]
+AC_SEARCH_LIBS([accept],[socket 'socket -lnsl' inet],
+[AS_IF([[test x"$enable_def_NETWORK_STYLE" = xNS_BSD]],[],[[LIBS=$_moo_save_LIBS]])])
+[_moo_save_LIBS=$LIBS]
+AC_SEARCH_LIBS([t_open],[nsl nsl_s],
+[AS_IF([[test x"$enable_def_NETWORK_PROTOCOL" = xNP_TCP && test x"$enable_def_NETWORK_STYLE" = xNS_SYSV]],[],[[LIBS=$_moo_save_LIBS]])])
+])dnl
+# *******************************************************************
 #  MOO_NET_FIFO_WORKS
 #  check the ways in which FIFOs can be used for sysv networking
 #  (1) cache:  moo_net_cv_fifo_fstat

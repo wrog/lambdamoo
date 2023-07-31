@@ -100,10 +100,6 @@ MOO_HAVE_FUNC_LIBS([atan2 asinh expm1 erfc j1], [m])
 dnl *** was -lm /lib/libm.a "-static -lm" (is this still needed?)
 MOO_HAVE_FUNC_LIBS([mkfifo waitpid sigemptyset], [posix])
 dnl *** was -lposix /lib/libposix.a (is this still needed?)
-MOO_HAVE_FUNC_LIBS([accept], [socket inet], [nsl])
-dnl *** was "-lsocket -lnsl" -lsocket -linet
-dnl *** (does nsl screw up non-sysV builds?)
-MOO_HAVE_FUNC_LIBS([t_open], [nsl nsl_s])
 MOO_HAVE_FUNC_LIBS([crypt], [crypt crypt_d])
 dnl
 MOO_ICONV_LIBS
@@ -181,33 +177,6 @@ AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 ]])],[AC_MSG_RESULT([no])],[AC_MSG_RESULT([yes])
 AC_DEFINE([UNDEF_IO_IN_STROPTS_H],[1])])
 
-MOO_NET_FIFO_WORKS
-MOO_NET_POSIX_NONBLOCKING
-dnl ***************************************************************************
-AC_MSG_CHECKING([which MOO networking configurations are likely to work])
-
-[NETWORK_CONFIGURATIONS="NP_SINGLE"]
-m4_define(MOO_ADD_NET_CONFIG,
-  [[NETWORK_CONFIGURATIONS="$NETWORK_CONFIGURATIONS $1"]])dnl
-
-AC_CHECK_HEADER([sys/socket.h],[
-	MOO_ADD_NET_CONFIG(NS_BSD/NP_LOCAL)
-	AC_CHECK_PROG([have_telnet],[telnet],[yes],[no])
-        test x$have_telnet = xyes && MOO_ADD_NET_CONFIG(NS_BSD/NP_TCP)])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <sys/stat.h>
-@%:@if !(defined(S_IFIFO) && !defined(NeXT) && \
-      (SELECT_WORKS_ON_FIFOS || POLL_WORKS_ON_FIFOS || FSTAT_WORKS_ON_FIFOS))
-#emote no FIFOs
-#endif
-]])], [MOO_ADD_NET_CONFIG(NS_SYSV/NP_LOCAL)], [])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if !(HAVE_TIUSER_H && HAVE_T_OPEN && HAVE_POLL)
-#emote no user+open+poll
-#endif
-]])],[test -r /dev/tcp && MOO_ADD_NET_CONFIG(NS_SYSV/NP_TCP)], [])
-AC_MSG_RESULT([done])
-
 dnl ***************************************************************************
 dnl Find a usable PCRE library
 AC_CHECK_LIB([pcre], [pcre_exec], [], [AC_MSG_ERROR([[missing -lpcre
@@ -228,18 +197,10 @@ if test "x$moo_lib_cv_pcre_utf8" = xno ; then]
 *** for Unicode character properties.  We need at least version 8.]])[
 fi]
 
+MOO_NET_FIFO_WORKS
+MOO_NET_POSIX_NONBLOCKING
+MOO_NET_DO_REPORT
 AC_OUTPUT
-[
-cat <<_MOO_EOF
-----------------------------------------------------------------------
-| The following networking configurations will probably work on your
-| system; any configuration *not* listed here almost certainly will
-| *not* work on your system:
-|
-|   $NETWORK_CONFIGURATIONS
-----------------------------------------------------------------------
-_MOO_EOF
-]
 
 # $Log$
 # Revision 1.2  2004/05/22 01:25:43  wrog
