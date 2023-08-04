@@ -171,10 +171,11 @@ proto_close_listener(int fd)
 
 char rcsid_net_bsd_lcl[] = "$Id$";
 
-/* $Log$
-/* Revision 1.2  1997/03/03 04:19:02  nop
-/* GNU Indent normalization
 /*
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:02  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:02  nop
  * LambdaMOO 1.8.0p5
  *

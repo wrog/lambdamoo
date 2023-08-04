@@ -36,7 +36,7 @@ extern void add_command_to_history(Objid player, const char *command);
 extern int log_pcount;
 extern int log_report_progress_cktime();
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2004/05/22 01:25:43  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

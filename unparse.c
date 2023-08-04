@@ -734,7 +734,7 @@ unparse_to_stderr(Program * p, int fully_parenthesize, int indent_lines,
 
 char rcsid_unparse[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2010/03/30 23:06:51  wrog
  * value_to_literal() replaced by unparse_value()

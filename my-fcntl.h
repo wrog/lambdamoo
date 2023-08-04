@@ -31,7 +31,7 @@ extern int open(const char *, int,...);
 #define NONBLOCK_FLAG O_NDELAY
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:18:08  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

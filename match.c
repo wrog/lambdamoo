@@ -137,7 +137,7 @@ match_object(Objid player, const char *name)
 
 char rcsid_match[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:18:02  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

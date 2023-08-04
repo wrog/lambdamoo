@@ -2,7 +2,7 @@
  * net_tcp.c
  *
  * common code for
- * multi-user networking protocol implementations for TCP/IP 
+ * multi-user networking protocol implementations for TCP/IP
  * (net_bsd_tcp.c and net_sysv_tcp.c)
  *
  */
@@ -66,7 +66,7 @@ tcp_arguments(int argc, char **argv, int *pport)
         }
     }
 #ifdef OUTBOUND_NETWORK
-    oklog("CMDLINE: Outbound network connections %s.\n", 
+    oklog("CMDLINE: Outbound network connections %s.\n",
           outbound_network_enabled ? "enabled" : "disabled");
 #endif
     return 1;
@@ -74,7 +74,7 @@ tcp_arguments(int argc, char **argv, int *pport)
 
 char rcsid_net_tcp[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.2  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

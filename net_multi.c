@@ -702,7 +702,7 @@ network_shutdown(void)
 
 char rcsid_net_multi[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2010/03/30 23:16:49  wrog
  * raw_bytes_to_binary() replaced by stream_add_raw_bytes_to_binary()

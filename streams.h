@@ -53,7 +53,7 @@ extern Exception stream_too_big;
 
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2010/04/23 05:10:55  wrog
  * remove max=0 meaning no limit

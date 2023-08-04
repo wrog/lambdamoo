@@ -1805,7 +1805,7 @@ register_server(void)
 
 char rcsid_server[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.15  2010/04/22 21:46:36  wrog
  * support for server_version(argument)

@@ -162,12 +162,12 @@
  * function.  If neither option is supplied, the definition given to
  * OUTBOUND_NETWORK here determines the default behavior
  * (use 0 to disable by default, 1 or blank to enable by default).
- * 
+ *
  * If OUTBOUND_NETWORK is not defined at all,
  * open_network_connection() is permanently disabled and +O is ignored.
  *
  * *** THINK VERY HARD BEFORE ENABLING THIS FUNCTION ***
- * In some contexts, this could represent a serious breach of security.  
+ * In some contexts, this could represent a serious breach of security.
  *
  * Note: OUTBOUND_NETWORK may not be defined if NETWORK_PROTOCOL is either
  *	 NP_SINGLE or NP_LOCAL.
@@ -231,7 +231,6 @@
  * disable the use of $server_options.protect_<property> for those who
  * did not actually make use of protected builtin properties.  Since all
  * protect_<property> options are now cached, this #define is now deprecated.
- ****************************************************************************** 
  */
 
 /* #define IGNORE_PROP_PROTECTED */
@@ -250,7 +249,7 @@
  * the next time (if it's in a loop) it will have the only reference to the
  * copy and then it can take advantage.
  *
- * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    
+ * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL
  *
  * This option affects the length of certain bytecode sequences.
  * Suspended tasks in a database from a server built with this option
@@ -261,9 +260,7 @@
  * lifted in a future version of the server software.  Consider this
  * option as being BETA QUALITY until then.
  *
- * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    
- *
- ******************************************************************************
+ * NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL    NOTE WELL
  */
 /* #define BYTECODE_REDUCE_REF */
 
@@ -279,7 +276,6 @@
  *
  * You might want to turn this off if you see a large delay before the
  * INTERN: lines in the log at startup.
- ******************************************************************************
  */
 
 #define STRING_INTERNING /* */
@@ -287,7 +283,6 @@
 /******************************************************************************
  * Store the length of the string WITH the string rather than recomputing
  * it each time it is needed.
- ******************************************************************************
  */
 /* #define MEMO_STRLEN */
 
@@ -327,7 +322,6 @@
  * is aborted as if it ran out of seconds (see DEFAULT_FG_SECONDS),
  * which was the original behavior in this situation (i.e., if we
  * were lucky enough to avoid a server memory allocation panic).
- ******************************************************************************
  */
 
 #define DEFAULT_MAX_LIST_CONCAT    4194302
@@ -439,7 +433,7 @@
 
 #endif				/* !Options_h */
 
-/* 
+/*
  * $Log$
  * Revision 1.16  2010/04/23 04:13:13  wrog
  * Define minima for .max_list_concat and .max_string_concat

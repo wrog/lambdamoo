@@ -62,7 +62,7 @@ table mapping
    (hash(object_key x target_verbname), object_key, target_verbname)
         => (verbdef, handle)
 
-used only for callable verb lookups.  
+used only for callable verb lookups.
 
 Any action on the db that could affect the validity of this table
 clears the whole table by calling
@@ -180,7 +180,7 @@ load_server_options() is called.
 
 list.c:
 
-There's now a canonical empty list.  
+There's now a canonical empty list.
 
 The regexp pattern cache wasn't storing the case_matters flag, causing
 many patterns to be impossible to find in the cache.

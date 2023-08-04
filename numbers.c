@@ -907,7 +907,7 @@ register_numbers(void)
 
 char rcsid_numbers[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2010/04/22 21:37:16  wrog
  * Fix random(m) to be uniformly distributed for m!=2^k

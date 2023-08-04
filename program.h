@@ -62,7 +62,7 @@ extern void free_program(Program *);
 
 #endif				/* !Program_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.6  2010/04/22 21:32:01  wrog
  * Avoid using uninitialized Program.cached_lineno_vec (rob@mars.org)

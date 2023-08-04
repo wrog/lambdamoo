@@ -332,7 +332,7 @@ register_property(void)
 
 char rcsid_property[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2008/08/20 04:25:23  bjj
  * Fix iffy usage of str_dup in verb_info() and property_info() which could

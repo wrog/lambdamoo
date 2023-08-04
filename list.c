@@ -29,12 +29,12 @@
 #include "pattern.h"
 #include "random.h"
 #include "ref_count.h"
+#include "server.h"
 #include "streams.h"
 #include "storage.h"
 #include "structures.h"
 #include "unparse.h"
 #include "utils.h"
-#include "server.h"
 
 Var
 new_list(int size)
@@ -1247,7 +1247,7 @@ register_list(void)
 
 char rcsid_list[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.12  2010/04/23 05:01:20  wrog
  * Implement max_list_concat for list_insert,list_append,set_add
@@ -1293,7 +1293,7 @@ char rcsid_list[] = "$Id$";
  *
  * Revision 1.4  1997/07/07 03:24:54  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.3.2.3  1997/07/03 08:04:01  bjj
  * Pattern cache was not storing case_matters flag, causing many patterns to
  * be impossible to find in the cache.

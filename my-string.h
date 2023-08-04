@@ -86,7 +86,7 @@ extern void *memset(void *, int, size_t);
 
 #endif				/* !My_String_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2004/05/22 01:25:43  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)

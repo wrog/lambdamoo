@@ -85,7 +85,7 @@ extern const char *binary_to_raw_bytes(const char *binary, int *rawlen);
 
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2010/03/30 23:15:52  wrog
  * strsub() replaced by stream_add_strsub()

@@ -1356,7 +1356,7 @@ generate_code(Stmt * stmt, DB_Version version)
 
 char rcsid_code_gen[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.13  2010/04/22 21:33:16  wrog
  * Fix compiler warning: f.pc uninitialized in capture_label

@@ -30,7 +30,7 @@ typedef const struct keyword Keyword;
 
 extern Keyword *find_keyword(const char *);
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:17:56  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

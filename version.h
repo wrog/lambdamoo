@@ -30,7 +30,7 @@ extern Var server_version_full(Var);
 
 
 /*****************************************************************
- * Language / Database-Format Version 
+ * Language / Database-Format Version
  */
 
 /* The following list must never be reordered, only appended to.  There is one
@@ -68,7 +68,7 @@ extern int check_db_version(DB_Version);
 
 #endif				/* !Version_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2010/04/22 21:39:52  wrog
  * support for server_version(argument)

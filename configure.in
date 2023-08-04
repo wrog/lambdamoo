@@ -250,7 +250,7 @@ rm -f conftest*
 dnl ***************************************************************************
 dnl	MOO_ANSI_C
 dnl Check whether or not the C compiler handles ANSI C (i.e., allows function
-dnl prototypes and the `void *' type) and try to make it do so by adding 
+dnl prototypes and the `void *' type) and try to make it do so by adding
 dnl command-line options like -Aa and -Xa, which some compilers require.  If
 dnl nothing works, abort configuration.
 define(MOO_ANSI_C, [

@@ -33,15 +33,15 @@
    License is also granted to make and use derivative works provided
    that such works are identified as "derived from the RSA Data
    Security, Inc. MD5 Message-Digest Algorithm" in all material
-   mentioning or referencing the derived work.  
+   mentioning or referencing the derived work.
 
    RSA Data Security, Inc. makes no representations concerning either
    the merchantability of this software or the suitability of this
    software for any particular purpose. It is provided "as is"
-   without express or implied warranty of any kind.  
+   without express or implied warranty of any kind.
 
    These notices must be retained in any copies of any part of this
-   documentation and/or software.  
+   documentation and/or software.
  */
 
 #include "my-string.h"
@@ -322,7 +322,7 @@ md5_Final(md5ctx_t * context, uint8 digest[16])
     memset((char *) context, 0, sizeof(*context));
 }
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:18:04  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

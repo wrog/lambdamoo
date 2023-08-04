@@ -2481,7 +2481,7 @@ Version 1.8.4, in progress
    violating new size limits causes out-of-seconds or E_QUOTA error
 
 **** Changes significant to people compiling and running the server:
--- Source/build information that is compiled into the server now 
+-- Source/build information that is compiled into the server now
    comes from version_src.h.  Purpose and format of this file is
    now described in version_src.txt.
 -- New GNUmakefile invokes optional ./version_hook which can be linked
@@ -2508,7 +2508,7 @@ Version 1.8.4, in progress
    load_server_protect_function_flags()
 -- make_abort_pack(ABORT_KILL) replaces make_kill_pack()
    builtin functions can now cause other kinds of aborts
--- Added caching regime for server options other than 
+-- Added caching regime for server options other than
    .protect_<function>
 -- List/string API changes (prep for raising stream exceptions)
    raw_bytes_to_binary -> stream_add_raw_bytes_to_binary

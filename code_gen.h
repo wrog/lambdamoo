@@ -21,7 +21,7 @@
 
 extern Program *generate_code(Stmt *, DB_Version);
 
-/* 
+/*
  * $Log$
  * Revision 1.3  1998/12/14 13:17:31  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims

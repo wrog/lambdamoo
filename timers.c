@@ -302,7 +302,7 @@ reenable_timers(void)
 
 char rcsid_timers[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2002/08/16 03:00:44  bjj
  * free cancelled timers with free_timer() instead of free() so they can

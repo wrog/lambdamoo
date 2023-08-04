@@ -264,7 +264,7 @@ stream_length(Stream * s)
 
 char rcsid_streams[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2010/04/23 05:04:28  wrog
  * remove max=0 meaning no limit

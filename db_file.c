@@ -739,7 +739,7 @@ db_shutdown()
 
 char rcsid_db_file[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2010/04/22 21:29:18  wrog
  * Free database name strings on shutdown (rob@mars.org)

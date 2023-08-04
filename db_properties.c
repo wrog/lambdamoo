@@ -655,7 +655,7 @@ dbpriv_fix_properties_after_chparent(Objid oid, Objid old_parent)
 
 char rcsid_db_properties[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2010/04/23 04:46:18  wrog
  * whitespace

@@ -543,7 +543,7 @@ extern void db_delete_verb(db_verb_handle);
 
 #endif				/* !DB_h */
 
-/* 
+/*
  * $Log$
  * Revision 1.6  2010/03/26 23:45:06  wrog
  * Moved builtin properties into a macro

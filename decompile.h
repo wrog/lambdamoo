@@ -21,7 +21,7 @@
 extern Stmt *decompile_program(Program * program, int vector);
 extern unsigned find_line_number(Program * program, int vector, unsigned pc);
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2010/04/22 21:42:44  wrog
  * Line number and pc are unsigned: fix find_line_number return/args types

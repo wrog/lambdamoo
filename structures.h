@@ -127,7 +127,7 @@ extern Var zero;		/* useful constant */
 
 #endif				/* !Structures_h */
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2010/04/22 21:56:28  wrog
  * Fix for-statement infinite loop bug (rob@mars.org)
@@ -138,7 +138,7 @@ extern Var zero;		/* useful constant */
  *
  * Revision 1.3  1997/07/07 03:24:55  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.2.2.2  1997/05/23 07:01:30  nop
  * Added experimental support for 32-bit pointer model on Alpha with DEC cc.
  *

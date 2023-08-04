@@ -244,7 +244,7 @@ extern void network_shutdown(void);
 
 #endif				/* Network_H */
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2005/09/29 18:46:18  bjj
  * Add third argument to open_network_connection() that associates a specific listener object with the new connection.  This simplifies a lot of outbound connection management.

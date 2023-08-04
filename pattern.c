@@ -176,7 +176,7 @@ free_pattern(Pattern p)
 
 char rcsid_pattern[] = "$Id";
 
-/* 
+/*
  * $Log$
  * Revision 1.5  2010/03/26 07:57:57  wrog
  * Fix compiler warning about unassigned variable

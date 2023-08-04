@@ -490,7 +490,7 @@ register_functions(void)
 
 char rcsid_functions[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.11  2010/04/22 21:52:08  wrog
  * re-separate out load_server_protect_function_flags
@@ -524,7 +524,7 @@ char rcsid_functions[] = "$Id$";
  *
  * Revision 1.4  1997/07/07 03:24:54  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.3.2.2  1997/05/12 04:03:21  bjj
  * This time for sure!
  *

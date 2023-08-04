@@ -698,7 +698,7 @@ rangeset_check(Var base, Var inst, int from, int to)
 #define bi_prop_protected(prop, progr) ((!is_wizard(progr)) && server_flag_option_cached(prop))
 #endif				/* IGNORE_PROP_PROTECTED */
 
-/** 
+/**
   the main interpreter -- run()
   everything is just an entry point to it
 **/
@@ -1629,7 +1629,7 @@ do {								\
 		free_var(obj);
 		free_var(verb);
 
-		if (err != E_NONE) {	/* there is an error, RUN_ACTIV unchanged, 
+		if (err != E_NONE) {	/* there is an error, RUN_ACTIV unchanged,
 					   args must be freed */
 		    free_var(args);
 		    PUSH_ERROR(err);
@@ -2255,7 +2255,7 @@ do_task(Program * prog, int which_vector, Var * result, int is_fg, int do_db_tra
 {				/* which vector determines the vector for the root_activ.
 				   a forked task can also have which_vector == MAIN_VECTOR.
 				   this happens iff it is recovered from a read from disk,
-				   because in that case the forked statement is parsed as 
+				   because in that case the forked statement is parsed as
 				   the main vector */
 
     RUN_ACTIV.prog = program_ref(prog);
@@ -2782,7 +2782,7 @@ Var *
 reorder_rt_env(Var * old_rt_env, const char **old_names,
 	       int old_size, Program * prog)
 {
-    /* reorder old_rt_env, which is aligned according to old_names, 
+    /* reorder old_rt_env, which is aligned according to old_names,
        to align to prog->var_names -- return the new rt_env
        after freeing old_rt_env and old_names */
 
@@ -2939,7 +2939,7 @@ read_activ(activation * a, int which_vector)
 
 char rcsid_execute[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.25  2010/04/23 05:03:39  wrog
  * Implement max_list_concat for OP_LIST_ADD_TAIL
@@ -2999,8 +2999,8 @@ char rcsid_execute[] = "$Id$";
  * Luke-Jr's patch for read_activ FUNC_NOT_FOUND
  *
  * Revision 1.14.2.1  2003/06/04 21:28:58  wrog
- * removed useless arguments from resume_from_previous_vm(), do_forked_task(); 
- * replaced current_task_kind with is_fg argument for do_task(); 
+ * removed useless arguments from resume_from_previous_vm(), do_forked_task();
+ * replaced current_task_kind with is_fg argument for do_task();
  * made enum task_kind internal to tasks.c
  *
  * Revision 1.14  2002/09/15 23:21:01  xplat

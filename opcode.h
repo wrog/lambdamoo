@@ -122,7 +122,7 @@ typedef enum Extended_Opcode Extended_Opcode;
 
 #endif
 
-/* 
+/*
  * $Log$
  * Revision 1.4  2002/09/15 23:21:01  xplat
  * GNU indent normalization.

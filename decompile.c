@@ -993,7 +993,7 @@ find_line_number(Program * prog, int vector, unsigned pc)
 
 char rcsid_decompile[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.8  2010/04/22 21:42:44  wrog
  * Line number and pc are unsigned: fix find_line_number return/args types
@@ -1012,7 +1012,7 @@ char rcsid_decompile[] = "$Id$";
  *
  * Revision 1.3  1997/07/07 03:24:53  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.2.2.2  1997/09/09 07:01:16  bjj
  * Change bytecode generation so that x=f(x) calls f() without holding a ref
  * to the value of x in the variable slot.  See the options.h comment for
@@ -1020,7 +1020,7 @@ char rcsid_decompile[] = "$Id$";
  *
  * This checkin also makes x[y]=z (OP_INDEXSET) take advantage of that (that
  * new code is not conditional and still works either way).
- * 
+ *
  * Revision 1.2.2.1  1997/06/05 09:00:00  bjj
  * Cache one pc/lineno pair with each Program.  Hopefully most programs that
  * fail multiple times usually do it on the same line!

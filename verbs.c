@@ -582,7 +582,7 @@ register_verbs(void)
 
 char rcsid_verbs[] = "$Id$";
 
-/* 
+/*
  * $Log$
  * Revision 1.7  2010/04/22 21:25:14  wrog
  * Fix assignment/equality typos (rob@mars.org)
