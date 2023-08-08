@@ -2882,6 +2882,34 @@ char rcsid_execute[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.25  2010/04/23 05:03:39  wrog
+ * Implement max_list_concat for OP_LIST_ADD_TAIL
+ * remove max=0 meaning no limit
+ *
+ * Revision 1.24  2010/04/23 04:10:50  wrog
+ * Fix memory leak in run_interpreter/save_handler_info
+ *
+ * Revision 1.23  2010/04/22 21:54:47  wrog
+ * Fix for-statement infinite loop bug (rob@mars.org)
+ * current_version -> current_db_version
+ *
+ * Revision 1.22  2010/03/31 18:08:07  wrog
+ * builtin functions can now explicitly abort task with out-of-seconds/ticks
+ * using make_abort_pack()/BI_KILL rather than by setting task_timed_out
+ *
+ * Revision 1.21  2010/03/30 23:18:41  wrog
+ * Allow builtins to cause out-of-seconds task aborts more directly
+ * value2str now returns addref'ed string
+ *
+ * Revision 1.20  2010/03/27 00:27:26  wrog
+ * New server options max_*_concat and
+ * (new checks for OP_LIST_APPEND, (string)OP_ADD and EOP_RANGESET);
+ * New server option max_concat_catchable and
+ * (new macro PUSH_ERROR_UNLESS_QUOTA to support it);
+ * protect_<property> now prevents non-wizard *writes* to .name/.r/.w/.f
+ * bi_prop_protected now references cached option values;
+ * Fixed description of unwind_stack
+ *
  * Revision 1.19  2006/12/06 23:54:53  wrog
  * Fix compiler warnings about undefined behavior (bv assigned twice in JUMP(READ_BYTES(...))) and unused values
  *

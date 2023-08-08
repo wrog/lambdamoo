@@ -1143,6 +1143,32 @@ char rcsid_list[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.12  2010/04/23 05:01:20  wrog
+ * Implement max_list_concat for list_insert,list_append,set_add
+ *
+ * Revision 1.11  2010/04/22 22:00:35  wrog
+ * Fuller explanation of TRY_STREAM, unscramble bf_substitute,
+ * stream usage cleanups in bf_tostr, bf_toliteral, bf_value_hash, bf_encode_binary
+ *
+ * Revision 1.10  2010/03/31 18:08:07  wrog
+ * builtin functions can now explicitly abort task with out-of-seconds/ticks
+ * using make_abort_pack()/BI_KILL rather than by setting task_timed_out
+ *
+ * Revision 1.9  2010/03/30 23:13:39  wrog
+ * rewrote bf_strsub(), bf_tostr(), bf_toliteral(),
+ * -  bf_substitute(), bf_value_hash(), bf_encode_binary()
+ * -  to enable and watch for stream_too_big exceptions;
+ * bf_decode_binary() now raises errors
+ * -  instead of creating overly large lists
+ * value2str() made safe (never allocates);
+ * list2str cannibalized into stream_add_tostr();
+ * print_to_stream() renamed to unparse_value(),
+ * -  made public to replace value_to_literal() [removed],
+ * -  now panicks on unknown Var type rather than logging;
+ *
+ * Revision 1.8  2010/03/26 23:28:29  wrog
+ * Fix compiler warning about unassigned variable
+ *
  * Revision 1.7  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
  * store strlen with strings.  This is basically free, since most string

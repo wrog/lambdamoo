@@ -178,6 +178,9 @@ char rcsid_pattern[] = "$Id";
 
 /*
  * $Log$
+ * Revision 1.5  2010/03/26 07:57:57  wrog
+ * Fix compiler warning about unassigned variable
+ *
  * Revision 1.4  1998/12/14 13:18:46  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *

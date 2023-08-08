@@ -95,6 +95,9 @@ extern void load_server_options(void);
 
 /*
  * $Log$
+ * Revision 1.6  2010/03/31 18:02:05  wrog
+ * differentiate kinds of BI_KILL; replace make_kill_pack() with make_abort_pack(abort_reason)
+ *
  * Revision 1.5  2001/03/12 03:25:16  bjj
  * Added new package type BI_KILL which kills the task calling the builtin.
  * Removed the static int task_killed in execute.c which wa tested on every

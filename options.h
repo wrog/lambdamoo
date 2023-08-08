@@ -395,6 +395,22 @@
 
 /*
  * $Log$
+ * Revision 1.16  2010/04/23 04:13:13  wrog
+ * Define minima for .max_list_concat and .max_string_concat
+ *
+ * Revision 1.15  2010/04/22 21:44:57  wrog
+ * Comment tweaks
+ *
+ * Revision 1.14  2010/03/29 21:59:49  wrog
+ * Set better MAX_CONCAT_* limits; revised description
+ *
+ * Revision 1.13  2010/03/27 00:10:33  wrog
+ * IGNORE_PROP_PROTECTED now off by default and deprecated;
+ * Undo accidental uncommenting of OUTBOUND_NETWORK
+ *
+ * Revision 1.12  2010/03/26 23:51:42  wrog
+ * New server options max_*_concat and max_concat_catchable
+ *
  * Revision 1.11  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
  *

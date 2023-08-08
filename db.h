@@ -535,6 +535,9 @@ extern void db_delete_verb(db_verb_handle);
 
 /*
  * $Log$
+ * Revision 1.6  2010/03/26 23:45:06  wrog
+ * Moved builtin properties into a macro
+ *
  * Revision 1.5  2004/05/22 01:25:43  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)
  *

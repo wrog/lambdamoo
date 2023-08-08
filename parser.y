@@ -1240,6 +1240,9 @@ char rcsid_parser[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.5  2010/04/22 21:30:18  wrog
+ * current_version -> current_db_version
+ *
  * Revision 1.4  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)
  *

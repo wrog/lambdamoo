@@ -113,6 +113,10 @@ extern Var zero;		/* useful constant */
 
 /*
  * $Log$
+ * Revision 1.5  2010/04/22 21:56:28  wrog
+ * Fix for-statement infinite loop bug (rob@mars.org)
+ * add MAX_LIST and MAX_STRING
+ *
  * Revision 1.4  1998/12/14 13:19:04  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *

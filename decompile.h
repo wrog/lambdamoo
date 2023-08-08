@@ -23,6 +23,9 @@ extern int find_line_number(Program * program, int vector, int pc);
 
 /*
  * $Log$
+ * Revision 1.4  2010/04/22 21:42:44  wrog
+ * Line number and pc are unsigned: fix find_line_number return/args types
+ *
  * Revision 1.3  1998/12/14 13:17:41  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *
