@@ -170,6 +170,9 @@ depend: ${ALL_CSRCS}
 
 ###############################################################################
 # $Log$
+# Revision 1.11  2010/04/22 21:18:43  wrog
+# Support for version_hook and version_src.h
+#
 # Revision 1.10  2006/12/06 23:44:24  wrog
 # Add parser.c to clean target
 #

@@ -736,6 +736,9 @@ char rcsid_unparse[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.4  2010/03/30 23:06:51  wrog
+ * value_to_literal() replaced by unparse_value()
+ *
  * Revision 1.3  1998/12/14 13:19:12  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *

@@ -64,6 +64,9 @@ extern void free_program(Program *);
 
 /*
  * $Log$
+ * Revision 1.6  2010/04/22 21:32:01  wrog
+ * Avoid using uninitialized Program.cached_lineno_vec (rob@mars.org)
+ *
  * Revision 1.5  1999/08/16 04:15:13  bjj
  * Lineno computation could be wrong for forked vectors.
  *

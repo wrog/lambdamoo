@@ -1798,6 +1798,19 @@ char rcsid_server[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.15  2010/04/22 21:46:36  wrog
+ * support for server_version(argument)
+ * simplify stream usage in emergency mode
+ *
+ * Revision 1.14  2010/03/30 22:59:57  wrog
+ * server_flag_option() now takes a default value;
+ * Minimum values on max_string_concat/max_list_concat enforced;
+ * Treat max_concat_catchable like other boolean options;
+ * Server option macros more readable/flexible/canonicalizable;
+ *
+ * Revision 1.13  2010/03/27 18:16:49  wrog
+ * Removed completely unused stream
+ *
  * Revision 1.12  2007/06/02 21:34:36  wrog
  * fix player_connect() so that the user_client_disconnected hook
  * sees a disconnected player, same as with server_close()

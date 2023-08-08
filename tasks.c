@@ -2238,6 +2238,22 @@ char rcsid_tasks[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.19  2010/04/22 21:27:25  wrog
+ * Avoid using uninitialized activation.temp (rob@mars.org)
+ * current_version -> current_db_version
+ *
+ * Revision 1.18  2010/03/31 18:02:05  wrog
+ * differentiate kinds of BI_KILL; replace make_kill_pack() with make_abort_pack(abort_reason)
+ *
+ * Revision 1.17  2010/03/30 23:26:36  wrog
+ * server_flag_option() now takes a default value
+ *
+ * Revision 1.16  2010/03/27 17:37:53  wrog
+ * Fixed memory leak in flush_input less stupidly
+ *
+ * Revision 1.15  2010/03/27 14:20:18  wrog
+ * Fixed memory leak in flush_input
+ *
  * Revision 1.14  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
  * store strlen with strings.  This is basically free, since most string

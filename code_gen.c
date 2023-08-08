@@ -1354,6 +1354,12 @@ char rcsid_code_gen[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.13  2010/04/22 21:33:16  wrog
+ * Fix compiler warning: f.pc uninitialized in capture_label
+ *
+ * Revision 1.12  2010/03/26 07:54:46  wrog
+ * Fix compiler warning about unassigned field
+ *
  * Revision 1.11  2002/09/15 23:21:01  xplat
  * GNU indent normalization.
  *

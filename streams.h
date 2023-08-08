@@ -43,6 +43,9 @@ extern int stream_length(Stream *);
 
 /*
  * $Log$
+ * Revision 1.7  2010/04/23 05:10:55  wrog
+ * remove max=0 meaning no limit
+ *
  * Revision 1.4  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
  *

@@ -493,6 +493,24 @@ char rcsid_functions[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.11  2010/04/22 21:52:08  wrog
+ * re-separate out load_server_protect_function_flags
+ *
+ * Revision 1.10  2010/03/31 18:02:05  wrog
+ * differentiate kinds of BI_KILL; replace make_kill_pack() with make_abort_pack(abort_reason)
+ *
+ * Revision 1.9  2010/03/30 23:20:45  wrog
+ * server_flag_option() now takes a default value;
+ * Minimum values on max_string_concat/max_list_concat enforced;
+ * Treat max_concat_catchable like other boolean options;
+ * Cleaned up server option macro invocations
+ *
+ * Revision 1.8  2010/03/27 00:05:53  wrog
+ * New server options max_*_concat and max_concat_catchable;
+ * New regime for caching integer/flag server options other than protect_<function>;
+ * protect_<property> options now cached; IGNORE_PROP_PROTECTED now off by default and deprecated;
+ * load_server_protect_flags() rolled into load_server_options()
+ *
  * Revision 1.7  2001/03/12 05:10:54  bjj
  * Split out call_verb and call_verb2.  The latter must only be called with
  * strings that are already MOO strings (str_ref-able).

@@ -117,6 +117,9 @@ char rcsid_program[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.7  2010/04/22 21:32:01  wrog
+ * Avoid using uninitialized Program.cached_lineno_vec (rob@mars.org)
+ *
  * Revision 1.6  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
  * store strlen with strings.  This is basically free, since most string

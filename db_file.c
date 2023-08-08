@@ -741,6 +741,10 @@ char rcsid_db_file[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.7  2010/04/22 21:29:18  wrog
+ * Free database name strings on shutdown (rob@mars.org)
+ * current_version -> current_db_version
+ *
  * Revision 1.6  2007/11/12 11:17:03  wrog
  * sync so that checkpoint is physically written before prior checkpoint is unlinked
  *

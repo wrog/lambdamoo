@@ -583,6 +583,16 @@ char rcsid_verbs[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.7  2010/04/22 21:25:14  wrog
+ * Fix assignment/equality typos (rob@mars.org)
+ *
+ * Revision 1.6  2010/03/30 23:26:36  wrog
+ * server_flag_option() now takes a default value
+ *
+ * Revision 1.5  2008/08/20 04:25:23  bjj
+ * Fix iffy usage of str_dup in verb_info() and property_info() which could
+ * cause poor behavior with MEMO_STRLEN (and other future string optimizations)
+ *
  * Revision 1.4  2001/01/29 08:38:44  bjj
  * Fix Sourceforge Bug #127620: add_verb() should return verbindex
  * And now it does.  Old servers always returned 0, new servers will always

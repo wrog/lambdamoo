@@ -403,3 +403,8 @@ void free_pattern(Pattern p)
 	myfree(regexp, M_PATTERN);
     }
 }
+
+/*
+ * $Log$
+ *
+ */

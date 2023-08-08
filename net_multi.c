@@ -721,6 +721,9 @@ char rcsid_net_multi[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.7  2010/03/30 23:16:49  wrog
+ * raw_bytes_to_binary() replaced by stream_add_raw_bytes_to_binary()
+ *
  * Revision 1.6  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
  *
