@@ -1,0 +1,20 @@
+Those inclined to hack the server sources
+may wish to read some or all of the following:
+
+    (1) version_src.txt
+
+    How source information gets included into the executable, and
+    What you need to do if you are a package maintainer or
+    are running a public server with sources modified beyond
+    the usual (un)setting of options.h macros.
+
+    (2) AddingNewMOOTypes.txt
+
+    A list of all of the places that need to be modified if you are adding
+    a new value type to the MOO language/server.
+
+    (3) MOOCodeSequences.txt
+
+    How all of the statement/expression constructs in the language
+    translate to byte code.
+
