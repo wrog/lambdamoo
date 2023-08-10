@@ -1409,11 +1409,6 @@ bf_memory_usage(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
 static package
 bf_shutdown(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
-    /*
-     * The stream 's' and its contents will leak, but we're shutting down,
-     * so it doesn't really matter.
-     */
-
     Stream *s;
     int nargs = arglist.v.list[0].v.num;
     const char *msg = (nargs >= 1 ? arglist.v.list[1].v.str : 0);
@@ -1426,7 +1421,8 @@ bf_shutdown(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
     stream_printf(s, "shutdown() called by %s", object_name(progr));
     if (msg)
 	stream_printf(s, ": %s", msg);
-    shutdown_message = stream_contents(s);
+    shutdown_message = str_dup(stream_contents(s));
+    free_stream(s);
 
     free_var(arglist);
     return no_var_pack();
