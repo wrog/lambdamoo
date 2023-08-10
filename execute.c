@@ -2111,8 +2111,20 @@ task_timeout(Timer_ID id UNUSED_, Timer_Data data UNUSED_)
 }
 
 static Timer_ID
-setup_task_execution_limits(int seconds, int ticks)
+setup_task_execution_limits(int is_fg)
 {
+    int seconds;
+    int ticks;
+
+    if (is_fg) {
+	seconds = server_int_option("fg_seconds", DEFAULT_FG_SECONDS);
+	ticks   = server_int_option("fg_ticks",   DEFAULT_FG_TICKS);
+    }
+    else {
+	seconds = server_int_option("bg_seconds", DEFAULT_BG_SECONDS);
+	ticks   = server_int_option("bg_ticks",   DEFAULT_BG_TICKS);
+    }
+
     task_alarm_id = set_virtual_timer(seconds < 1 ? 1 : seconds,
 				      task_timeout, 0);
     task_timed_out = 0;
@@ -2131,14 +2143,7 @@ run_interpreter(char raise, enum error e,
 {
     enum outcome ret;
 
-    setup_task_execution_limits(is_fg ? server_int_option("fg_seconds",
-						      DEFAULT_FG_SECONDS)
-				: server_int_option("bg_seconds",
-						    DEFAULT_BG_SECONDS),
-				is_fg ? server_int_option("fg_ticks",
-							DEFAULT_FG_TICKS)
-				: server_int_option("bg_ticks",
-						    DEFAULT_BG_TICKS));
+    setup_task_execution_limits(is_fg);
 
     handler_verb_args = zero;
     handler_verb_name = 0;
