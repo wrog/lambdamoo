@@ -1377,7 +1377,7 @@ write_forked_task(forked_task ft)
 {
     unsigned lineno = find_line_number(ft.program, ft.f_index, 0);
 
-    dbio_printf("0 %d %ld %d\n", lineno, (long)ft.start_time, ft.id);
+    dbio_printf("0 %u %ld %d\n", lineno, (long)ft.start_time, ft.id);
     write_activ_as_pi(ft.a);
     write_rt_env(ft.program->var_names, ft.rt_env, ft.program->num_var_names);
     dbio_write_forked_program(ft.program, ft.f_index);
@@ -1464,7 +1464,9 @@ read_task_queue(void)
 	return 0;
     }
     for (; count > 0; count--) {
-	int first_lineno, id, old_size, st;
+	unsigned first_lineno;
+	int id, old_size;
+	long st;
 	char c;
 	time_t start_time;
 	Program *program;
@@ -1472,7 +1474,7 @@ read_task_queue(void)
 	const char **old_names;
 	activation a;
 
-	if (dbio_scanf("%d %d %d %d%c",
+	if (dbio_scanf("%d %u %ld %d%c",
 		       &dummy, &first_lineno, &st, &id, &c) != 5
 	    || c != '\n') {
 	    errlog("READ_TASK_QUEUE: Bad numbers, count = %d.\n", count);
