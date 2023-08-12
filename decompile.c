@@ -33,7 +33,7 @@ static enum {
     TOP, ENDBODY, BOTTOM, DONE
 } hot_position;
 
-static int lineno;
+static unsigned lineno;
 
 static void
 push_expr(Expr * expr)
@@ -813,7 +813,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 }
 
 static Stmt *
-program_to_tree(Program * prog, int vector, int pc_vector, int pc)
+program_to_tree(Program * prog, int vector, int pc_vector, unsigned pcnext)
 {
     Stmt *result;
     Bytecodes bc;
@@ -824,15 +824,15 @@ program_to_tree(Program * prog, int vector, int pc_vector, int pc)
 	  ? program->main_vector
 	  : program->fork_vectors[pc_vector]);
 
-    if (pc < 0)
+    if (!pcnext)
 	hot_byte = 0;
-    else if (pc < bc.size)
-	hot_byte = bc.vector + pc;
+    else if (pcnext <= bc.size)
+	hot_byte = bc.vector + pcnext - 1;
     else
 	panic("Illegal PC in FIND_LINE_NUMBER!");
 
     hot_node = 0;
-    hot_position = (pc == bc.size - 1 ? DONE : TOP);
+    hot_position = (pcnext == bc.size ? DONE : TOP);
 
     sum = program->main_vector.max_stack;
     for (i = 0; i < program->fork_vectors_size; i++)
@@ -856,7 +856,7 @@ program_to_tree(Program * prog, int vector, int pc_vector, int pc)
 Stmt *
 decompile_program(Program * prog, int vector)
 {
-    return program_to_tree(prog, vector, MAIN_VECTOR, -1);
+    return program_to_tree(prog, vector, MAIN_VECTOR, 0);
 }
 
 static int
@@ -975,7 +975,7 @@ find_line_number(Program * prog, int vector, unsigned pc)
     if (prog->cached_lineno_pc == pc && prog->cached_lineno_vec == vector)
 	return prog->cached_lineno;
 
-    tree = program_to_tree(prog, MAIN_VECTOR, vector, pc);
+    tree = program_to_tree(prog, MAIN_VECTOR, vector, pc + 1);
 
     lineno = prog->first_lineno;
     find_hot_node(tree);
