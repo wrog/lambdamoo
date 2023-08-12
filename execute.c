@@ -129,7 +129,7 @@ print_error_backtrace(const char *msg, void (*output) (const char *))
 	if (activ_stack[t].vloc != activ_stack[t].this)
 	    stream_printf(str, " (this == #%d)", activ_stack[t].this);
 
-	stream_printf(str, ", line %d",
+	stream_printf(str, ", line %u",
 		      find_line_number(activ_stack[t].prog,
 				       (t == 0 ? root_activ_vector
 					: MAIN_VECTOR),
