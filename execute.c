@@ -68,11 +68,23 @@ static Var handler_verb_args;
 
 /**** error handling ****/
 
-typedef enum {			/* Reasons for executing a FINALLY handler */
-    /* These constants are stored in the DB, so don't change the order... */
-    FIN_FALL_THRU, FIN_RAISE, FIN_UNCAUGHT, FIN_RETURN,
-    FIN_ABORT,			/* This doesn't actually get you into a FINALLY... */
-    FIN_EXIT
+
+/*
+ * Compendium of all of the possible ways in which the stack
+ * may be unwound to some specific place (loop exit, return,
+ * EXCEPT/FINALLY handler) or all of the way out (uncaught
+ * exception, kill_task(), or ticks/seconds exhaustion)
+ *
+ * WARNING:  These constants show up in DB files,
+ *   so do *NOT* change their order/values...
+ */
+typedef enum {
+    FIN_FALL_THRU,	/* (none) TRY body finished normally	*/
+    FIN_RAISE,		/* (partial) handled exception		*/
+    FIN_UNCAUGHT,	/* (full unless finally) uncaught exception */
+    FIN_RETURN,		/* (partial) did a RETURN		*/
+    FIN_ABORT,		/* (full + skip handlers) ticks/seconds	*/
+    FIN_EXIT		/* (partial) did a BREAK / CONTINUE	*/
 } Finally_Reason;
 
 /*
@@ -199,12 +211,15 @@ static void abort_task(enum abort_reason reason);
 static int
 unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 {
-    /* Returns true iff the interpreter should stop,
-     * in which case *outcome is set to the correct outcome to return.
-     * Interpreter stops either because it was blocked (OUTCOME_BLOCKED)
-     * or the entire stack was unwound (OUTCOME_DONE/OUTCOME_ABORTED)
+    /*
+     * Unwind the activation and rt stacks in accordance with 'why'.
+     * Return true iff the interpreter should stop, in which case
+     * *outcome is set.  Interpreter stops either because it was
+     * blocked (OUTCOME_BLOCKED) or the entire stack was unwound
+     * (OUTCOME_DONE/OUTCOME_ABORTED)
      *
-     * why==FIN_EXIT always returns false
+     * Return value may be safely ignored in the following cases:
+     * why==FIN_EXIT  always returns false
      * why==FIN_ABORT always returns true/OUTCOME_ABORTED
      */
     Var code = (why == FIN_RAISE ? value.v.list[1] : zero);
