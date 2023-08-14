@@ -26,6 +26,8 @@
 #include "server.h"
 #include "streams.h"
 #include "structures.h"
+#include "utf.h"
+#include "utf-ctype.h"
 #include "utils.h"
 
 static enum {
@@ -34,6 +36,8 @@ static enum {
 static int listening = 0;
 static server_listener slistener;
 static int binary = 0;
+static char excess_utf[4];
+static int excess_utf_count = 0;
 
 const char *
 network_protocol_name(void)
@@ -166,7 +170,7 @@ network_process_io(int timeout)
     static Stream *s = 0;
     char buffer[1024];
     ssize_t count;
-    char *ptr, *end;
+    const char *ptr, *end;
     int got_some = 0;
 
     if (s == 0) {
@@ -185,6 +189,8 @@ network_process_io(int timeout)
 	if (listening) {
 	    sh = server_new_connection(slistener, nh, 0);
 	    state = STATE_OPEN;
+	    binary = 0;
+	    excess_utf_count = 0;
 	    got_some = 1;
 	} else if (timeout != 0)
 	    sleep(timeout);
@@ -192,27 +198,35 @@ network_process_io(int timeout)
 
     case STATE_OPEN:
 	for (;;) {
-	    while (!input_suspended
-		   && (count = read(0, buffer, sizeof(buffer))) > 0) {
+	    while (!input_suspended &&
+		   ((void)(excess_utf_count
+			   && memcpy(buffer, excess_utf, excess_utf_count)),
+		    count = read(0, buffer + excess_utf_count,
+				 sizeof(buffer) - excess_utf_count)) > 0) {
 		got_some = 1;
 		if (binary) {
 		    stream_add_string(s, raw_bytes_to_moobinary(buffer, count));
 		    server_receive_line(sh, reset_stream(s));
-		} else
+		    excess_utf_count = 0;
+		} else {
 		    for (ptr = buffer, end = buffer + count;
-			 ptr < end;
-			 ptr++) {
-			unsigned char c = *ptr;
+			 ptr < end && ptr + clearance_utf(*ptr) <= end;
+			 ) {
+			int c = get_utf(&ptr);
 
-			if (isgraph(c) || c == ' ' || c == '\t')
-			    stream_add_char(s, c);
+			if (my_is_printable(c))
+			    stream_add_utf(s, c);
 #ifdef INPUT_APPLY_BACKSPACE
 			else if (c == 0x08 || c == 0x7F)
-			    stream_delete_char(s);
+			    stream_delete_utf(s);
 #endif
 			else if (c == '\n')
 			    server_receive_line(sh, reset_stream(s));
 		    }
+		    if (ptr < end)
+			memcpy(excess_utf, ptr, end - ptr);
+		    excess_utf_count = end - ptr;
+		}
 	    }
 
 	    if (got_some || timeout == 0)
