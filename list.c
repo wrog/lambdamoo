@@ -1054,7 +1054,7 @@ bf_decode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 	for (count = in_string = 0, i = 0; i < length; i++) {
 	    unsigned char c = bytes[i];
 
-	    if (isgraph(c) || c == ' ' || c == '\t') {
+	    if ((32 <= c && c <= 126) || c == '\t') {
 		if (!in_string)
 		    count++;
 		in_string = 1;
@@ -1068,7 +1068,7 @@ bf_decode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 	for (count = 1, in_string = 0, i = 0; i < length; i++) {
 	    unsigned char c = bytes[i];
 
-	    if (isgraph(c) || c == ' ' || c == '\t') {
+	    if ((32 <= c && c <= 126) || c == '\t') {
 		stream_add_char(s, c);
 		in_string = 1;
 	    } else {
