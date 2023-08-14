@@ -7,6 +7,8 @@
 #ifndef UTF_h
 #define UTF_h 1
 
+#include "config.h"
+
 #define INVALID_RUNE	0xfffd
 
 inline int is_utf8_cont_byte(uint8_t c)

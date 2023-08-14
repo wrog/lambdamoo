@@ -546,21 +546,22 @@ bf_strsub(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 {				/* (source, what, with [, case-matters]) */
     Var r;
     int case_matters = 0;
+    Stream *s;
 
     if (arglist.v.list[0].v.num == 4)
 	case_matters = is_true(arglist.v.list[4]);
     if (arglist.v.list[2].v.str[0] == '\0') {
 	free_var(arglist);
 	return make_error_pack(E_INVARG);
-    } else {
-	r.type = TYPE_STR;
-	r.v.str = str_dup(strsub(arglist.v.list[1].v.str,
-				 arglist.v.list[2].v.str,
-				 arglist.v.list[3].v.str, case_matters));
-
-	free_var(arglist);
-	return make_var_pack(r);
     }
+    s = new_stream(100);
+    stream_add_strsub(s, arglist.v.list[1].v.str, arglist.v.list[2].v.str,
+		      arglist.v.list[3].v.str, case_matters);
+    r.type = TYPE_STR;
+    r.v.str = str_dup(stream_contents(s));
+    free_stream(s);
+    free_var(arglist);
+    return make_var_pack(r);
 }
 
 #if HAVE_CRYPT
@@ -1101,25 +1102,23 @@ encode_binary(Stream * s, Var v)
 static package
 bf_encode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    static Stream *s = 0;
-    int ok;
-    size_t length;
     Var r;
-    const char *bytes;
-
-    if (!s)
-	s = new_stream(100);
-
-    ok = encode_binary(s, arglist);
-    free_var(arglist);
-    length = stream_length(s);
-    bytes = reset_stream(s);
-    if (ok) {
+    package p;
+    Stream *s = new_stream(100);
+    Stream *s2 = new_stream(100);
+    if (encode_binary(s, arglist)) {
+	stream_add_moobinary_from_raw_bytes(
+	    s2, stream_contents(s), stream_length(s));
 	r.type = TYPE_STR;
-	r.v.str = str_dup(raw_bytes_to_moobinary(bytes, length));
-	return make_var_pack(r);
-    } else
-	return make_error_pack(E_INVARG);
+	r.v.str = str_dup(stream_contents(s2));
+	p = make_var_pack(r);
+    }
+    else
+	p = make_error_pack(E_INVARG);
+    free_stream(s2);
+    free_stream(s);
+    free_var(arglist);
+    return p;
 }
 
 static package
@@ -1229,120 +1228,105 @@ encode_chars(Stream *s, Var v)
 static package
 bf_encode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    static Stream *s = 0;
-    int ok;
+    package p;
     size_t length;
-    const char *bytes;
-
-    if (!s)
-	s = new_stream(100);
-
-    ok = encode_chars(s, arglist.v.list[1]);
-
-    length = stream_length(s);
-    bytes = reset_stream(s);
-
-    if (ok) {
-	bytes = recode_chars(bytes, &length, "UTF-8", arglist.v.list[2].v.str);
-	if (!bytes)
-	    ok = 0;
-    }
-
-    free_var(arglist);
-
-    if (ok) {
+    Stream *s = new_stream(100);
+    Stream *s2 = new_stream(100);
+    if (!(encode_chars(s, arglist.v.list[1]) &&
+	  (length = stream_length(s),
+	   stream_add_recoded_chars(s2, reset_stream(s), length,
+				    "UTF-8", arglist.v.list[2].v.str))))
+	p = make_error_pack(E_INVARG);
+    else {
 	Var r;
-
+	stream_add_moobinary_from_raw_bytes(
+	    s, stream_contents(s2), stream_length(s2));
 	r.type = TYPE_STR;
-	r.v.str = str_dup(raw_bytes_to_moobinary(bytes, length));
-	return make_var_pack(r);
-    } else
-	return make_error_pack(E_INVARG);
+	r.v.str = str_dup(reset_stream(s));
+	p = make_var_pack(r);
+    }
+    free_stream(s);
+    free_stream(s2);
+    free_var(arglist);
+    return p;
 }
 
 static package
 bf_decode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    const char *binary = arglist.v.list[1].v.str;
     int nargs = arglist.v.list[0].v.num;
     int fully = (nargs >= 3 && is_true(arglist.v.list[3]));
-    const char *src, *dst;
-    size_t length;
-    int ok = 0;
-    Var r;
+    package p;
+    Stream *s32 = new_stream(100);
+    {
+	size_t eblength = 0;
+	const char *ebytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str,
+						    &eblength);
+	const char *encoding = arglist.v.list[2].v.str;
 
-    src = moobinary_to_raw_bytes(binary, &length);
-    if (src) {
-	dst = recode_chars(src, &length, arglist.v.list[2].v.str,
+	if (!(ebytes &&
+	      stream_add_recoded_chars(s32, ebytes, eblength, encoding,
 #ifdef WORDS_BIGENDIAN
  "UTF-32BE"
 #else
  "UTF-32LE"
 #endif
-			   );
-	if (dst) {
-	    uint32_t *chars = (uint32_t *) dst;
-
-	    length /= sizeof(uint32_t);
-
-	    /* UTF-32(BE|LE) are not supposed to produce BOMs,
-	     * but I'm not certain, and this is harmless, so...
-	     *   --wrog
-	     */
-	    if (length && *chars == 0xFEFF /* BOM */)
-		++chars, --length;
-
-	    if (fully) {
-		int i;
-
-		r = new_list(length);
-
-		for (i = 1; i <= length; ++i) {
-		    r.v.list[i].type = TYPE_INT;
-		    r.v.list[i].v.num = *chars++;
-		}
-	    }
-	    else {
-		Stream *s;
-		Var elt;
-
-		r = new_list(0);
-		s = new_stream(length + length / 2);
-
-		while (length--) {
-		    int c = *chars++;
-
-		    if (my_is_printable(c))
-			stream_add_utf(s, c);
-		    else {
-			if (stream_length(s)) {
-			    elt.type = TYPE_STR;
-			    elt.v.str = str_dup(reset_stream(s));
-			    r = listappend(r, elt);
-			}
-
-			elt.type = TYPE_INT;
-			elt.v.num = c;
-			r = listappend(r, elt);
-		    }
-		}
-
-		if (stream_length(s)) {
-		    elt.type = TYPE_STR;
-		    elt.v.str = str_dup(reset_stream(s));
-		    r = listappend(r, elt);
-		}
-
-		free_stream(s);
-	    }
-
-	    ok = 1;
+				       ))) {
+	    p = make_error_pack(E_INVARG);
+	    goto oops;
 	}
     }
+    size_t dlength = stream_length(s32) / sizeof(uint32_t);
+    uint32_t *dchars = (uint32_t *) reset_stream(s32);
 
+    /* UTF-32(BE|LE) are not supposed to produce BOMs, but
+     * I'm not certain, and this is harmless, so...  --wrog
+     */
+    if (dlength && *dchars == 0xFEFF /* BOM */)
+	++dchars, --dlength;
+
+    Var r;
+    if (fully) {
+	size_t i;
+
+	r = new_list(dlength);
+
+	for (i = 1; i <= dlength; ++i) {
+	    r.v.list[i].type = TYPE_INT;
+	    r.v.list[i].v.num = *dchars++;
+	}
+    }
+    else {
+	Stream *s = new_stream(dlength + dlength / 2);
+
+	r = new_list(0);
+	for (;;) {
+	    Var elt;
+	    int done;
+	    uint32_t c;
+
+	    if (!(done = !dlength--) && my_is_printable(c = *dchars++)) {
+		stream_add_utf(s, c);
+		continue;
+	    }
+	    if (stream_length(s)) {
+		elt.type = TYPE_STR;
+		elt.v.str = str_dup(reset_stream(s));
+		r = listappend(r, elt);
+	    }
+	    if (done)
+		break;
+	    elt.type = TYPE_INT;
+	    elt.v.num = c;
+	    r = listappend(r, elt);
+	}
+	free_stream(s);
+    }
+    p = make_var_pack(r);
+ oops:
+    free_stream(s32);
     free_var(arglist);
-
-    return ok ? make_var_pack(r) : make_error_pack(E_INVARG);
+    return p;
 }
 
 void

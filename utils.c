@@ -271,14 +271,10 @@ equality(Var lhs, Var rhs, int case_matters)
     return 0;
 }
 
-char *
-strsub(const char *source, const char *what, const char *with, int case_counts)
+void
+stream_add_strsub(Stream *str, const char *source, const char *what, const char *with, int case_counts)
 {
-    static Stream *str = 0;
     int lwhat = strlen(what);
-
-    if (str == 0)
-	str = new_stream(100);
 
     while (*source) {
 	if (!(case_counts ? strncmp(source, what, lwhat)
@@ -288,8 +284,6 @@ strsub(const char *source, const char *what, const char *with, int case_counts)
 	} else
 	    stream_add_char(str, *source++);
     }
-
-    return reset_stream(str);
 }
 
 int
@@ -394,14 +388,11 @@ value_bytes(Var v)
     return size;
 }
 
-const char *
-raw_bytes_to_moobinary(const char *buffer, size_t buflen)
+void
+stream_add_moobinary_from_raw_bytes(Stream *s,
+				    const char *buffer, size_t buflen)
 {
-    static Stream *s = 0;
     size_t i;
-
-    if (!s)
-	s = new_stream(100);
 
     for (i = 0; i < buflen; i++) {
 	unsigned char c = buffer[i];
@@ -411,8 +402,6 @@ raw_bytes_to_moobinary(const char *buffer, size_t buflen)
 	else
 	    stream_printf(s, "~%02x", (int) c);
     }
-
-    return reset_stream(s);
 }
 
 const char *
@@ -455,56 +444,39 @@ moobinary_to_raw_bytes(const char *binary, size_t *buflen)
     return reset_stream(s);
 }
 
-const char *
-recode_chars(const char *chars, size_t *length,
-	     const char *fromcode, const char *tocode)
+int
+stream_add_recoded_chars(Stream *s,
+			 const char *inbuf, size_t inbytesleft,
+			 const char *fromcode, const char *tocode)
 {
     iconv_t cd;
-    char *inbuf, *outbuf;
-    size_t inbytesleft, outbytesleft;
-    char buffer[512];
-    static Stream *s = 0;
+    char *outbuf;
+    size_t outbytesleft;
+    int ret;
 
     cd = iconv_open(tocode, fromcode);
     if (cd == (iconv_t) -1)
 	return 0;
 
-    inbuf = (char *) chars;
-    inbytesleft = *length;
+    do {
+	stream_beginfill(s, inbytesleft * 2,
+			 &outbuf, &outbytesleft);
+	ret = (size_t) -1 !=
+	    iconv(cd, (char **)&inbuf, &inbytesleft,
+		  &outbuf, &outbytesleft);
 
-    outbuf = buffer;
-    outbytesleft = sizeof(buffer);
-
-    if (!s)
-	s = new_stream(inbytesleft);
-
-    while (iconv(cd, &inbuf, &inbytesleft,
-		 &outbuf, &outbytesleft) == (size_t) -1) {
-	switch (errno) {
-	case E2BIG:
-	    /* output buffer has no more room */
-	    stream_add_bytes(s, buffer, outbuf - buffer);
-	    outbuf = buffer;
-	    outbytesleft = sizeof(buffer);
-	    break;
-
-	case EILSEQ:
-	    /* invalid multibyte sequence in input */
-	case EINVAL:
-	    /* incomplete multibyte sequence in input */
-	default:
-	    iconv_close(cd);
-	    reset_stream(s);
-	    return 0;
-	}
+	stream_endfill(s, outbytesleft);
     }
-
-    stream_add_bytes(s, buffer, outbuf - buffer);
+    while (!ret && errno == E2BIG);
+    /* E2BIG = remaining output buffer too small => try again
+     * die on all other errors, including
+     *   EILSEQ: invalid input sequence
+     *   EINVAL: incomplete input sequence
+     */
 
     iconv_close(cd);
 
-    *length = stream_length(s);
-    return reset_stream(s);
+    return ret;
 }
 
 

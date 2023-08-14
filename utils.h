@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include "execute.h"
+#include "streams.h"
 
 #undef MAX
 #undef MIN
@@ -70,7 +71,7 @@ var_dup(Var v)
 extern int equality(Var lhs, Var rhs, int case_matters);
 extern int is_true(Var v);
 
-extern char *strsub(const char *, const char *, const char *, int);
+extern void stream_add_strsub(Stream *, const char *, const char *, const char *, int);
 extern int strindex(const char *, const char *, int);
 extern int strrindex(const char *, const char *, int);
 
@@ -79,10 +80,19 @@ extern Objid get_system_object(const char *);
 
 extern int value_bytes(Var);
 
-extern const char *raw_bytes_to_moobinary(const char *buffer, size_t buflen);
+extern void stream_add_moobinary_from_raw_bytes(
+    Stream *, const char *buffer, size_t buflen);
 extern const char *moobinary_to_raw_bytes(const char *binary, size_t *rawlen);
 
-extern const char *recode_chars(const char *, size_t *, const char *, const char *);
+/* Given a stream and a buffer of characters encoded as bytes using
+ * fromcode, write the characters to the stream using tocode,
+ * fromcode and tocode being encodings the iconv library
+ * knows about.  Return nonzero if successful.
+ */
+extern int stream_add_recoded_chars(Stream *s,
+				    const char *inbuf, size_t inbytesleft,
+				    const char *fromcode,
+				    const char *tocode);
 
 #endif		/* !Utils_H */
 
