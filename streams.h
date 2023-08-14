@@ -20,6 +20,8 @@
 
 #include "config.h"
 
+#include "my-string.h"
+
 typedef struct {
     char *buffer;
     size_t buflen;
@@ -29,8 +31,9 @@ typedef struct {
 extern Stream *new_stream(size_t size);
 extern void stream_add_char(Stream *, char);
 extern void stream_delete_char(Stream *);
-extern void stream_add_string(Stream *, const char *);
 extern void stream_add_bytes(Stream *, const char *, size_t);
+inline void stream_add_string(Stream * s, const char *string)
+{ stream_add_bytes(s, string, strlen(string)); }
 extern void stream_printf(Stream *, const char *,...) FORMAT(printf,2,3);
 extern void free_stream(Stream *);
 extern char *stream_contents(Stream *);

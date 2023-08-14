@@ -66,22 +66,6 @@ stream_delete_char(Stream * s)
 }
 
 void
-stream_add_string(Stream * s, const char *string)
-{
-    int len = strlen(string);
-
-    if (s->current + len >= s->buflen) {
-	size_t newlen = s->buflen * 2;
-
-	if (newlen <= s->current + len)
-	    newlen = s->current + len + 1;
-	grow(s, newlen);
-    }
-    strcpy(s->buffer + s->current, string);
-    s->current += len;
-}
-
-void
 stream_add_bytes(Stream * s, const char *bytes, size_t len)
 {
     if (s->current + len >= s->buflen) {
