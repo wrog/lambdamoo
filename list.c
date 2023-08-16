@@ -224,28 +224,11 @@ sublist(Var list, int lower, int upper)
     }
 }
 
-/* could get away with a weird calling convention in lieu of malloc, but that
- * might cause Issues down the road, so malloc it is... remember to free it
- * yourself! */
-
-static const char *
-float2str(double n)
-{
-    char *buffer;
-
-    buffer = mymalloc(40, M_STREAM);
-    snprintf(buffer, 40, "%.*g", DBL_DIG, n);
-    if (!strchr(buffer, '.') && !strchr(buffer, 'e'))
-        strncat(buffer, ".0", 40);   /* make it look floating */
-    return buffer;
-}
-
 static const char *
 list2str(Var * args)
 {
     static Stream *str = 0;
     int i;
-    const char *s;
 
     if (!str)
 	str = new_stream(100);
@@ -265,9 +248,7 @@ list2str(Var * args)
 	    stream_add_string(str, unparse_error(args[i].v.err));
 	    break;
 	case TYPE_FLOAT:
-            s = float2str(args[i].v.fnum);
-            stream_add_string(str, s);
-            myfree(s, M_STREAM);
+            stream_add_float(str, args[i].v.fnum, DBL_DIG);
 	    break;
 	case TYPE_LIST:
 	    stream_add_string(str, "{list}");
@@ -296,8 +277,6 @@ value2str(Var value)
 static void
 print_to_stream(Var v, Stream * s)
 {
-    const char *tmp;
-
     switch (v.type) {
     case TYPE_INT:
 	stream_printf(s, "%"PRIdN, v.v.num);
@@ -309,9 +288,7 @@ print_to_stream(Var v, Stream * s)
 	stream_add_string(s, error_name(v.v.err));
 	break;
     case TYPE_FLOAT:
-        tmp = float2str(v.v.fnum);
-        stream_add_string(s, tmp);
-        myfree(tmp, M_STREAM);
+	stream_add_float(s, v.v.fnum, DBL_DIG);
 	break;
     case TYPE_STR:
 	{
