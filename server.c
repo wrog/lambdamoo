@@ -949,8 +949,8 @@ server_flag_option(const char *name, int defallt)
 	return defallt;
 }
 
-int
-server_int_option(const char *name, int defallt)
+Num
+server_int_option(const char *name, Num defallt)
 {
     Var v;
 

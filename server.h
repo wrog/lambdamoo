@@ -126,7 +126,7 @@ extern int server_flag_option(const char *name, int defallt);
 				 * Otherwise, return DEFALLT.
 				 */
 
-extern int server_int_option(const char *name, int defallt);
+extern Num server_int_option(const char *name, Num defallt);
 				/* If both $server_options and
 				 * $server_options.NAME exist and the latter
 				 * has a numeric value, then return that value.
@@ -203,7 +203,7 @@ enum Server_Option {
 #define server_int_option_cached(srvopt)   (_server_int_option_cache[srvopt])
 
 
-extern int _server_int_option_cache[]; /* private */
+extern Num _server_int_option_cache[]; /* private */
 
 
 
