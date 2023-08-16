@@ -296,9 +296,7 @@ pull_input(nhandle * h)
 
 		h->last_input_was_CR = (c == '\r');
 	    }
-            if (ptr < end)
-            {
-                h->excess_utf_count = end - ptr;
+            if (ptr < end) {
                 memcpy(h->excess_utf, ptr, end - ptr);
             }
             h->excess_utf_count = end - ptr;
