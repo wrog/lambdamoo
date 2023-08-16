@@ -1361,6 +1361,11 @@ bf_decode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
     if (fully) {
 	size_t i;
 
+	if (dlength > (size_t)server_int_option_cached(SVO_MAX_LIST_CONCAT)) {
+	    p = make_space_pack();
+	    goto oops;
+	}
+
 	r = new_list(dlength);
 
 	for (i = 1; i <= dlength; ++i) {
@@ -1369,11 +1374,39 @@ bf_decode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
 	}
     }
     else {
-	Stream *s = new_stream(dlength + dlength / 2);
+	size_t smax = 0, llen = 0;
+	{
+	    size_t sfirst = 0, i = 0;
+	    int in_string = 0;
+	    for (;; ++i) {
+		int done = (i >= dlength);
+		if (!done && my_is_printable(dchars[i])) {
+		    if (!in_string) {
+			++llen;
+			sfirst = i;
+			in_string = 1;
+		    }
+		    continue;
+		}
+		if (in_string && (i - sfirst > smax))
+		    smax = i - sfirst;
+		if (done)
+		    break;
+		in_string = 0;
+		++llen;
+	    }
+	}
+	if (   llen > (size_t)server_int_option_cached(SVO_MAX_LIST_CONCAT)
+	    || smax > (size_t)server_int_option_cached(SVO_MAX_STRING_CONCAT)) {
+	    p = make_space_pack();
+	    goto oops;
+	}
 
-	r = new_list(0);
+	Stream *s = new_stream(smax + 1);
+	size_t llast = 0;
+
+	r = new_list(llen);
 	for (;;) {
-	    Var elt;
 	    int done;
 	    uint32_t c;
 
@@ -1382,16 +1415,17 @@ bf_decode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
 		continue;
 	    }
 	    if (stream_length(s)) {
-		elt.type = TYPE_STR;
-		elt.v.str = str_dup(reset_stream(s));
-		r = listappend(r, elt);
+		r.v.list[++llast].type = TYPE_STR;
+		r.v.list[llast].v.str = str_dup(reset_stream(s));
 	    }
 	    if (done)
 		break;
-	    elt.type = TYPE_INT;
-	    elt.v.num = c;
-	    r = listappend(r, elt);
+	    r.v.list[++llast].type = TYPE_INT;
+	    r.v.list[llast].v.num = c;
 	}
+	if (llast != llen)
+	    panic("bf_decode_chars: list element miscount");
+
 	free_stream(s);
     }
     p = make_var_pack(r);
