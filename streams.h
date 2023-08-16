@@ -49,6 +49,32 @@ inline void stream_add_string(Stream * s, const char *string)
 extern void stream_printf(Stream *, const char *,...) FORMAT(printf,2,3);
 
 /*
+ * How to provide fixed-size buffers for others to fill:
+ *
+ *   setup:
+ *      Stream *s;
+ *      char *buffer;
+ *      size_t blength;
+ *      stream_beginfill(s, NEED, &buffer, &blength);
+ *	  // may need to allocate and RAISE(stream_too_big);
+ *	  // guarantees blength >= NEED,
+ *	  // leaves space for \0 afterwards
+ *
+ *   paradigm 1:
+ *      if (0 >= (count = read(fd, buffer, blength)))
+ *	  ;// error|noop: nothing written; nothing to do
+ *      else
+ *	  stream_endfill(s, blength - count);
+ *
+ *   paradigm 2:
+ *      iconv(cd, &in, &ilen, &buffer, &blength);
+ *	  // always does (buffer += K, blength -= K)
+ *      stream_endfill(s, blength);
+ */
+extern void stream_beginfill(Stream *, size_t, char **, size_t *);
+extern void stream_endfill(Stream *, size_t);
+
+/*
  * Helper for catching overly large allocations:
  *
  *   TRY_STREAM
