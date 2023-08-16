@@ -176,6 +176,37 @@ stream_length(Stream * s)
     return s->current;
 }
 
+/*
+ * Return a fixed length buffer (in *BUF and *LEN)
+ * growing stream as necessary so that *LEN >= NEED
+ * and so that even if all *LEN bytes are used there
+ * is space for a final \0.
+ */
+void
+stream_beginfill(Stream *s, size_t need, char **buf, size_t *len)
+{
+    (void)grew(s, need);
+    *buf = s->buffer + s->current;
+    *len = s->buflen - s->current - 1;
+}
+
+/*
+ * Advance stream pointer so that exactly UNUSED bytes remain,
+ * or equivalently, update stream to account for
+ * *LEN - UNUSED bytes having been written
+ * starting at *BUF; UNUSED must be <= *LEN).
+ *
+ * Not calling this leaves stream in the state as if
+ * nothing had been written to it since the _beginfill call
+ */
+void
+stream_endfill(Stream *s, size_t unused)
+{
+    if (unused >= s->buflen - s->current)
+	panic("stream_endfill: unused count too large");
+    s->current = s->buflen - 1 - unused;
+}
+
 char rcsid_streams[] = "$Id$";
 
 /*
