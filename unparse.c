@@ -31,6 +31,7 @@
 #include "unparse.h"
 #include "storage.h"
 #include "streams.h"
+#include "utf-ctype.h"
 #include "utils.h"
 
 static Program *prog;

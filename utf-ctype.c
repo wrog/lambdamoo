@@ -6,37 +6,11 @@
 
 #include "config.h"
 #include "ucd.h"
-#include "my-ctype.h"
+#include "utf-ctype.h"
 
-int my_tolower(int x)
-{
-    const struct unicode_character_data *ucd;
-    int rv;
-
-    ucd = unicode_character_data(x);
-    if (!ucd)
-	return x;
-
-    rv = ucd->simple_lowercase;
-    unicode_character_put(ucd);
-
-    return rv;
-}
-
-int my_toupper(int x)
-{
-    const struct unicode_character_data *ucd;
-    int rv;
-
-    ucd = unicode_character_data(x);
-    if (!ucd)
-	return x;
-
-    rv = ucd->simple_uppercase;
-    unicode_character_put(ucd);
-
-    return rv;
-}
+/*------------*
+ |   digits   |
+ *------------*/
 
 int my_isdigit(int x)
 {
@@ -69,20 +43,9 @@ int my_digitval(int x)
     return rv;
 }
 
-int my_isspace(int x)
-{
-    const struct unicode_character_data *ucd;
-    int rv;
-
-    ucd = unicode_character_data(x);
-    if (!ucd)
-	return x;
-
-    rv = !!(ucd->fl & UC_FL_WHITE_SPACE);
-    unicode_character_put(ucd);
-
-    return rv;
-}
+/*---------------------------*
+ |   identifier characters   |
+ *---------------------------*/
 
 /*
  * The XID categories are the best thing in Unicode to what
@@ -118,6 +81,73 @@ int my_is_xid_cont(int x)
 
     return rv;
 }
+
+/*-------------------------*
+ |   simple case folding   |
+ *-------------------------*/
+
+/*
+ * Yes, this is inadequate in general, but we knew that already.
+ * The goal here is to have the MOO programming environment continue to
+ * make sense, to have it be deterministic/easy/fast to know when two
+ * identifiers are equivalent, not to accomodate every last quirk of
+ * world language case folding.  Presumably, future designers of
+ * actual international programming languages will now know not to
+ * include case-insensitivity in their creations.  --wrog
+ */
+
+int my_tolower(int x)
+{
+    const struct unicode_character_data *ucd;
+    int rv;
+
+    ucd = unicode_character_data(x);
+    if (!ucd)
+	return x;
+
+    rv = ucd->simple_lowercase;
+    unicode_character_put(ucd);
+
+    return rv;
+}
+
+int my_toupper(int x)
+{
+    const struct unicode_character_data *ucd;
+    int rv;
+
+    ucd = unicode_character_data(x);
+    if (!ucd)
+	return x;
+
+    rv = ucd->simple_uppercase;
+    unicode_character_put(ucd);
+
+    return rv;
+}
+
+/*----------------*
+ |   whitespace   |
+ *----------------*/
+
+int my_isspace(int x)
+{
+    const struct unicode_character_data *ucd;
+    int rv;
+
+    ucd = unicode_character_data(x);
+    if (!ucd)
+	return x;
+
+    rv = !!(ucd->fl & UC_FL_WHITE_SPACE);
+    unicode_character_put(ucd);
+
+    return rv;
+}
+
+/*------------------------------*
+ |   MOO-string character set   |
+ *------------------------------*/
 
 int my_is_printable(int x)
 {

@@ -40,6 +40,7 @@
 #include "storage.h"
 #include "timers.h"
 #include "utf.h"
+#include "utf-ctype.h"
 #include "utils.h"
 
 static struct proto proto;

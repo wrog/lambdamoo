@@ -53,7 +53,7 @@ HDRS =  ast.h bf_register.h code_gen.h \
 	parse_cmd.h parser.h pattern.h program.h quota.h random.h \
 	ref_count.h server.h storage.h streams.h structures.h \
 	str_intern.h sym_table.h tasks.h timers.h tokens.h \
-	unparse.h utils.h verbs.h version.h
+	unparse.h utf-ctype.h utils.h verbs.h version.h
 
 SYSHDRS = my-ctype.h my-fcntl.h my-in.h my-inet.h my-ioctl.h my-math.h \
 	my-poll.h my-signal.h my-socket.h my-stat.h my-stdarg.h my-stdio.h \

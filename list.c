@@ -36,6 +36,7 @@
 #include "unparse.h"
 #include "ucd/ucd.h"
 #include "utf.h"
+#include "utf-ctype.h"
 #include "utils.h"
 
 Var

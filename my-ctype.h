@@ -19,20 +19,12 @@
 
 #include "config.h"
 
-extern int my_tolower(int);
-extern int my_toupper(int);
+#include <ctype.h>
 
-extern int my_isdigit(int);
-extern int my_digitval(int);
-
-extern int my_isspace(int);
-
-extern int my_is_xid_start(int);
-extern int my_is_xid_cont(int);
-
-extern int my_is_printable(int);
-
-#define my_isascii(x) ((unsigned int)(x) < 127)
+#if NDECL_TOLOWER
+extern int tolower(int);
+extern int toupper(int);
+#endif
 
 #endif				/* !My_Ctype_H */
 

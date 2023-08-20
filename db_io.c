@@ -20,7 +20,7 @@
  *****************************************************************************/
 
 #include "config.h"
-#include <ctype.h>
+#include "my-ctype.h"
 #include <float.h>
 #include "my-stdarg.h"
 #include "my-stdio.h"

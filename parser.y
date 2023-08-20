@@ -43,6 +43,7 @@
 #include "sym_table.h"
 #include "utils.h"
 #include "utf.h"
+#include "utf-ctype.h"
 #include "version.h"
 
 static Stmt    	       *prog_start;
