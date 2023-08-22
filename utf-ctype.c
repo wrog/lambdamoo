@@ -137,7 +137,7 @@ int my_isspace(int x)
 
     ucd = unicode_character_data(x);
     if (!ucd)
-	return x;
+	return 0;
 
     rv = !!(ucd->fl & UC_FL_WHITE_SPACE);
     unicode_character_put(ucd);
