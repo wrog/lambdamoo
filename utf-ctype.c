@@ -12,7 +12,8 @@
  |   digits   |
  *------------*/
 
-int my_isdigit(int x)
+int
+my_isdigit(uint32_t x)
 {
     const struct unicode_character_data *ucd;
     int rv;
@@ -27,7 +28,8 @@ int my_isdigit(int x)
     return rv;
 }
 
-int my_digitval(int x)
+int
+my_digitval(uint32_t x)
 {
     const struct unicode_character_data *ucd;
     int rv;
@@ -52,7 +54,8 @@ int my_digitval(int x)
  * characters should allow to begin and continue identifiers,
  * respectively.
  */
-int my_is_xid_start(int x)
+int
+my_is_xid_start(uint32_t x)
 {
     const struct unicode_character_data *ucd;
     int rv;
@@ -67,7 +70,8 @@ int my_is_xid_start(int x)
     return rv;
 }
 
-int my_is_xid_cont(int x)
+int
+my_is_xid_cont(uint32_t x)
 {
     const struct unicode_character_data *ucd;
     int rv;
@@ -96,10 +100,11 @@ int my_is_xid_cont(int x)
  * include case-insensitivity in their creations.  --wrog
  */
 
-int my_tolower(int x)
+uint32_t
+my_tolower(uint32_t x)
 {
     const struct unicode_character_data *ucd;
-    int rv;
+    uint32_t rv;
 
     ucd = unicode_character_data(x);
     if (!ucd)
@@ -111,10 +116,11 @@ int my_tolower(int x)
     return rv;
 }
 
-int my_toupper(int x)
+uint32_t
+my_toupper(uint32_t x)
 {
     const struct unicode_character_data *ucd;
-    int rv;
+    uint32_t rv;
 
     ucd = unicode_character_data(x);
     if (!ucd)
@@ -130,7 +136,8 @@ int my_toupper(int x)
  |   whitespace   |
  *----------------*/
 
-int my_isspace(int x)
+int
+my_isspace(uint32_t x)
 {
     const struct unicode_character_data *ucd;
     int rv;
@@ -149,7 +156,8 @@ int my_isspace(int x)
  |   MOO-string character set   |
  *------------------------------*/
 
-int my_is_printable(int x)
+int
+my_is_printable(uint32_t x)
 {
     const struct unicode_character_data *ucd;
     int rv;

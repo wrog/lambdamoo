@@ -25,12 +25,12 @@
 	v = (v << 6) + c;     \
     } while (0)
 
-int
+uint32_t
 get_utf(const char **pp)
 {
     const char *p = *pp;
-    unsigned char c;
-    int v;
+    uint8_t  c;
+    uint32_t v;
 
     c = *p++;
 
@@ -97,12 +97,12 @@ get_utf(const char **pp)
 	v = (v << 6) + c;     \
     } while (0)
 
-int
-get_utf_call(int (*c_getch) (void *), void *c_data, int *state)
+int32_t
+get_utf_call(int32_t (*c_getch) (void *), void *c_data, int32_t *state)
 {
-    int c;
-    int cc = *state;
-    int v;
+    int32_t c;
+    int32_t cc = *state;
+    int32_t v;
 
     if (cc != -1) {
 	c = cc;
@@ -151,10 +151,9 @@ get_utf_call(int (*c_getch) (void *), void *c_data, int *state)
 }
 
 int
-put_utf(char **pp, int vv)
+put_utf(char **pp, uint32_t v)
 {
     char *p = *pp;
-    unsigned int v = vv;
 
     if (v <= 0x7f) {
 	*p++ = v;
@@ -181,9 +180,7 @@ put_utf(char **pp, int vv)
     return 0;
 }
 
-/* XXX these should really be size_t, not int */
-
-int
+size_t
 skip_utf(const char *s0, int i)
 {
     const char *s = s0;
@@ -195,18 +192,18 @@ skip_utf(const char *s0, int i)
     return s - s0;
 }
 
-int
+size_t
 strlen_utf(const char *s)
 {
-    int i = 0;
+    size_t i = 0;
     while (get_utf(&s)) {
         i++;
     }
     return i;
 }
 
-int
-clearance_utf(const unsigned char c)
+size_t
+clearance_utf(const uint8_t c)
 {
     if (c <= 0x7f)
         return 1;

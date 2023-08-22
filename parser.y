@@ -54,7 +54,7 @@ static void	error(const char *, const char *);
 static void	warning(const char *, const char *);
 static int	find_id(char *name);
 static void	yyerror(const char *s);
-static int	yylex(void);
+static int32_t	yylex(void);
 static Scatter *scatter_from_arglist(Arg_List *);
 static Scatter *add_scatter_item(Scatter *, Scatter *);
 static void	vet_scatter(Scatter *);
@@ -71,7 +71,7 @@ static void	check_loop_name(const char *, enum loop_exit_kind);
 %union {
   Stmt	       *stmt;
   Expr	       *expr;
-  int		chr;		/* Used to carry non-ASCII characters */
+  int32_t	chr;		/* Used to carry non-ASCII characters */
   Num		integer;
   Objid		object;
   double        real;
@@ -741,9 +741,10 @@ warning(const char *s, const char *t)
 	error(s, t);
 }
 
-static int unget_buffer[5], unget_count, getc_state;
+static int32_t unget_buffer[5], unget_count;
+static int32_t getc_state;
 
-static int
+static int32_t
 lex_getc(void)
 {
     if (unget_count > 0)
@@ -753,13 +754,13 @@ lex_getc(void)
 }
 
 static void
-lex_ungetc(int c)
+lex_ungetc(int32_t c)
 {
     unget_buffer[unget_count++] = c;
 }
 
-static int
-follow(int expect, int ifyes, int ifno)     /* look ahead for >=, etc. */
+static int32_t
+follow(int32_t expect, int32_t ifyes, int32_t ifno)     /* look ahead for >=, etc. */
 {
     int c = lex_getc();
 
@@ -771,7 +772,7 @@ follow(int expect, int ifyes, int ifno)     /* look ahead for >=, etc. */
 
 static Stream  *token_stream = 0;
 
-static int
+static int32_t
 yylex(void)
 {
     int		c;
@@ -1218,12 +1219,12 @@ my_error(void *data, const char *msg)
     state->errors = listappend(state->errors, v);
 }
 
-static int
+static int32_t
 my_getc(void *data)
 {
     struct parser_state	*state = (struct parser_state *) data;
-    Var			code;
-    unsigned char	c;
+    Var      code;
+    uint8_t  c;
 
     code = state->code;
     if (task_timed_out  ||  state->cur_string > code.v.list[0].v.num)

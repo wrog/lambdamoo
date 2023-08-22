@@ -9,17 +9,17 @@
 
 #include "config.h"
 
-extern int my_isdigit(int);
-extern int my_digitval(int);
+extern int my_isdigit(uint32_t);
+extern int my_digitval(uint32_t);
 
-extern int my_is_xid_start(int);
-extern int my_is_xid_cont(int);
+extern int my_is_xid_start(uint32_t);
+extern int my_is_xid_cont(uint32_t);
 
-extern int my_tolower(int);
-extern int my_toupper(int);
-extern int my_isspace(int);
+extern uint32_t my_tolower(uint32_t);
+extern uint32_t my_toupper(uint32_t);
+extern int      my_isspace(uint32_t);
 
-extern int my_is_printable(int);
+extern int my_is_printable(uint32_t);
 /*  Unlike with the other my_* functions here, which are intended to
  *  follow the respective Unicode classifications, "printable" here
  *  does NOT.  It actually refers to the set of code points (character

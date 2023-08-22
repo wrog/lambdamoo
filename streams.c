@@ -88,7 +88,7 @@ stream_delete_char(Stream * s)
 }
 
 int
-stream_add_utf(Stream * s, int c)
+stream_add_utf(Stream * s, uint32_t c)
 {
     (void)grew(s, 4);
 
