@@ -152,7 +152,7 @@ $(ucd_dir)/libucd.a:
 $(ucd_dir)/ucd.h:
 	cd $(ucd_dir); $(MAKE) ucd.h
 
-list.o utf-ctype.o: $(ucd_dir)/ucd.h
+utf-ctype.o: $(ucd_dir)/ucd.h
 @XT_RULES@
 
 dist.tar.Z:	$(DISTFILES)

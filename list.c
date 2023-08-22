@@ -34,7 +34,6 @@
 #include "storage.h"
 #include "structures.h"
 #include "unparse.h"
-#include "ucd/ucd.h"
 #include "utf.h"
 #include "utf-ctype.h"
 #include "utils.h"
@@ -1130,7 +1129,6 @@ bf_tochar(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
     int ucs = 0;
     Var ans;
     Var v = arglist.v.list[1];
-    const struct unicode_character_data *ucd = 0;
 
     if (!s)
 	s = new_stream(5);
@@ -1140,11 +1138,7 @@ bf_tochar(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 	    ucs = v.v.num;
 	break;
     case TYPE_STR:
-        ucd = unicode_character_lookup(v.v.str);
-        if (ucd) {
-            ucs = ucd->ucs;
-            unicode_character_put(ucd);
-        }
+	ucs = my_char_lookup(v.v.str);
 	break;
     default:
         free_var(arglist);
@@ -1168,22 +1162,20 @@ static package
 bf_charname(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r = arglist.v.list[1];
-    const struct unicode_character_data *ucd = 0;
     const char *s = r.v.str;
     int ucs = get_utf(&s);
-    Var ans;
 
     if ((ucs == 0) || (*s != 0)) {
         free_var(arglist);
         return make_error_pack(E_INVARG);
     }
     free_var(arglist);
-    ucd = unicode_character_data(ucs);
-    if (!ucd)
-        return make_error_pack(E_INVARG);
+
+    Var ans;
+    ans.v.str = my_char_name(ucs);
+    if (!ans.v.str)
+	return make_error_pack(E_INVARG);
     ans.type = TYPE_STR;
-    ans.v.str = str_dup(ucd->name);
-    unicode_character_put(ucd);
     return make_var_pack(ans);
 }
 

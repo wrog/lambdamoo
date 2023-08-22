@@ -8,6 +8,8 @@
 #include "ucd.h"
 #include "utf-ctype.h"
 
+#include "storage.h"
+
 /*------------*
  |   digits   |
  *------------*/
@@ -173,6 +175,42 @@ my_is_printable(uint32_t x)
         return 0;
 
     rv = !(ucd->fl & UC_FL_NONCHARACTER_CODE_POINT);
+    unicode_character_put(ucd);
+
+    return rv;
+}
+
+/*----------------------------------*
+ |   character name/number lookup   |
+ *----------------------------------*/
+
+const char *
+my_char_name(uint32_t x)
+{
+    const struct unicode_character_data *ucd;
+    char *rv;
+
+    ucd = unicode_character_data(x);
+    if (!ucd)
+	return (NULL);
+
+    rv = str_dup(ucd->name);
+    unicode_character_put(ucd);
+
+    return rv;
+}
+
+uint32_t
+my_char_lookup(const char *name)
+{
+    const struct unicode_character_data *ucd;
+    uint32_t rv;
+
+    ucd = unicode_character_lookup(name);
+    if (!ucd)
+	return (0);
+
+    rv = ucd->ucs;
     unicode_character_put(ucd);
 
     return rv;

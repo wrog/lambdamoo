@@ -33,6 +33,9 @@ extern int my_is_printable(uint32_t);
 
 #define my_isascii(x) ((unsigned int)(x) < 127)
 
+extern const char *my_char_name(uint32_t);
+extern   uint32_t  my_char_lookup(const char *);
+
 #endif		/* !UTF_CType_H */
 
 /*
