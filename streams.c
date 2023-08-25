@@ -21,17 +21,32 @@
 #include "my-stdio.h"
 
 #include "config.h"
+#include "exceptions.h"
 #include "log.h"
 #include "storage.h"
 #include "streams.h"
+
+/*
+ * v must be a variable.
+ * set v to 1<<k: k smallest such that v < (1<<k)
+ *   (Does not branch.)
+ *   (Assumes v>>32 is optimzed out for 32-bit v?)
+ */
+#define NEXT_2_POWER(v)					\
+    (v=(v|(v>>1)),v=(v|(v>>2)),v=(v|(v>>4)),		\
+     v=(v|(v>>8)),v=(v|(v>>16)),v=1+(v|(v>>32)))
 
 Stream *
 new_stream(size_t size)
 {
     Stream *s = mymalloc(sizeof(Stream), M_STREAM);
 
-    if (size < 1)
-	size = 1;
+    /*  We probably get an entire cache line
+     *  whether we want it or not, so force size >= 32.
+     *  ((XXX separate M_STREAMSTR with 64b alignment?))
+     */
+    size |= 0x1f;
+    NEXT_2_POWER(size);
 
     s->buffer = mymalloc(size, M_STREAM);
     s->buflen = size;
@@ -57,11 +72,14 @@ disable_stream_exceptions(void)
     --allow_stream_exceptions;
 }
 
-static void
-grow(Stream * s, size_t newlen, int need)
+static int
+grew(Stream * s, size_t need)
 {
-    char *newbuf;
+    if (s->current + need < s->buflen)
+	return 0;
 
+    size_t newlen = s->current + need;
+    NEXT_2_POWER(newlen);
     if (allow_stream_exceptions > 0) {
 	if (newlen > stream_alloc_maximum) {
 	    if (s->current + need < stream_alloc_maximum)
@@ -70,19 +88,19 @@ grow(Stream * s, size_t newlen, int need)
 		RAISE(stream_too_big, 0);
 	}
     }
-    newbuf = mymalloc(newlen, M_STREAM);
+    char *newbuf = mymalloc(newlen, M_STREAM);
+
     memcpy(newbuf, s->buffer, s->current);
     myfree(s->buffer, M_STREAM);
     s->buffer = newbuf;
     s->buflen = newlen;
+    return 1;
 }
 
 void
 stream_add_char(Stream * s, char c)
 {
-    if (s->current + 1 >= s->buflen)
-	grow(s, s->buflen * 2, 1);
-
+    (void)grew(s, 1);
     s->buffer[s->current++] = c;
 }
 
@@ -96,13 +114,7 @@ stream_delete_char(Stream * s)
 void
 stream_add_bytes(Stream * s, const char *bytes, size_t len)
 {
-    if (s->current + len >= s->buflen) {
-	size_t newlen = s->buflen * 2;
-
-	if (newlen <= s->current + len)
-	    newlen = s->current + len + 1;
-	grow(s, newlen, len);
-    }
+    (void)grew(s, len);
     memcpy(s->buffer + s->current, bytes, len);
     s->current += len;
 }
@@ -116,17 +128,16 @@ stream_printf(Stream * s, const char *fmt,...)
     va_start(args, fmt);
 
     va_copy(pargs, args);
-    len = vsnprintf(s->buffer + s->current, s->buflen - s->current, fmt, pargs);
+    len = vsnprintf(s->buffer + s->current, s->buflen - s->current,
+		    fmt, pargs);
+    if (len < 0)
+	panic("vsnprintf returned negative");
+
     va_end(pargs);
 
-    if (s->current + len >= s->buflen) {
-	size_t newlen = s->buflen * 2;
-
-	if (newlen <= s->current + len)
-	    newlen = s->current + len + 1;
-	grow(s, newlen, len);
-	len = vsnprintf(s->buffer + s->current, s->buflen - s->current, fmt, args);
-    }
+    if (grew(s, len))
+	len = vsnprintf(s->buffer + s->current, s->buflen - s->current,
+			fmt, args);
     va_end(args);
     s->current += len;
 }
