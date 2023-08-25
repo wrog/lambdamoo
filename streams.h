@@ -24,26 +24,26 @@
 
 typedef struct {
     char *buffer;
-    int buflen;
-    int current;
+    size_t buflen;
+    size_t current;
 } Stream;
 
-extern Stream *new_stream(int size);
+extern Stream *new_stream(size_t size);
 extern void stream_add_char(Stream *, char);
 extern void stream_delete_char(Stream *);
 
-extern int stream_add_utf(Stream *, int);
+extern int  stream_add_utf(Stream *, int);
 extern void stream_delete_utf(Stream *);
 
 extern void stream_add_float(Stream *s, double n, int prec);
-extern void stream_add_bytes(Stream *, const char *, int);
+extern void stream_add_bytes(Stream *, const char *, size_t);
 inline void stream_add_string(Stream * s, const char *string)
 { stream_add_bytes(s, string, strlen(string)); }
 extern void stream_printf(Stream *, const char *,...) FORMAT(printf,2,3);
 extern void free_stream(Stream *);
 extern char *stream_contents(Stream *);
 extern char *reset_stream(Stream *);
-extern int stream_length(Stream *);
+extern size_t stream_length(Stream *);
 
 #endif		/* !Streams_H */
 
