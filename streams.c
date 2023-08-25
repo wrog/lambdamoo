@@ -26,7 +26,7 @@
 #include "streams.h"
 
 Stream *
-new_stream(int size)
+new_stream(size_t size)
 {
     Stream *s = mymalloc(sizeof(Stream), M_STREAM);
 
@@ -38,7 +38,7 @@ new_stream(int size)
 }
 
 static void
-grow(Stream * s, int newlen)
+grow(Stream * s, size_t newlen)
 {
     char *newbuf;
 
@@ -71,7 +71,7 @@ stream_add_string(Stream * s, const char *string)
     int len = strlen(string);
 
     if (s->current + len >= s->buflen) {
-	int newlen = s->buflen * 2;
+	size_t newlen = s->buflen * 2;
 
 	if (newlen <= s->current + len)
 	    newlen = s->current + len + 1;
@@ -85,7 +85,7 @@ void
 stream_printf(Stream * s, const char *fmt,...)
 {
     va_list args, pargs;
-    int len;
+    ssize_t len;
 
     va_start(args, fmt);
 
@@ -94,7 +94,7 @@ stream_printf(Stream * s, const char *fmt,...)
     va_end(pargs);
 
     if (s->current + len >= s->buflen) {
-	int newlen = s->buflen * 2;
+	size_t newlen = s->buflen * 2;
 
 	if (newlen <= s->current + len)
 	    newlen = s->current + len + 1;
@@ -127,7 +127,7 @@ stream_contents(Stream * s)
     return s->buffer;
 }
 
-int
+size_t
 stream_length(Stream * s)
 {
     return s->current;
