@@ -25,13 +25,19 @@
 #include "program.h"
 #include "structures.h"
 
+enum abort_reason {
+    ABORT_KILL    = -1, 	/* kill_task(task_id()) */
+    ABORT_SECONDS = 0,		/* out of seconds */
+    ABORT_TICKS   = 1		/* out of ticks */
+};
+
 typedef struct {
     enum {
 	BI_RETURN,		/* Normal function return */
 	BI_RAISE,		/* Raising an error */
 	BI_CALL,		/* Making a nested verb call */
 	BI_SUSPEND,		/* Suspending the current task */
-	BI_KILL			/* Killing the current task */
+	BI_ABORT		/* Aborting the current task */
     } kind;
     union {
 	Var ret;
@@ -48,16 +54,11 @@ typedef struct {
 	    enum error (*proc) (vm, void *);
 	    void *data;
 	} susp;
+	enum abort_reason why;
     } u;
 } package;
 
 void register_bi_functions();
-
-enum abort_reason {
-    ABORT_KILL    = -1, 	/* kill_task(task_id()) */
-    ABORT_SECONDS = 0,		/* out of seconds */
-    ABORT_TICKS   = 1		/* out of ticks */
-};
 
 package make_abort_pack(enum abort_reason reason);
 package make_error_pack(enum error err);

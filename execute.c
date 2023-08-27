@@ -333,8 +333,8 @@ unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 		    a->bi_func_pc = p.u.call.pc;
 		    a->bi_func_data = p.u.call.data;
 		    return 0;
-		case BI_KILL:
-		    abort_task(p.u.ret.v.num);
+		case BI_ABORT:
+		    abort_task(p.u.why);
 		    if (outcome)
 			*outcome = OUTCOME_ABORTED;
 		    return 1;
@@ -362,7 +362,7 @@ unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 			free_var(p.u.raise.value);
 			break;
 		    case BI_SUSPEND:
-		    case BI_KILL:
+		    case BI_ABORT:
 			break;
 		    case BI_CALL:
 			free_activation(&activ_stack[top_activ_stack--], 0);
@@ -1724,9 +1724,9 @@ do {								\
 				PUSH_ERROR(e);
 			}
 			break;
-		    case BI_KILL:
+		    case BI_ABORT:
 			STORE_STATE_VARIABLES();
-			abort_task(p.u.ret.v.num);
+			abort_task(p.u.why);
 			return OUTCOME_ABORTED;
 			/* NOTREACHED */
 		    }

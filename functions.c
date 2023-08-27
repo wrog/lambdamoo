@@ -307,9 +307,8 @@ make_abort_pack(enum abort_reason reason)
 {
     package p;
 
-    p.kind = BI_KILL;
-    p.u.ret.type = TYPE_INT;
-    p.u.ret.v.num = reason;
+    p.kind = BI_ABORT;
+    p.u.why = reason;
     return p;
 }
 
