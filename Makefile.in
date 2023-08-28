@@ -36,25 +36,27 @@ YFLAGS = -d
 COMPILE.c = $(CC) $(CFLAGS) $(CPPFLAGS) -c
 GPERF = @GPERF@
 
-CSRCS = ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
+COMMON_CSRCS = \
+	ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	db_tune.c db_verbs.c decompile.c disassemble.c eval_env.c \
 	eval_vm.c exceptions.c execute.c extensions.c functions.c \
 	list.c log.c match.c md5.c name_lookup.c network.c net_mplex.c \
-	net_proto.c numbers.c objects.c parse_cmd.c pattern.c program.c \
+	net_proto.c numbers.c objects.c parse_cmd.c program.c \
 	property.c quota.c ref_count.c server.c storage.c \
 	streams.c str_intern.c sym_table.c tasks.c timers.c unparse.c \
-	utf.c utf-ctype.c utils.c verbs.c version.c
+	utf-ctype.c utils.c verbs.c version.c
+
+XT_CSRCS = pattern_pcre.c utf.c
+ALL_XT_CSRCS = $(XT_CSRCS) pattern_ylo.c regexpr.c
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
 	net_tcp.c \
 	net_bsd_tcp.c net_bsd_lcl.c net_sysv_tcp.c net_sysv_lcl.c
 
-OPT_CSRCS = $(OPT_NET_SRCS)
-
 YSRCS = parser.y
 
-HDRS =  ast.h bf_register.h code_gen.h config_epilog.h \
+COMMON_HDRS = ast.h bf_register.h code_gen.h config_epilog.h \
 	db.h db_io.h db_private.h decompile.h db_tune.h \
 	disassemble.h eval_env.h eval_vm.h exceptions.h execute.h \
 	functions.h getpagesize.h keywords.h list.h log.h match.h \
@@ -63,32 +65,36 @@ HDRS =  ast.h bf_register.h code_gen.h config_epilog.h \
 	parse_cmd.h parser.h pattern.h program.h quota.h random.h \
 	ref_count.h server.h storage.h streams.h structures.h \
 	str_intern.h sym_table.h tasks.h timers.h tokens.h \
-	unparse.h utf-ctype.h utils.h verbs.h version.h
+	unparse.h utf.h utf-ctype.h utils.h verbs.h version.h
+
+XT_HDRS =
+ALL_XT_HDRS = regexpr.h
 
 SYSHDRS = my-ctype.h my-fcntl.h my-in.h my-inet.h my-ioctl.h my-math.h \
 	my-poll.h my-signal.h my-socket.h my-stat.h my-stdarg.h my-stdio.h \
 	my-stdlib.h my-string.h my-stropts.h my-sys-time.h my-time.h \
 	my-tiuser.h my-types.h my-unistd.h my-wait.h
 
-CLIENT_SRCS = client_bsd.c client_sysv.c
+CLIENT_CSRCS = client_bsd.c client_sysv.c
 
-ALL_CSRCS = $(CSRCS) $(OPT_CSRCS) $(CLIENT_SRCS)
+ALL_CSRCS = $(COMMON_CSRCS) $(OPT_NET_SRCS) $(ALL_XT_CSRCS) $(CLIENT_CSRCS)
 
-SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) $(HDRS) $(SYSHDRS)
+ALL_SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) \
+	$(COMMON_HDRS) $(ALL_XT_HDRS) $(SYSHDRS)
 
-DISTFILES = $(SRCS) Makefile.in restart restart.sh \
+DISTFILES = $(ALL_SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
 	ChangeLog.txt README configure.in configure config.h.in \
 	aclocal.m4 \
 	MOOCodeSequences.txt AddingNewMOOTypes.txt
 
-COBJS = $(CSRCS:.c=.o)
+COBJS = $(COMMON_CSRCS:.c=.o) $(XT_CSRCS:.c=.o)
 
 YOBJS = $(YSRCS:.y=.o)
 
 OBJS = $(COBJS) $(YOBJS) keywords.o
 
-DFILES = $(OBJS:.o=.d) $(CLIENT_SRCS:.c=.d)
+DFILES = $(OBJS:.o=.d) $(CLIENT_CSRCS:.c=.d)
 
 all: moo
 
@@ -163,7 +169,7 @@ dist.tar.Z:	$(DISTFILES)
 	rm -fr MOO-`cat version_number` version_number
 
 tags:
-	etags -t $(SRCS)
+	etags -t $(ALL_SRCS)
 
 clean-all: clean
 	@for dir in $(XT_DIRS); do $(MAKE) -C $$dir clean; done
