@@ -19,6 +19,11 @@ abs_srcdir = @abs_srcdir@
 abs_builddir = @abs_builddir@
 @SET_MAKE@
 
+# XT_MAKEVARS -----
+# (none)
+XT_DIRS =
+XT_LOBJS =
+
 CC = @CC@
 LIBS = @LIBS@
 YACC = @YACC@
@@ -31,73 +36,79 @@ YFLAGS = -d
 COMPILE.c = $(CC) $(CFLAGS) $(CPPFLAGS) -c
 GPERF = @GPERF@
 
-CSRCS = ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
+COMMON_CSRCS = \
+	ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	db_tune.c db_verbs.c decompile.c disassemble.c eval_env.c \
 	eval_vm.c exceptions.c execute.c extensions.c functions.c \
 	list.c log.c match.c md5.c name_lookup.c network.c net_mplex.c \
-	net_proto.c numbers.c objects.c parse_cmd.c pattern.c program.c \
-	property.c quota.c ref_count.c regexpr.c server.c storage.c \
+	net_proto.c numbers.c objects.c parse_cmd.c program.c \
+	property.c quota.c ref_count.c server.c storage.c \
 	streams.c str_intern.c sym_table.c tasks.c timers.c unparse.c \
 	utils.c verbs.c version.c
+
+XT_CSRCS = pattern_ylo.c regexpr.c
+ALL_XT_CSRCS = $(XT_CSRCS)
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
 	net_tcp.c \
 	net_bsd_tcp.c net_bsd_lcl.c net_sysv_tcp.c net_sysv_lcl.c
 
-OPT_CSRCS = $(OPT_NET_SRCS)
-
 YSRCS = parser.y
 
-HDRS =  ast.h bf_register.h code_gen.h config_epilog.h \
+COMMON_HDRS = ast.h bf_register.h code_gen.h config_epilog.h \
 	db.h db_io.h db_private.h decompile.h db_tune.h \
 	disassemble.h eval_env.h eval_vm.h exceptions.h execute.h \
 	functions.h getpagesize.h keywords.h list.h log.h match.h \
 	md5.h name_lookup.h network.h net_mplex.h net_multi.h \
 	net_proto.h numbers.h opcode.h options_epilog.h \
 	parse_cmd.h parser.h pattern.h program.h quota.h random.h \
-	ref_count.h regexpr.h server.h storage.h streams.h structures.h \
+	ref_count.h server.h storage.h streams.h structures.h \
 	str_intern.h sym_table.h tasks.h timers.h tokens.h \
 	unparse.h utils.h verbs.h version.h
+
+XT_HDRS = regexpr.h
+ALL_XT_HDRS = $(XT_HDRS)
 
 SYSHDRS = my-ctype.h my-fcntl.h my-in.h my-inet.h my-ioctl.h my-math.h \
 	my-poll.h my-signal.h my-socket.h my-stat.h my-stdarg.h my-stdio.h \
 	my-stdlib.h my-string.h my-stropts.h my-sys-time.h my-time.h \
 	my-tiuser.h my-types.h my-unistd.h my-wait.h
 
-CLIENT_SRCS = client_bsd.c client_sysv.c
+CLIENT_CSRCS = client_bsd.c client_sysv.c
 
-ALL_CSRCS = $(CSRCS) $(OPT_CSRCS) $(CLIENT_SRCS)
+ALL_CSRCS = $(COMMON_CSRCS) $(OPT_NET_SRCS) $(ALL_XT_CSRCS) $(CLIENT_CSRCS)
 
-SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) $(HDRS) $(SYSHDRS)
+ALL_SRCS = $(ALL_CSRCS) keywords.gperf $(YSRCS) \
+	$(COMMON_HDRS) $(ALL_XT_HDRS) $(SYSHDRS)
 
-DISTFILES = $(SRCS) Makefile.in restart restart.sh \
+DISTFILES = $(ALL_SRCS) Makefile.in restart restart.sh \
 	Minimal.db README.Minimal \
 	ChangeLog.txt README configure.ac configure config.h.in \
 	options.ac options.h.in ac_include/*.m4 aclocal.m4 \
 	MOOCodeSequences.txt AddingNewMOOTypes.txt
 
-COBJS = $(CSRCS:.c=.o)
+COBJS = $(COMMON_CSRCS:.c=.o) $(XT_CSRCS:.c=.o)
 
 YOBJS = $(YSRCS:.y=.o)
 
 OBJS = $(COBJS) $(YOBJS) keywords.o
 
-DFILES = $(OBJS:.o=.d) $(CLIENT_SRCS:.c=.d)
+DFILES = $(OBJS:.o=.d) $(CLIENT_CSRCS:.c=.d)
 
 all: moo
 
-moo:	$(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
+moo:	$(OBJS) $(XT_LOBJS)
+	$(CC) $(LDFLAGS) $(OBJS) $(XT_LOBJS) $(LIBS) -o $@
 
 pure_moo: moo
-	purify $(CC) $(CFLAGS) $(OBJS) $(LIBRARIES) -o $@
+	purify $(CC) $(CFLAGS) $(OBJS) $(XT_LOBJS) $(LIBS) -o $@
 
 client_bsd: client_bsd.o
-	$(CC) $(CFLAGS) client_bsd.o $(LIBRARIES) -o $@
+	$(CC) $(CFLAGS) client_bsd.o $(XT_LOBJS) $(LIBS) -o $@
 
 client_sysv: client_sysv.o
-	$(CC) $(CFLAGS) client_sysv.o $(LIBRARIES) -o $@
+	$(CC) $(CFLAGS) client_sysv.o $(XT_LOBJS) $(LIBS) -o $@
 
 # This rule gets around some "make"s' desire to `derive' it from `restart.sh'.
 restart:
@@ -132,6 +143,8 @@ keywords.c: keywords.gperf
 # those on files that are automatically generated
 keywords.o: y.tab.h
 
+# XT_RULES ---------
+# (none)
 dist.tar.Z:	$(DISTFILES)
 	rm -f version_number
 	grep "server_version = " version.c \
@@ -148,7 +161,15 @@ dist.tar.Z:	$(DISTFILES)
 	rm -fr MOO-`cat version_number` version_number
 
 tags:
-	etags -t $(SRCS)
+	etags -t $(ALL_SRCS)
+
+clean-all: clean
+	@for dir in $(XT_DIRS); do $(MAKE) -C $$dir clean; done
+
+distclean-all: distclean
+	@for dir in $(XT_DIRS); do $(MAKE) -C $$dir distclean; done
+
+gitclean-all: gitclean distclean-all
 
 clean:
 	rm -f $(OBJS) $(DFILES) core parser.c y.tab.c y.tab.h y.output keywords.c version_src.h version_make.*
