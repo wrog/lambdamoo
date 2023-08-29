@@ -34,7 +34,6 @@
 
 #include "bf_register.h"
 #include "functions.h"
-#include "db_tune.h"
 
 #if EXAMPLE
 
@@ -139,50 +138,12 @@ bf_read_stdin(Var arglist, Byte next, void *vdata, Objid progr)
 }
 #endif				/* EXAMPLE */
 
-#define STUPID_VERB_CACHE 1
-#ifdef STUPID_VERB_CACHE
-#include "utils.h"
-
-static package
-bf_verb_cache_stats(Var arglist, Byte next, void *vdata, Objid progr)
-{
-    Var r;
-
-    free_var(arglist);
-
-    if (!is_wizard(progr)) {
-	return make_error_pack(E_PERM);
-    }
-    r = db_verb_cache_stats();
-
-    return make_var_pack(r);
-}
-
-static package
-bf_log_cache_stats(Var arglist, Byte next, void *vdata, Objid progr)
-{
-    free_var(arglist);
-
-    if (!is_wizard(progr)) {
-	return make_error_pack(E_PERM);
-    }
-    db_log_cache_stats();
-
-    return no_var_pack();
-}
-#endif
-
-
 void
 register_extensions()
 {
 #if EXAMPLE
     register_task_queue(stdin_enumerator);
     register_function("read_stdin", 0, 0, bf_read_stdin);
-#endif
-#ifdef STUPID_VERB_CACHE
-    register_function("log_cache_stats", 0, 0, bf_log_cache_stats);
-    register_function("verb_cache_stats", 0, 0, bf_verb_cache_stats);
 #endif
 }
 
