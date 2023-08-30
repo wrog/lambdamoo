@@ -90,7 +90,7 @@ network_send_line(network_handle nh UNUSED_, const char *line,
 }
 
 int
-network_send_bytes(network_handle nh UNUSED_, const char *buffer, int buflen,
+network_send_bytes(network_handle nh UNUSED_, const char *buffer, size_t buflen,
 		   int flush_ok UNUSED_)
 {
     /* Cast to (void *) to discard `const' on some systems */
