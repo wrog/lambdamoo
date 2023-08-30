@@ -451,11 +451,11 @@ accept_new_connection(nlistener * l)
 }
 
 static int
-enqueue_output(network_handle nh, const char *line, int line_length,
+enqueue_output(network_handle nh, const char *line, size_t line_length,
 	       int add_eol, int flush_ok)
 {
     nhandle *h = nh.ptr;
-    int length = line_length + (add_eol ? eol_length : 0);
+    size_t length = line_length + (add_eol ? eol_length : 0);
     char *buffer;
     text_block *block;
 
@@ -562,7 +562,7 @@ network_send_line(network_handle nh, const char *line, int flush_ok)
 }
 
 int
-network_send_bytes(network_handle nh, const char *buffer, int buflen,
+network_send_bytes(network_handle nh, const char *buffer, size_t buflen,
 		   int flush_ok)
 {
     return enqueue_output(nh, buffer, buflen, 0, flush_ok);
