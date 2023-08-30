@@ -79,10 +79,10 @@ extern Objid get_system_object(const char *);
 
 extern int value_bytes(Var);
 
-extern const char *raw_bytes_to_moobinary(const char *buffer, int buflen);
-extern const char *moobinary_to_raw_bytes(const char *binary, int *rawlen);
+extern const char *raw_bytes_to_moobinary(const char *buffer, size_t buflen);
+extern const char *moobinary_to_raw_bytes(const char *binary, size_t *rawlen);
 
-extern const char *recode_chars(const char *, int *, const char *, const char *);
+extern const char *recode_chars(const char *, size_t *, const char *, const char *);
 
 #endif		/* !Utils_H */
 
