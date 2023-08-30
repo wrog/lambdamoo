@@ -165,7 +165,7 @@ network_process_io(int timeout)
     static server_handle sh;
     static Stream *s = 0;
     char buffer[1024];
-    int count;
+    ssize_t count;
     char *ptr, *end;
     int got_some = 0;
 
