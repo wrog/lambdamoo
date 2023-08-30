@@ -219,7 +219,7 @@ static int
 push_output(nhandle * h)
 {
     text_block *b;
-    int count;
+    ssize_t count;
 
     if (h->output_lines_flushed > 0) {
 	char buf[100];
@@ -261,7 +261,7 @@ static int
 pull_input(nhandle * h)
 {
     Stream *s = h->input;
-    int count;
+    ssize_t count;
     char buffer[1024];
     char *ptr, *end;
 

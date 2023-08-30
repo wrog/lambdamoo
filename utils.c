@@ -378,9 +378,9 @@ value_bytes(Var v)
 
 void
 stream_add_moobinary_from_raw_bytes(Stream *s,
-				    const char *buffer, int buflen)
+				    const char *buffer, size_t buflen)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < buflen; i++) {
 	unsigned char c = buffer[i];
@@ -393,7 +393,7 @@ stream_add_moobinary_from_raw_bytes(Stream *s,
 }
 
 const char *
-moobinary_to_raw_bytes(const char *binary, int *buflen)
+moobinary_to_raw_bytes(const char *binary, size_t *buflen)
 {
     static Stream *s = 0;
     const char *ptr = binary;

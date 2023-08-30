@@ -1648,7 +1648,7 @@ bf_notify(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
     r.type = TYPE_INT;
     if (h && !h->disconnect_me) {
 	if (h->binary) {
-	    int length;
+	    size_t length;
 
 	    line = moobinary_to_raw_bytes(line, &length);
 	    if (!line) {

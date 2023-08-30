@@ -1002,7 +1002,7 @@ bf_value_bytes(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr 
 }
 
 static const char *
-hash_bytes(const char *input, int length)
+hash_bytes(const char *input, size_t length)
 {
     md5ctx_t context;
     uint8_t result[16];
@@ -1025,7 +1025,7 @@ static package
 bf_binary_hash(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     Var r;
-    int length;
+    size_t length;
     const char *bytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str, &length);
 
     free_var(arglist);
@@ -1074,12 +1074,12 @@ bf_value_hash(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr U
 static package
 bf_decode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    int length;
+    size_t length;
     const char *bytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str, &length);
     int nargs = arglist.v.list[0].v.num;
     int fully = (nargs >= 2 && is_true(arglist.v.list[2]));
     Var r;
-    int i;
+    size_t i;
 
     free_var(arglist);
     if (!bytes)
