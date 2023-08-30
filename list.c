@@ -1278,12 +1278,22 @@ bf_decode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
 
     src = moobinary_to_raw_bytes(binary, &length);
     if (src) {
-	dst = recode_chars(src, &length, arglist.v.list[2].v.str, "UTF-32");
+	dst = recode_chars(src, &length, arglist.v.list[2].v.str,
+#ifdef WORDS_BIGENDIAN
+ "UTF-32BE"
+#else
+ "UTF-32LE"
+#endif
+			   );
 	if (dst) {
 	    uint32_t *chars = (uint32_t *) dst;
 
 	    length /= sizeof(uint32_t);
 
+	    /* UTF-32(BE|LE) are not supposed to produce BOMs,
+	     * but I'm not certain, and this is harmless, so...
+	     *   --wrog
+	     */
 	    if (length && *chars == 0xFEFF /* BOM */)
 		++chars, --length;
 

@@ -5,7 +5,8 @@
 #  Sets moo_cv_iconv_lib to one of 'none needed', '-liconv', 'fail'
 #
 AC_DEFUN([MOO_ICONV_LIBS],
-[AC_CACHE_CHECK([[for iconv needing additional flags]],
+[AC_REQUIRE([AC_C_BIGENDIAN])
+AC_CACHE_CHECK([[for iconv needing additional flags]],
 		[moo_cv_iconv_lib],[[
   _moo_save_libs="$LIBS"
   moo_cv_iconv_lib=
