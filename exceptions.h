@@ -53,6 +53,43 @@
  *              FINALLY
  *                  stmts;
  *              ENDTRY
+ *
+ * Usage notes:
+ *
+ * (1) Do *not* attempt any non-local exit from a TRY block or
+ *     handler, meaning
+ *
+ *     (.) return,
+ *     (.) break or continue from any loop or switch,
+ *         not entirely enclosed in that TRY block/handler,
+ *     (.) goto any label outside of that TRY block/handler, and
+ *     (.) longjmp
+ *
+ *     are all pretty much guaranteed **not** to behave the way you
+ *     expect and **will** likely corrupt the exception stack
+ *     (...well okay, it is possible that return or goto out of an
+ *     EXCEPT handler won't kill you, but if so, that was by accident,
+ *     and we will try harder next time.)
+ *
+ * (2) TRY uses setjmp/longjmp, which means
+ *     automatic variables modified in the TRY body
+ *     whose values need to be available in a handler or afterwards
+ *
+ *     should be declared 'volatile' (compiler otherwise has no idea
+ *     what it needs to restore upon coming back from the longjmp).
+ *
+ * (3) Life will be easier if you do all of your memory allocation
+ *     outside of TRY blocks.
+ *
+ *     If you *have* to allocate within a TRY block, and it's
+ *     something that will become inaccessible when the block exits,
+ *     then anything afterwards within the block that might fail
+ *     should be enclosed in a TRY of its own with a FINALLY that does
+ *     the freeing of whatever you allocated.
+ *
+ *     Otherwise you've just created a memory leak; congratulations.
+ *
+ * --wrog
  */
 
 #ifndef Exceptions_H
