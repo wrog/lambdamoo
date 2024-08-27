@@ -74,24 +74,7 @@ proto_name(void)
     return "SysV/TCP";
 }
 
-int
-proto_initialize(struct proto *proto, Var * desc, int argc, char **argv)
-{
-    int port = DEFAULT_PORT;
-
-    proto->pocket_size = 1;
-    proto->believe_eof = 1;
-    proto->eol_out_string = "\r\n";
-
-    if (!tcp_arguments(argc, argv, &port))
-	return 0;
-
-    initialize_name_lookup();
-
-    desc->type = TYPE_INT;
-    desc->v.num = port;
-    return 1;
-}
+/* proto_initialize() -> net_tcp.c */
 
 enum error
 proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
@@ -268,9 +251,6 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
     int timeout = server_int_option("name_lookup_timeout", 5);
     static struct sockaddr_in addr;
     static Stream *st1 = 0, *st2 = 0;
-
-    if (!outbound_network_enabled)
-	return E_PERM;
 
     if (!st1) {
 	st1 = new_stream(20);

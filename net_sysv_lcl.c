@@ -117,6 +117,8 @@ proto_initialize(struct proto *proto, Var * desc, int argc, char **argv)
 {
     const char *connect_file = DEFAULT_CONNECT_FILE;
 
+    proto->can_connect_outbound = 0;
+
     proto->pocket_size = 2;
 #if POSIX_NONBLOCKING_WORKS
     /* With POSIX-style nonblocking, we'll win */

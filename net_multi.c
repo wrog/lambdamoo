@@ -690,6 +690,9 @@ network_open_connection(Var arglist, server_listener sl)
     const char *local_name, *remote_name;
     enum error e;
 
+    if (!proto.can_connect_outbound)
+	return E_PERM;
+
     e = proto_open_connection(arglist, &rfd, &wfd, &local_name, &remote_name);
     if (e == E_NONE)
 	make_new_connection(sl, rfd, wfd,

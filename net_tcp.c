@@ -7,10 +7,6 @@
  *
  */
 
-#ifdef OUTBOUND_NETWORK
-static char outbound_network_enabled = OUTBOUND_NETWORK;
-#endif
-
 static in_addr_t bind_local_ip = INADDR_ANY;
 
 const char *
@@ -21,7 +17,7 @@ proto_usage_string(void)
 
 
 static int
-tcp_arguments(int argc, char **argv, int *pport)
+tcp_arguments(struct proto *proto, int argc, char **argv, int *pport)
 {
     char *p = 0;
 
@@ -32,7 +28,7 @@ tcp_arguments(int argc, char **argv, int *pport)
 	    && argv[0][2] == 0
 	    ) {
 #ifdef OUTBOUND_NETWORK
-	    outbound_network_enabled = (argv[0][0] == '+');
+	    proto->can_connect_outbound = (argv[0][0] == '+');
 #else
 	    if (argv[0][0] == '+') {
 		fprintf(stderr, "Outbound network not supported.\n");
@@ -67,10 +63,39 @@ tcp_arguments(int argc, char **argv, int *pport)
     }
 #ifdef OUTBOUND_NETWORK
     oklog("CMDLINE: Outbound network connections %s.\n",
-          outbound_network_enabled ? "enabled" : "disabled");
+          proto->can_connect_outbound ? "enabled" : "disabled");
 #endif
     return 1;
 }
+
+
+int
+proto_initialize(struct proto *proto, Var * desc, int argc, char **argv)
+{
+    proto->can_connect_outbound =
+#ifdef OUTBOUND_NETWORK
+	OUTBOUND_NETWORK;
+#else
+	0;
+#endif
+
+    int port = DEFAULT_PORT;
+
+    proto->pocket_size = 1;
+    proto->believe_eof = 1;
+    proto->eol_out_string = "\r\n";
+
+    if (!tcp_arguments(proto, argc, argv, &port))
+	return 0;
+
+    initialize_name_lookup();
+
+    desc->type = TYPE_INT;
+    desc->v.num = port;
+
+    return 1;
+}
+
 
 char rcsid_net_tcp[] = "$Id$";
 

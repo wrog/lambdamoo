@@ -42,6 +42,9 @@ struct proto {
 				 * being available. */
     const char *eol_out_string;	/* The characters to add to the end of each
 				 * line of output on connections. */
+    int can_connect_outbound;   /* True iff outbound connections are meaningful
+				 * in this protocol and such a facility has
+				 * been enabled. */
 };
 
 extern const char *proto_name(void);
