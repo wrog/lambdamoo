@@ -970,6 +970,20 @@ server_string_option(const char *name, const char *defallt)
 	return defallt;
 }
 
+Num
+server_listener_int_option(server_listener sl,
+			   const char *name, Num defallt)
+{
+    slistener *l = sl.ptr;
+    Var v;
+
+    if (get_server_option((l ? l->oid : SYSTEM_OBJECT), name, &v)
+	&& v.type == TYPE_INT)
+	return v.v.num;
+    else
+	return defallt;
+}
+
 static Objid next_unconnected_player = NOTHING - 1;
 
 server_handle

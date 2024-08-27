@@ -97,6 +97,50 @@ proto_initialize(struct proto *proto, Var * desc, int argc, char **argv)
 }
 
 
+/* So, historically, only 'name_lookup_timeout' existed and applied to
+ * both inbound and outbound connections.  But these are really
+ * different situations and need to have separate settings.  Which
+ * means one of them has to be a new option, but defaulting to the old
+ * one for backwards compatibility.
+ *
+ * We *could* have made the new one be the one governing outbound
+ * connections, but since the setting for inbound connections is the
+ * one people are way more likely to want to change (i.e., to set to 0
+ * because, now that the year is 2024 and reverse-DNS is almost
+ * completely useless), having the default for outbound be the inbound
+ * setting would force everyone wanting to turn off inbound lookups to
+ * make a *second* setting to restore the outbound default, which
+ * would be a huge pain.  So that is why it's the other way around
+ * (inbound defaults to outbound).
+ *
+ * And, yes, the naming is confusing:  "name lookup" can EITHER mean
+ * you *have* a name that you are looking up to get information about
+ * it, or you have the other information and want to look up the
+ * corresponding name.  English is stupid; film at 11.
+ *
+ * Here we are going with the former interpretation, which also
+ * happens to put the new name with the new option, hence,
+ * the option is named after the thing you provide:
+ *
+ *   "name_lookup" is for when you have a name and need an address
+ *      (i.e., "ordinary" DNS A query for outbound connections)
+ *   "address_lookup" is for when you have an address and want a name
+ *      (i.e., "reverse" DNS PTR query for inbound connections)
+ *
+ * Sorry if this seems backwards to you, but we're in a no-win
+ * situation here.                  --wrog (8/27/2024)
+ */
+static int
+address_lookup_timeout(server_listener sl)
+{
+    int timeout = server_listener_int_option(sl, "address_lookup_timeout", -2);
+
+    if (timeout == -2)
+	timeout = server_listener_int_option(sl, "name_lookup_timeout", 5);
+    return timeout < 0 ? 0 : timeout;
+}
+
+
 static int
 open_connection_arguments(Var arglist,
 			  const char **host_name, int *port)

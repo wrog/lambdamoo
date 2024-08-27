@@ -424,7 +424,8 @@ accept_new_connection(nlistener * l)
     int rfd, wfd, i;
     const char *host_name;
 
-    switch (proto_accept_connection(l->fd, &rfd, &wfd, &host_name)) {
+    switch (proto_accept_connection(l->fd, l->slistener,
+				    &rfd, &wfd, &host_name)) {
     case PA_OKAY:
 	make_new_connection(l->slistener, rfd, wfd, l->name, host_name, 0);
 	break;
@@ -432,7 +433,8 @@ accept_new_connection(nlistener * l)
     case PA_FULL:
 	for (i = 0; i < proto.pocket_size; i++)
 	    close(pocket_descriptors[i]);
-	if (proto_accept_connection(l->fd, &rfd, &wfd, &host_name) != PA_OKAY)
+	if (proto_accept_connection(l->fd, l->slistener,
+				    &rfd, &wfd, &host_name) != PA_OKAY)
 	    errlog("Can't accept connection even by emptying pockets!\n");
 	else {
 	    nh.ptr = h = new_nhandle(rfd, wfd, l->name, host_name, 0);
@@ -693,7 +695,8 @@ network_open_connection(Var arglist, server_listener sl)
     if (!proto.can_connect_outbound)
 	return E_PERM;
 
-    e = proto_open_connection(arglist, &rfd, &wfd, &local_name, &remote_name);
+    e = proto_open_connection(arglist, sl,
+			      &rfd, &wfd, &local_name, &remote_name);
     if (e == E_NONE)
 	make_new_connection(sl, rfd, wfd,
 			    local_name, remote_name, 1);

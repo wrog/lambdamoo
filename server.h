@@ -42,6 +42,13 @@ typedef struct {		/* Server's handle on a listening point */
 
 extern server_listener null_server_listener;
 
+extern Num server_listener_int_option(server_listener l,
+				      const char *name, Num defallt);
+				 /* If server option NAME exists for this listener
+				  * and has a numeric value, then return that value.
+				  * Otherwise, return DEFALLT.
+				  */
+
 extern server_handle server_new_connection(server_listener l,
 					 network_handle h, int outbound);
 				/* Called by the network whenever a new player

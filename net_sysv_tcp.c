@@ -162,10 +162,10 @@ set_rw_able(int fd)
 }
 
 enum proto_accept_error
-proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
-			const char **name)
+proto_accept_connection(int listener_fd, server_listener sl,
+			int *read_fd, int *write_fd, const char **name)
 {
-    int timeout = server_int_option("name_lookup_timeout", 5);
+    int timeout = address_lookup_timeout(sl);
     int fd;
     struct sockaddr_in *addr = (struct sockaddr_in *) call->addr.buf;
     static Stream *s = 0;
@@ -235,7 +235,8 @@ timeout_proc(Timer_ID id UNUSED_, Timer_Data data UNUSED_)
 }
 
 enum error
-proto_open_connection(Var arglist, int *read_fd, int *write_fd,
+proto_open_connection(Var arglist, server_listener sl,
+		      int *read_fd, int *write_fd,
 		      const char **local_name, const char **remote_name)
 {
     /* These are `static' rather than `volatile' because I can't cope with
@@ -248,7 +249,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
     static int port;
     static Timer_ID id;
     int fd, result;
-    int timeout = server_int_option("name_lookup_timeout", 5);
+    int timeout = server_listener_int_option(sl, "name_lookup_timeout", 5);
     static struct sockaddr_in addr;
     static Stream *st1 = 0, *st2 = 0;
     enum error e = open_connection_arguments(arglist, &host_name, &port);
@@ -303,7 +304,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
     call->addr.buf = (void *) &addr;
 
     TRY {
-	id = set_timer(server_int_option("outbound_connect_timeout", 5),
+	id = set_timer(server_listener_int_option(sl, "outbound_connect_timeout", 5),
 		       timeout_proc, 0);
 	result = t_connect(fd, call, 0);
 	cancel_timer(id);
