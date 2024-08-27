@@ -59,6 +59,8 @@ proto_initialize(struct proto *proto, Var * desc, int argc, char **argv)
 {
     const char *connect_file = DEFAULT_CONNECT_FILE;
 
+    proto->can_connect_outbound = 0;
+
     proto->pocket_size = 1;
     proto->believe_eof = 1;
     proto->eol_out_string = "\n";
