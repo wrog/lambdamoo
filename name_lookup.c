@@ -299,12 +299,20 @@ intermediary(int to_server, int from_server)
 
 static int to_intermediary, from_intermediary;
 static int dead_intermediary = 0;
+static int intermediary_pid = 0;
 
 
-int
-initialize_name_lookup(void)
+static int
+check_intermediary(void)
 {
-    return spawn_pipe(intermediary, &to_intermediary, &from_intermediary);
+    if (dead_intermediary)
+	return 0;
+    if (intermediary_pid)
+	return 1;
+    intermediary_pid =
+	spawn_pipe(intermediary, &to_intermediary, &from_intermediary);
+    return
+	intermediary_pid || ((dead_intermediary = 1), 0);
 }
 
 static void
@@ -316,6 +324,31 @@ abandon_intermediary(const char *prefix)
     close(from_intermediary);
 }
 
+int
+initialize_name_lookup(void)
+{
+    /* Change this to "return 1" to delay launch until we actually
+     * need it.  But, it turns out the problem with doing that is the
+     * longer we wait, the bigger the process gets, and the more
+     * random shit can go wrong on all of the replicated file
+     * descriptors => intermediary fails for mysterious reasons --
+     * extra-special bad because we are ultimately doing four (4)
+     * fork() calls here.  Really the top-level fork() should instead
+     * be a vfork()+exec to swap in a much smaller executable to do
+     * what the intermediary is now doing, along with going through
+     * every last connection/listening fd that is not part of this and
+     * arranging for them all to be set FD_CLOEXEC.  There's work to
+     * do to get that right,...
+     *
+     * ... and I think I'd rather spend it swapping in a library
+     * capable of asynchronous calls and guaranteed to do actual DNS
+     * (gethostbyaddr/name is NOT, i.e., not if the local sysadmin
+     * can reconfigure it to do LDAP or NIS lookups or some other
+     * bullshit.)                  --wrog
+     */
+    return !!check_intermediary();
+}
+
 const char *
 lookup_name_from_addr(struct sockaddr_in *addr, unsigned timeout)
 {
@@ -324,7 +357,7 @@ lookup_name_from_addr(struct sockaddr_in *addr, unsigned timeout)
     static int buflen = 0;
     int len;
 
-    if (!dead_intermediary) {
+    if (timeout > 0 && check_intermediary()) {
 	req.kind = REQ_NAME_FROM_ADDR;
 	req.timeout = timeout;
 	req.u.address = *addr;
@@ -344,11 +377,10 @@ lookup_name_from_addr(struct sockaddr_in *addr, unsigned timeout)
 	    }
 	}
     }
-    /* Either the intermediary is presumed dead, or else it failed to produce
-     * a name; in either case, we must fall back on a the default, dotted-
-     * decimal notation.
+    /* Either we never cared about getting an actual name (timeout==0),
+     * or the intermediary has failed and died; in either case,
+     * we fall back on dotted-decimal notation.
      */
-
     {
 	static char decimal[20];
 	uint32_t a = ntohl(addr->sin_addr.s_addr);
@@ -366,7 +398,7 @@ lookup_addr_from_name(const char *name, unsigned timeout)
     struct request req;
     uint32_t addr = 0;
 
-    if (dead_intermediary) {
+    if (!(timeout > 0 && check_intermediary())) {
 	/* Numeric addresses should always work... */
 	addr = inet_addr((void *) name);
     } else {
