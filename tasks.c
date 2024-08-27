@@ -308,9 +308,13 @@ ensure_usage(tqueue * tq)
 }
 
 static char *
-default_flush_command(void)
+default_flush_command(Objid handler)
 {
-    const char *str = server_string_option("default_flush_command", ".flush");
+    Var v;
+    const char *str =
+	!get_server_option(handler, "default_flush_command", &v)
+	? ".flush" :
+	v.type == TYPE_STR ? v.v.str : 0;
 
     return (str && str[0] != '\0') ? str_dup(str) : 0;
 }
@@ -346,7 +350,7 @@ find_tqueue(Objid player, int create_if_not_found)
     tq->total_input_length = tq->input_suspended = 0;
 
     tq->output_prefix = tq->output_suffix = 0;
-    tq->flush_cmd = default_flush_command();
+    tq->flush_cmd = 0;
     tq->program_stream = 0;
 
     tq->reading = 0;
@@ -801,6 +805,7 @@ new_task_queue(Objid player, Objid handler)
 
     tq->connected = 1;
     tq->handler = handler;
+    tq->flush_cmd = default_flush_command(handler);
 
     return result;
 }
