@@ -49,24 +49,7 @@ proto_name(void)
     return "BSD/TCP";
 }
 
-int
-proto_initialize(struct proto *proto, Var * desc, int argc, char **argv)
-{
-    int port = DEFAULT_PORT;
-
-    proto->pocket_size = 1;
-    proto->believe_eof = 1;
-    proto->eol_out_string = "\r\n";
-
-    if (!tcp_arguments(argc, argv, &port))
-	return 0;
-
-    initialize_name_lookup();
-
-    desc->type = TYPE_INT;
-    desc->v.num = port;
-    return 1;
-}
+/* proto_initialize() -> net_tcp.c */
 
 enum error
 proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
@@ -204,22 +187,15 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
     int timeout = server_int_option("name_lookup_timeout", 5);
     static struct sockaddr_in addr;
     static Stream *st1 = 0, *st2 = 0;
+    enum error e = open_connection_arguments(arglist, &host_name, &port);
 
-    if (!outbound_network_enabled)
-	return E_PERM;
+    if (e != E_NONE)
+	return e;
 
     if (!st1) {
 	st1 = new_stream(20);
 	st2 = new_stream(50);
     }
-    if (arglist.v.list[0].v.num != 2)
-	return E_ARGS;
-    else if (arglist.v.list[1].type != TYPE_STR ||
-	     arglist.v.list[2].type != TYPE_INT)
-	return E_TYPE;
-
-    host_name = arglist.v.list[1].v.str;
-    port = arglist.v.list[2].v.num;
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
