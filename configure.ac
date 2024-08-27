@@ -34,6 +34,7 @@ AC_CONFIG_COMMANDS([config.lastrun], [[
 AC_CONFIG_COMMANDS_POST([MOO_WRITE_VERSION_OPTIONS([version_options.h])])
 
 m4_include([options.ac])
+m4_include([extensions.ac])
 MOO_ARG_ENABLE_ALL()
 
 dnl ***************************************************************************
@@ -179,6 +180,7 @@ AC_DEFINE([UNDEF_IO_IN_STROPTS_H],[1])])
 MOO_NET_FIFO_WORKS
 MOO_NET_POSIX_NONBLOCKING
 MOO_NET_DO_REPORT
+MOO_XT_CONFIGURE_EXTENSIONS
 MOO_SVF_SUBST_VERSION_MAKE
 MOO_SVF_LASTCK_INIT([moo_init_lastck],[moo_write_lastck])
 AC_OUTPUT

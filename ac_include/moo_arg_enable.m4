@@ -12,8 +12,14 @@ AC_DEFUN([MOO_ARG_ENABLE_ALL],
 [MOO_PUT_HELP([ENABLE],[
 LambdaMOO-Specific Features:])
 
+MOO_PUT_HELP([WITH],[
+LambdaMOO-Specific Packages:])
+
 # --(enable|disable)-net
 MOO_NET_ARG_ENABLE([net])
+
+# --(enable|disable)-{extensions}
+MOO_XT_EXTENSION_ARGS()
 
 # --(enable|disable)-prop-protect
 #   a less insane way of dealing with IGNORE_PROP_PROTECTED

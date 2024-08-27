@@ -1,6 +1,6 @@
-# generated automatically by aclocal 1.16.3 -*- Autoconf -*-
+# generated automatically by aclocal 1.16.5 -*- Autoconf -*-
 
-# Copyright (C) 1996-2020 Free Software Foundation, Inc.
+# Copyright (C) 1996-2021 Free Software Foundation, Inc.
 
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -14,6 +14,7 @@
 m4_ifndef([AC_CONFIG_MACRO_DIRS], [m4_defun([_AM_CONFIG_MACRO_DIRS], [])m4_defun([AC_CONFIG_MACRO_DIRS], [_AM_CONFIG_MACRO_DIRS($@)])])
 m4_include([ac_include/ax_gcc_func_attribute.m4])
 m4_include([ac_include/ax_gcc_var_attribute.m4])
+m4_include([ac_include/ax_lp.m4])
 m4_include([ac_include/moo_arg_enable.m4])
 m4_include([ac_include/moo_cflags.m4])
 m4_include([ac_include/moo_decl.m4])
@@ -24,3 +25,4 @@ m4_include([ac_include/moo_options.m4])
 m4_include([ac_include/moo_svf.m4])
 m4_include([ac_include/moo_svf_mk.m4])
 m4_include([ac_include/moo_sys_ancient.m4])
+m4_include([ac_include/moo_xt.m4])
