@@ -25,6 +25,7 @@
 #include "config.h"
 #include "options.h"
 #include "structures.h"
+#include "server.h"
 
 struct proto {
     unsigned pocket_size;	/* Maximum number of file descriptors it might
@@ -106,10 +107,10 @@ enum proto_accept_error {
 };
 
 extern enum proto_accept_error
- proto_accept_connection(int listener_fd,
+ proto_accept_connection(int listener_fd, server_listener sl,
 			 int *read_fd, int *write_fd,
 			 const char **name);
-				/* Accept a new connection on LISTENER_FD,
+				/* Accept a new connection on LISTENER_FD/SL
 				 * returning PA_OKAY if successful, PA_FULL if
 				 * unsuccessful only because there aren't
 				 * enough file descriptors available, and
@@ -126,13 +127,14 @@ extern enum proto_accept_error
 
 #ifdef OUTBOUND_NETWORK
 
-extern enum error proto_open_connection(Var arglist,
+extern enum error proto_open_connection(Var arglist, server_listener sl,
 					int *read_fd, int *write_fd,
 					const char **local_name,
 					const char **remote_name);
 				/* The given MOO arguments should be used as a
 				 * specification of a remote network connection
-				 * to be opened.  If the arguments are OK for
+				 * to be opened, with options as for listening
+				 * point SL.  If the arguments are OK for
 				 * this protocol and the connection is success-
 				 * fully made, then *READ_FD and *WRITE_FD
 				 * should be set as proto_accept_connection()
