@@ -48,8 +48,8 @@ COMMON_CSRCS = \
 	streams.c str_intern.c sym_table.c tasks.c timers.c unparse.c \
 	utf-ctype.c utils.c verbs.c version.c
 
-XT_CSRCS = utf.c pattern_pcre.c @XT_CSRCS@
-ALL_XT_CSRCS = utf.c pattern_pcre.c pattern_ylo.c regexpr.c @ALL_XT_CSRCS@
+XT_CSRCS = utf.c @XT_CSRCS@
+ALL_XT_CSRCS = utf.c @ALL_XT_CSRCS@
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
@@ -70,7 +70,7 @@ COMMON_HDRS = ast.h bf_register.h code_gen.h config_epilog.h \
 	unparse.h utf.h utf-ctype.h utils.h verbs.h version.h
 
 XT_HDRS = @XT_HDRS@
-ALL_XT_HDRS = regexpr.h @ALL_XT_HDRS@
+ALL_XT_HDRS = @ALL_XT_HDRS@
 
 SYSHDRS = my-ctype.h my-fcntl.h my-in.h my-inet.h my-ioctl.h my-math.h \
 	my-poll.h my-signal.h my-socket.h my-stat.h my-stdarg.h my-stdio.h \

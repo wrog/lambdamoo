@@ -182,25 +182,6 @@ AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 ]])],[AC_MSG_RESULT([no])],[AC_MSG_RESULT([yes])
 AC_DEFINE([UNDEF_IO_IN_STROPTS_H],[1])])
 
-dnl ***************************************************************************
-dnl Find a usable PCRE library
-AC_CHECK_LIB([pcre], [pcre_exec], [], [AC_MSG_ERROR([[missing -lpcre
-*** The PCRE library cannot be found. (must be PCRE1, not PCRE2)
-***   ('apt-get install libpcre3-dev' in Debian or Ubuntu)
-***   (Fedora, Red Hat, MacOS homebrew all have 'pcre' packages)]])])
-AC_CACHE_CHECK([[whether -lpcre was built with required features]],
-  [moo_lib_cv_pcre_utf8],
-[AC_RUN_IFELSE([AC_LANG_PROGRAM([[@%:@ include <pcre.h>]],[[
-  int have_utf8, have_props;
-  pcre_config(PCRE_CONFIG_UTF8, &have_utf8);
-  pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &have_props);
-  return (have_utf8 && have_props) ? 0 : 1;
-]])], [[moo_lib_cv_pcre_utf8=yes]], [[moo_lib_cv_pcre_utf8=no]])])[
-if test "x$moo_lib_cv_pcre_utf8" = xno ; then]
-  AC_MSG_ERROR([[-lpcre cannot be used
-*** The installed PCRE library is missing either support for UTF-8 or support
-*** for Unicode character properties.  We need at least version 8.]])[
-fi]
 
 MOO_NET_FIFO_WORKS
 MOO_NET_POSIX_NONBLOCKING
