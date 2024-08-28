@@ -1,6 +1,46 @@
 
 MOO_XT_DECLARE_EXTENSIONS([
 
+##==================
+%%extension unicode
+##==================
+
+  XT_CSRCS = utf.c
+
+  %require uclib
+    --with-uclib=LIB,..
+      %?   Unicode character data source.  Choices are
+      %?*  gnu(=unistring), icu, ucd
+
+    %cdefine UNICODE_DATA UD_%s
+
+    %lib unistring GNU
+      %alt gnu
+      %ac AC_SEARCH_LIBS([unicode_character_name],[unistring],[[%%]])
+    %lib icu
+      %ac MOO_LIB_ICUUC([[%%]])
+    %lib ucd
+      %ac AC_SEARCH_LIBS([unicode_character_data],[ucd],[[%%]])
+      %build
+	--with-ucdpath=DIR
+	  %?  use this libucd build for uclib
+
+	%dirvar ucd_dir
+	CPPFLAGS = -I$(ucd_dir)
+	XT_LOBJS = $(ucd_dir)/libucd.a
+
+	%make <<END_UCD_MAKE
+
+$(ucd_dir)/libucd.a:
+	$(MAKE) -C $(ucd_dir) libucd.a
+
+$(ucd_dir)/ucd.h:
+	$(MAKE) -C $(ucd_dir) ucd.h
+
+utf-ctype.o: $(ucd_dir)/ucd.h
+
+END_UCD_MAKE
+
 ##=================
 %%extension regexp
 ##=================
@@ -10,7 +50,7 @@ MOO_XT_DECLARE_EXTENSIONS([
       %?  regular expressions (ylo,pcre)
 
     # yes, this is a hack:
-    %ac_yes [%%=pcre]
+    %ac_yes AS_IF([[$moo_xt_do_unicode]],[[%%=pcre]],[[%%=ylo]])
 
     %lib ylo
       XT_CSRCS = regexpr.c pattern_ylo.c
@@ -29,6 +69,24 @@ END
 
 ])
 
+# MOO_LIB_ICUUC( <IF-FOUND>, <IF-NOT-FOUND> )
+#
+AC_DEFUN([MOO_LIB_ICUUC],
+[AC_CACHE_CHECK([[for icu being installed]],[moo_cv_icuuc_lib],[[
+_moo_save_libs=$LIBS
+moo_cv_icuuc_lib=
+LIBS="-licuuc $_moo_save_libs"]
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+  [[@%:@include <unicode/uchar.h>]],
+  [[UChar32 c; int j = u_charDigitValue(c);]])],[[
+  moo_cv_icuuc_lib=yes
+]],[[
+  moo_cv_icuuc_lib=no
+]])
+LIBS=$_moo_save_libs])
+AS_IF([[test "$moo_cv_icuuc_lib" = yes]],[[
+  LIBS="-licuuc $LIBS"]
+  $1],[$2])])
 
 # MOO_LIB_PCRE1( <IF-FOUND>, <IF-NOT-FOUND>, <IF-BROKEN> )
 #

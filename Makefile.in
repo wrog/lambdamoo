@@ -20,18 +20,17 @@ abs_builddir = @abs_builddir@
 @SET_MAKE@
 
 # XT_MAKEVARS -----
-ucd_dir = $(abs_srcdir)/ucd
 @XT_MAKEVARS@
 
-XT_DIRS = $(ucd_dir) @XT_DIRS@
-XT_LOBJS = $(ucd_dir)/libucd.a @XT_LOBJS@
+XT_DIRS = @XT_DIRS@
+XT_LOBJS = @XT_LOBJS@
 
 CC = @CC@
 LIBS = @LIBS@
 YACC = @YACC@
 
 CFLAGS = @CFLAGS@
-CPPFLAGS = -I$(abs_builddir) -I$(abs_srcdir) -I$(ucd_dir) @CPPFLAGS@
+CPPFLAGS = -I$(abs_builddir) -I$(abs_srcdir) @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 
 YFLAGS = -d
@@ -48,8 +47,8 @@ COMMON_CSRCS = \
 	streams.c str_intern.c sym_table.c tasks.c timers.c unparse.c \
 	utf-ctype.c utils.c verbs.c version.c
 
-XT_CSRCS = utf.c @XT_CSRCS@
-ALL_XT_CSRCS = utf.c @ALL_XT_CSRCS@
+XT_CSRCS = @XT_CSRCS@
+ALL_XT_CSRCS = @ALL_XT_CSRCS@
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
@@ -146,13 +145,6 @@ keywords.c: keywords.gperf
 keywords.o: y.tab.h
 
 # XT_RULES ---------
-$(ucd_dir)/libucd.a:
-	cd $(ucd_dir); $(MAKE) libucd.a
-
-$(ucd_dir)/ucd.h:
-	cd $(ucd_dir); $(MAKE) ucd.h
-
-utf-ctype.o: $(ucd_dir)/ucd.h
 @XT_RULES@
 
 dist.tar.Z:	$(DISTFILES)
