@@ -271,6 +271,11 @@
  */
 #undef WORDS_BIGENDIAN
 
+/*
+ * which unicode data library are we using?
+ */
+#undef UNICODE_DATA
+
 
 /* continue on to the part that ./configure should not be touching */
 #include "config_epilog.h"
