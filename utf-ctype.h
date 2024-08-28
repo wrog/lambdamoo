@@ -1,7 +1,7 @@
 /*
  * utf-ctype.h
  *
- * Invoke libucd to test for specific character classes.
+ * query Unicode Character Database for character attributes
  */
 
 #ifndef UTF_CType_H
@@ -35,6 +35,12 @@ extern int my_is_printable(uint32_t);
 
 extern const char *my_char_name(uint32_t);
 extern   uint32_t  my_char_lookup(const char *);
+
+#if UNICODE_DATA
+extern   uint32_t  my_unicode_version(void);
+extern   uint32_t  my_unilib_version(void);
+extern const char *my_unilib_name;
+#endif /* UNICODE_DATA */
 
 #endif		/* !UTF_CType_H */
 

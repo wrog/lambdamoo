@@ -169,4 +169,15 @@ typedef unsigned char uint8_t;
 #  define UNUSED_
 #endif
 
+/*
+ *  possible values for UNICODE_DATA
+ */
+#define UD_UCD  1 /* use HPA's UCD library */
+#define UD_GNU  2 /* use GNU libunistring */
+#define UD_ICU  3 /* use ICU libicuuc */
+
+#if defined(UNICODE_DATA) && (UNICODE_DATA != UD_UCD && UNICODE_DATA != UD_GNU && UNICODE_DATA != UD_ICU)
+#error "bad value for UNICODE_DATA"
+#endif
+
 #endif		/* !Config_Epilog_H */
