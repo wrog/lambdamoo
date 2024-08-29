@@ -1,7 +1,0 @@
-enums
-gen
-ucd.h
-perfect/perfect
-libucd.so.0
-*.[hsl]o
-*.a
