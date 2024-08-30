@@ -452,7 +452,10 @@ stream_add_recoded_chars(Stream *s,
 	    stream_beginfill(s, inbytesleft * 2,
 			     &outbuf, &outbytesleft);
 	    ret = (size_t) -1 !=
-		iconv(cd, (char **)&inbuf, &inbytesleft,
+		iconv(cd, (void *)&inbuf, &inbytesleft,
+		      /*  Evidently, different iconv vendors
+			  disagree on the constness of 'inbuf'.
+			  Oh, well... */
 		      &outbuf, &outbytesleft);
 
 	    stream_endfill(s, outbytesleft);
@@ -463,7 +466,6 @@ stream_add_recoded_chars(Stream *s,
 	 *   EILSEQ: invalid input sequence
 	 *   EINVAL: incomplete input sequence
 	 */
-
     FINALLY
 	iconv_close(cd);
     ENDTRY;

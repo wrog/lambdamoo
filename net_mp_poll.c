@@ -27,8 +27,8 @@
 typedef struct pollfd Port;
 
 static Port *ports = 0;
-static unsigned num_ports = 0;
-static unsigned max_fd;
+static int num_ports = 0;
+static int max_fd;
 
 void
 mplex_clear(void)
