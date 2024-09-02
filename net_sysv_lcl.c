@@ -309,8 +309,8 @@ proto_accept_connection(int listener_fd, server_listener sl UNUSED_,
 	log_perror("Statting client FIFOs");
 	return PA_OTHER;
     }
-    if (st1.st_mode & S_IFMT != S_IFIFO
-	|| st2.st_mode & S_IFMT != S_IFIFO
+    if ((st1.st_mode & S_IFMT) != S_IFIFO
+	|| (st2.st_mode & S_IFMT) != S_IFIFO
 	|| st1.st_uid != st2.st_uid) {
 	close(*read_fd);
 	close(*write_fd);
