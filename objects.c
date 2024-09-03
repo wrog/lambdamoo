@@ -177,7 +177,7 @@ bf_move_read()
 {
     struct bf_move_data *data = alloc_data(sizeof(*data));
 
-    if (dbio_scanf("bf_move data: what = %"PRIdN", where = %"PRIdN"\n",
+    if (dbio_scanf("bf_move data: what = %"SCNdN", where = %"SCNdN"\n",
 		   &data->what, &data->where) == 2)
 	return data;
     else
@@ -304,7 +304,7 @@ bf_create_read(void)
 {
     Objid *data = alloc_data(sizeof(Objid));
 
-    if (dbio_scanf("bf_create data: oid = %"PRIdN"\n", data) == 1)
+    if (dbio_scanf("bf_create data: oid = %"SCNdN"\n", data) == 1)
 	return data;
     else
 	return 0;
@@ -518,7 +518,7 @@ bf_recycle_read(void)
      * suppressed assignments are not counted in determining the returned value
      * of `scanf'...
      */
-    if (dbio_scanf("bf_recycle data: oid = %"PRIdN", cont = %d\n",
+    if (dbio_scanf("bf_recycle data: oid = %"SCNdN", cont = %d\n",
 		   data, &dummy) == 2)
 	return data;
     else

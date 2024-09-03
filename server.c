@@ -820,7 +820,7 @@ emergency_mode()
 	    } else if (!mystrcasecmp(command, "debug") && nargs == 0) {
 		debug = !debug;
 	    } else if (!mystrcasecmp(command, "wizard") && nargs == 1
-		       && sscanf(words.v.list[2].v.str, "#%"PRIdN"", &wizard) == 1) {
+		       && sscanf(words.v.list[2].v.str, "#%"SCNdN"", &wizard) == 1) {
 		printf("** Switching to wizard #%"PRIdN"...\n", wizard);
 	    } else {
 		if (mystrcasecmp(command, "help")
@@ -1163,7 +1163,7 @@ read_active_connections(void)
 	Var v;
 
 	if (have_listeners) {
-	    if (dbio_scanf("%"PRIdN" %"PRIdN"\n", &who, &listener) != 2) {
+	    if (dbio_scanf("%"SCNdN" %"SCNdN"\n", &who, &listener) != 2) {
 		errlog("READ_ACTIVE_CONNECTIONS: Bad conn/listener pair.\n");
 		return 0;
 	    }

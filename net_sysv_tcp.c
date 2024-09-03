@@ -149,7 +149,7 @@ proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
     canon->type = TYPE_INT;
     canon->v.num = ntohs(rec_addr.sin_port);
 
-    stream_printf(st, "port %d", canon->v.num);
+    stream_printf(st, "port %"PRIdN, canon->v.num);
     *name = reset_stream(st);
 
     *fd = s;
