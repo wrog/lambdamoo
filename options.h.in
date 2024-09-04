@@ -450,6 +450,22 @@ should now be completely unnecessary given that
 #undef MEMO_STRLEN
 
 /******************************************************************************
+ * Explicitly fix the size of the INT/NUM and OBJ datatypes in bits,
+ * for situations where you need them to be a particular size
+ * (e.g., legacy databases where arithmetic rollover needs to
+ * happen in the right place).
+ *
+ * Current allowed values are 16, 32, and 64.  The default, if left
+ * unset, is 64 if your platform can do 64-bit ints and otherwise 32.
+ * (16 is mainly for testing/experiments).
+ *
+ * Loading a database previously written by a server with larger
+ * INT_TYPE_BITSIZE will fail there are out-of-range integers.
+ */
+
+#undef INT_TYPE_BITSIZE
+
+/******************************************************************************
  * DEFAULT_MAX_LIST_CONCAT,   if set to a postive value, is the length
  *                            of the largest constructible list.
  * DEFAULT_MAX_STRING_CONCAT, if set to a postive value, is the length

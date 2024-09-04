@@ -47,13 +47,6 @@
 #define OUT_OF_BAND_QUOTE_PREFIX ""
 #endif
 
-#if DEFAULT_MAX_LIST_CONCAT < MIN_LIST_CONCAT_LIMIT
-#error DEFAULT_MAX_LIST_CONCAT < MIN_LIST_CONCAT_LIMIT ??
-#endif
-#if DEFAULT_MAX_STRING_CONCAT < MIN_STRING_CONCAT_LIMIT
-#error DEFAULT_MAX_STRING_CONCAT < MIN_STRING_CONCAT_LIMIT ??
-#endif
-
 #if PATTERN_CACHE_SIZE < 1
 #  error Illegal match() pattern cache size!
 #endif
@@ -128,6 +121,73 @@
     && MPLEX_STYLE != MP_POLL \
     && MPLEX_STYLE != MP_FAKE
 #  error Illegal value for "MPLEX_STYLE"
+#endif
+
+
+#ifdef INT_TYPE_BITSIZE
+#  if INT_TYPE_BITSIZE == 1
+    /* Both
+     *    --enable-def-INT_TYPE_BITSIZE=yes
+     *    --disable-def-INT_TYPE_BITSIZE
+     * should be ./configure errors because wtf.  But code
+     * has not yet been written to do that, so cope here.
+     */
+#    undef INT_TYPE_BITSIZE
+#  elif !(INT_TYPE_BITSIZE == 64 || \
+	  INT_TYPE_BITSIZE == 32 || \
+	  INT_TYPE_BITSIZE == 16)
+#    error INT_TYPE_BITSIZE can only be 64, 32, or 16.
+#  endif
+#endif
+
+#ifndef INT_TYPE_BITSIZE
+#  if HAVE_INT64_T
+#    define INT_TYPE_BITSIZE 64
+#  else
+#    define INT_TYPE_BITSIZE 32
+#  endif
+#endif
+
+#if HAVE_INT64_T
+/* we can do 64 or 32 or 16 */
+#elif INT_TYPE_BITSIZE == 64
+#  error INT_TYPE_BITSIZE == 64 requires a platform that has 64-bit integers.
+#elif HAVE_INT32_T
+/* we can do 32 or 16 */
+#elif INT_TYPE_BITSIZE == 32
+#  error INT_TYPE_BITSIZE == 32 requires a platform that has 32-bit integers.
+#endif
+
+#if DEFAULT_MAX_LIST_CONCAT < MIN_LIST_CONCAT_LIMIT
+#error DEFAULT_MAX_LIST_CONCAT < MIN_LIST_CONCAT_LIMIT ??
+#endif
+#if DEFAULT_MAX_STRING_CONCAT < MIN_STRING_CONCAT_LIMIT
+#error DEFAULT_MAX_STRING_CONCAT < MIN_STRING_CONCAT_LIMIT ??
+#endif
+
+#if INT_TYPE_BITSIZE == 16
+/* Options that are modifiable in-db must fit in a Num so
+ * any larger than NUM_MAX must be reduced, except we cannot
+ * reference NUM_MAX here, because that is in structures.h
+ * which depends on this file and, hence, has not been
+ * defined yet.)
+ */
+#  if DEFAULT_MAX_LIST_CONCAT   >= INT16_MAX
+#    undef  DEFAULT_MAX_LIST_CONCAT
+#    define DEFAULT_MAX_LIST_CONCAT	(INT16_MAX - 1)
+#  endif
+#  if DEFAULT_MAX_STRING_CONCAT >= INT16_MAX
+#    undef  DEFAULT_MAX_STRING_CONCAT
+#    define DEFAULT_MAX_STRING_CONCAT	(INT16_MAX - 1)
+#  endif
+#  if MAX_QUEUED_OUTPUT >= INT16_MAX
+#    undef  MAX_QUEUED_OUTPUT
+#    define MAX_QUEUED_OUTPUT	(INT16_MAX - 1)
+#  endif
+#  if MAX_QUEUED_INPUT  >= INT16_MAX
+#    undef  MAX_QUEUED_INPUT
+#    define MAX_QUEUED_INPUT	(INT16_MAX - 1)
+#  endif
 #endif
 
 #endif		/* !Options_Epilog_H */

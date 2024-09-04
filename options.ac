@@ -126,6 +126,8 @@ dnl
   [not-logged-in max idle time]],
  [[PATTERN_CACHE_SIZE],     [int], 20,
   [number of remembered match() patterns]],
+ [[INT_TYPE_BITSIZE],       [int], no,
+  [bitsize of integer/object-id values]],
  [[DEFAULT_MAX_LIST_CONCAT],   [int], 4194302,
   [largest constructible list length]],
  [[DEFAULT_MAX_STRING_CONCAT], [int], 33554423,
