@@ -47,6 +47,10 @@
 #define OUT_OF_BAND_QUOTE_PREFIX ""
 #endif
 
+#if DEFAULT_MAX_STACK_DEPTH < 3
+#error No!
+#endif
+
 #if PATTERN_CACHE_SIZE < 1
 #  error Illegal match() pattern cache size!
 #endif

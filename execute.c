@@ -45,7 +45,7 @@
 
 /* the following globals are the guts of the virtual machine: */
 static activation *activ_stack = 0;
-static Num max_stack_size = 0;
+static UNum max_stack_size = 0;
 static unsigned top_activ_stack;	/* points to top-of-stack
 					   (last-occupied-slot),
 					   not next-empty-slot */
@@ -2258,7 +2258,7 @@ caller(void)
 }
 
 static void
-check_activ_stack_size(int max)
+check_activ_stack_size(UNum max)
 {
     if (max_stack_size != max) {
 	if (activ_stack)
@@ -2269,10 +2269,10 @@ check_activ_stack_size(int max)
     }
 }
 
-static int
+static UNum
 current_max_stack_size(void)
 {
-    int max = server_int_option("max_stack_depth", DEFAULT_MAX_STACK_DEPTH);
+    UNum max = server_int_option("max_stack_depth", DEFAULT_MAX_STACK_DEPTH);
 
     if (max < DEFAULT_MAX_STACK_DEPTH)
 	max = DEFAULT_MAX_STACK_DEPTH;
