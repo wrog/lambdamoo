@@ -33,8 +33,8 @@ struct Verbdef {
     const char *name;
     Program *program;
     Objid owner;
-    short perms;
-    short prep;
+    uint16_t perms;
+    int16_t  prep;
     Verbdef *next;
 };
 
@@ -55,7 +55,7 @@ struct Proplist {
 typedef struct Pval {
     Var var;
     Objid owner;
-    short perms;
+    uint16_t perms;
 } Pval;
 
 typedef struct Object {
@@ -71,7 +71,7 @@ typedef struct Object {
 
 
     const char *name;
-    int flags;
+    uint16_t flags;
 
     Verbdef *verbdefs;
     Proplist propdefs;

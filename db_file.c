@@ -56,8 +56,8 @@ read_verbdef(Verbdef * v)
 {
     v->name = dbio_read_string_intern();
     v->owner = dbio_read_objid();
-    v->perms = dbio_read_num();
-    v->prep = dbio_read_num();
+    v->perms = dbio_read_uint16();
+    v->prep = dbio_read_int16();
     v->next = 0;
     v->program = 0;
 }
@@ -67,8 +67,8 @@ write_verbdef(Verbdef * v)
 {
     dbio_write_string(v->name);
     dbio_write_objid(v->owner);
-    dbio_write_num(v->perms);
-    dbio_write_num(v->prep);
+    dbio_write_intmax(v->perms);
+    dbio_write_intmax(v->prep);
 }
 
 static Propdef
@@ -89,7 +89,7 @@ read_propval(Pval * p)
 {
     p->var = dbio_read_var();
     p->owner = dbio_read_objid();
-    p->perms = dbio_read_num();
+    p->perms = dbio_read_uint16();
 }
 
 static void
@@ -97,7 +97,7 @@ write_propval(Pval * p)
 {
     dbio_write_var(p->var);
     dbio_write_objid(p->owner);
-    dbio_write_num(p->perms);
+    dbio_write_intmax(p->perms);
 }
 
 
@@ -108,9 +108,9 @@ read_object(void)
 {
     Objid oid;
     Object *o;
-    int i;
+    intmax_t i;
     Verbdef *v, **prevv;
-    int nprops;
+    intmax_t nprops;
 
     if (dbio_scanf("#%"SCNdN, &oid) != 1 || oid != db_last_used_objid() + 1)
 	return 0;
@@ -125,7 +125,7 @@ read_object(void)
     o = dbpriv_new_object();
     o->name = dbio_read_string_intern();
     dbio_skip_lines(1);		/* discard old handles string */
-    o->flags = dbio_read_num();
+    o->flags = dbio_read_uint16();
 
     o->owner = dbio_read_objid();
 
@@ -139,7 +139,7 @@ read_object(void)
 
     o->verbdefs = 0;
     prevv = &(o->verbdefs);
-    for (i = dbio_read_num(); i > 0; i--) {
+    for (i = dbio_read_intmax(); i > 0; i--) {
 	v = mymalloc(sizeof(Verbdef), M_VERBDEF);
 	read_verbdef(v);
 	*prevv = v;
@@ -149,14 +149,14 @@ read_object(void)
     o->propdefs.cur_length = 0;
     o->propdefs.max_length = 0;
     o->propdefs.l = 0;
-    if ((i = dbio_read_num()) != 0) {
+    if ((i = dbio_read_intmax()) != 0) {
 	o->propdefs.l = mymalloc(i * sizeof(Propdef), M_PROPDEF);
 	o->propdefs.cur_length = i;
 	o->propdefs.max_length = i;
 	for (i = 0; i < o->propdefs.cur_length; i++)
 	    o->propdefs.l[i] = read_propdef();
     }
-    nprops = dbio_read_num();
+    nprops = dbio_read_intmax();
     if (nprops)
 	o->propval = mymalloc(nprops * sizeof(Pval), M_PVAL);
     else
@@ -186,7 +186,7 @@ write_object(Objid oid)
     dbio_printf("#%"PRIdN"\n", oid);
     dbio_write_string(o->name);
     dbio_write_string("");	/* placeholder for old handles string */
-    dbio_write_num(o->flags);
+    dbio_write_intmax(o->flags);
 
     dbio_write_objid(o->owner);
 
@@ -201,17 +201,17 @@ write_object(Objid oid)
     for (v = o->verbdefs, nverbdefs = 0; v; v = v->next)
 	nverbdefs++;
 
-    dbio_write_num(nverbdefs);
+    dbio_write_intmax(nverbdefs);
     for (v = o->verbdefs; v; v = v->next)
 	write_verbdef(v);
 
-    dbio_write_num(o->propdefs.cur_length);
+    dbio_write_intmax(o->propdefs.cur_length);
     for (i = 0; i < o->propdefs.cur_length; i++)
 	write_propdef(&o->propdefs.l[i]);
 
     nprops = dbpriv_count_properties(oid);
 
-    dbio_write_num(nprops);
+    dbio_write_intmax(nprops);
     for (i = 0; i < nprops; i++)
 	write_propval(o->propval + i);
 }

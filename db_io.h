@@ -41,7 +41,62 @@ extern void dbio_skip_lines(size_t n);
 
 extern int dbio_scanf(const char *format,...) FORMAT(scanf,1,2);
 
-extern int64_t dbio_read_num(void);
+/*--------------------------*
+ |  integer range checking  |
+ *--------------------------*
+ *  DEF(<XX>, <xx_t>, <fn>, <SCNxx>)
+ *    declares the enumeration constant 'DBIO_RANGE_<XX>'
+ *    to refer to the integer type '<xx_t>',
+ *    the corresponding reader function to be 'dbio_read_<fn>',
+ *    and the dbio_scxnf() conversion to be %"<SCNxx>"
+ *    (and if that value is quoted here, then it's unquoted
+ *    in the actual format string and vice versa, e.g.,
+ *    use '%jd' for intmax_t, but '%"SCNdN"' for Num).
+ */
+#define DBIO_RANGE_SPEC_LIST(DEF)		\
+    DEF(INTMAX, intmax_t, intmax,    "jd")	\
+    DEF(NUM,         Num, num,      SCNdN)	\
+    DEF(INT16,   int16_t, int16,   SCNd16)	\
+    DEF(UINT16, uint16_t, uint16,  SCNu16)	\
+    DEF(INT,         int, int,        "d")	\
+    DEF(UINT,   unsigned, uint,       "u")	\
+
+enum dbio_intrange {
+#   define DBIO_DO_(INTXX,_2,_3,_4)  DBIO_RANGE_##INTXX,
+
+    DBIO_RANGE_SPEC_LIST(DBIO_DO_)
+    DBIO_RANGE__LENGTH
+
+#   undef DBIO_DO_
+};
+
+/*---------------------------*
+ |  dbio_read_*() functions  |
+ *---------------------------*/
+
+extern intmax_t dbio_read_integer(enum dbio_intrange);
+                /* a.k.a. dbio_read_intmax() dbio_read_num()
+		 *        dbio_read_int16() dbio_read_uint16()
+		 *        dbio_read_int() dbio_read_uint()
+		 *
+		 * Reads an integer, does format and range checking.
+		 * (uses str_to_imax() to read all available digits
+		 * even for (u)int16.
+		 *
+		 * Also calls errlog() on errors
+		 * (so caller does not have to).
+		 */
+
+#   define DBIO_DO_(INTXX,intxx_t,intxx,_4)			\
+								\
+inline intxx_t dbio_read_##intxx(void) {			\
+    return (intxx_t)dbio_read_integer(DBIO_RANGE_##INTXX);	\
+}								\
+
+    DBIO_RANGE_SPEC_LIST(DBIO_DO_)
+#   undef DBIO_DO_
+
+
 extern Objid dbio_read_objid(void);
 extern double dbio_read_float(void);
 
@@ -92,7 +147,7 @@ extern Program *dbio_read_program(DB_Version version,
 
 extern void dbio_printf(const char *format,...) FORMAT(printf,1,2);
 
-extern void dbio_write_num(int64_t);
+extern void dbio_write_intmax(intmax_t);
 extern void dbio_write_objid(Objid);
 extern void dbio_write_float(double);
 

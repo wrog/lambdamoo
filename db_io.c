@@ -21,11 +21,12 @@
 
 #include "config.h"
 #include "my-ctype.h"
-#include <float.h>
+#include "my-math.h"
 #include "my-stdarg.h"
 #include "my-stdio.h"
 #include "my-stdlib.h"
 #include "my-string.h"
+#include <errno.h>
 
 #include "db_io.h"
 #include "db_private.h"
@@ -39,12 +40,15 @@
 #include "structures.h"
 #include "str_intern.h"
 #include "unparse.h"
+#include "utils.h"
 #include "version.h"
 
 
 /*********** Input ***********/
 
 static FILE *input;
+
+static const char *dbio_last_error = NULL;
 
 void
 dbpriv_set_dbio_input(FILE * f)
@@ -133,37 +137,117 @@ dbio_scanf(const char *format,...)
     return count;
 }
 
+/*--------------------------*
+ |  integer range checking  |
+ *--------------------------*/
+
+#define  DBIO_INT16_INIT  { INT16_MIN,  INT16_MAX, 0 }
+#define DBIO_UINT16_INIT  {         0, UINT16_MAX, 0 }
+#define DBIO_INTMAX_INIT  { .skip=1 }
+
+#if NUM_MAX == INTMAX_MAX
+#  define  DBIO_NUM_INIT  DBIO_INTMAX_INIT
+#else
+#  define  DBIO_NUM_INIT  { NUM_MIN, NUM_MAX, 0 }
+#endif
+
+#if INT_MAX < INTMAX_MAX
+#  define  DBIO_INT_INIT  { INT_MIN,  INT_MAX, 0 }
+#  define DBIO_UINT_INIT  {      0,  UINT_MAX, 0 }
+
+#else  /* INT_MAX == INTMAX_MAX */
+#  define  DBIO_INT_INIT  DBIO_INTMAX_INIT
+#  define DBIO_UINT_INIT  { 0, INTMAX_MAX, 0 }
+/* Why INTMAX_MAX instead of UINTMAX_MAX?
+   Answer:
+   In this situation, we would have to go to extra trouble to preserve
+   that top bit, and having something declared as 'unsigned' rather
+   than 'uintmax_t' means the author was never intending to put really
+   large quantities there or be using that top bit as a flag.
+   Forbidding this means we can read everything as intmax_t and then
+   complain if we see anything going outside that range, which is most
+   likely a mistake anyway.
+*/
+#endif
+
+static struct intrange {
+    intmax_t min;
+    intmax_t max;
+    uint8_t skip;
+}
+#define DBIO_DO_(INTXX,_2,_3,_4)   DBIO_##INTXX##_INIT,
+    dbio_intranges[] = {
+       DBIO_RANGE_SPEC_LIST(DBIO_DO_)
+};
+#undef DBIO_DO_
+
+
+static intmax_t
+dbio_string_to_integer(enum dbio_intrange range_id, const char *s, const char **end)
+{
+    errno = 0;
+    intmax_t i = strtoimax(s, (char **)end, 10);
+    const struct intrange *range = dbio_intranges + range_id;
+
+    dbio_last_error = NULL;
+    if (errno == ERANGE)
+	dbio_last_error = "Integer overflow on read";
+    else if (errno)
+	dbio_last_error = "Some other strtoimax() error";
+    else if (*end == s)
+	dbio_last_error = "Integer expected";
+    else if (range->skip)
+	;
+    else if (i < range->min)
+	dbio_last_error = range->min ? "Integer too negative" : "Integer must be unsigned";
+    else if (range->max < i)
+	dbio_last_error = "Integer too large";
+    return i;
+}
+
 /*-----------------------------*
  |  reading individual values  |
  *-----------------------------*/
 
-int64_t
-dbio_read_num(void)
+intmax_t
+dbio_read_integer(enum dbio_intrange range_id)
 {
-    char s[22];
-    char *p;
-    long long i;
+    const char *s, *p1, *p2;
 
-    fgets(s, sizeof(s), input);
-    i = strtoll(s, &p, 10);
-    if (isspace(*s) || *p != '\n')
-	errlog("DBIO_READ_NUM: Bad number: \"%s\" at file pos. %ld\n",
-	       s, ftell(input));
+    if (!(s = dbio_read_line(&p1))) {
+	errlog("DBIO_READ_INTEGER: Unexpected end of file\n");
+	dbio_last_error = "Unexpected end of file";
+	return 0;
+    }
+    intmax_t i = dbio_string_to_integer(range_id, s, &p2);
+    if (!dbio_last_error && (isspace(*s) || p1 != p2))
+	dbio_last_error = "Did not read entire line";
+
+    if (dbio_last_error)
+	errlog("DBIO_READ_INTEGER: %s: \"%s\" at file pos. %ld\n",
+	       dbio_last_error, s, ftell(input));
     return i;
 }
 
 double
 dbio_read_float(void)
 {
-    char s[40];
-    char *p;
-    double d;
+    const char *s, *p1, *p2;
 
-    fgets(s, 40, input);
-    d = strtod(s, &p);
-    if (isspace(*s) || *p != '\n')
-	errlog("DBIO_READ_FLOAT: Bad number: \"%s\" at file pos. %ld\n",
-	       s, ftell(input));
+    if (!(s = dbio_read_line(&p1))) {
+	errlog("DBIO_READ_FLOAT: Unexpected end of file\n");
+	dbio_last_error = "Unexpected end of file";
+	return 0.0;
+    }
+    double d = strtod(s, (char **)&p2);
+    dbio_last_error =
+	(isspace(*s) || p1 != p2)
+	? "Did not read entire line"
+	: (!IS_REAL(d) ? "Magnitude too large or NaN" : NULL);
+
+    if (dbio_last_error)
+	errlog("DBIO_READ_FLOAT: %s: \"%s\" at file pos. %ld\n",
+	       dbio_last_error, s, ftell(input));
     return d;
 }
 
@@ -188,7 +272,10 @@ dbio_read_string_intern(void)
 Var
 dbio_read_var(void)
 {
-    return dbio_read_var_value(dbio_read_num());
+    intmax_t vtype = dbio_read_intmax();
+    if (dbio_last_error)
+	return zero;
+    return dbio_read_var_value(vtype);
 }
 
 Var
@@ -220,12 +307,21 @@ dbio_read_var_value(intmax_t vtype)
 	break;
     case _TYPE_LIST: ;
 	Num len = dbio_read_num();
+	if (dbio_last_error)
+	    return zero;
 	r = new_list(len); /* overwrites r.type */
 	Num i;
-	for (i = 1; i <= len; ++i)
+	for (i = 1; i <= len; ++i) {
 	    r.v.list[i] = dbio_read_var();
+	    if (dbio_last_error) {
+		r.v.list[0].v.num = i-1;
+		complex_free_var(r);
+		return zero;
+	    }
+	}
 	break;
     default:
+	dbio_last_error = "Unknown Var type";
 	errlog("DBIO_READ_VAR: Unknown type (%jd) at DB file pos. %ld\n",
 	       vtype, ftell(input));
 	r = zero;
@@ -324,9 +420,9 @@ dbio_printf(const char *format,...)
 }
 
 void
-dbio_write_num(Num n)
+dbio_write_intmax(intmax_t n)
 {
-    dbio_printf("%"PRIdN"\n", n);
+    dbio_printf("%"PRIdMAX"\n", n);
 }
 
 void
@@ -345,7 +441,7 @@ dbio_write_float(double d)
 void
 dbio_write_objid(Objid oid)
 {
-    dbio_write_num(oid);
+    dbio_write_intmax(oid);
 }
 
 void
@@ -359,7 +455,7 @@ dbio_write_var(Var v)
 {
     int i;
 
-    dbio_write_num((int) v.type & TYPE_DB_MASK);
+    dbio_write_intmax((intmax_t) v.type & TYPE_DB_MASK);
     switch ((int) v.type) {
     case TYPE_CLEAR:
     case TYPE_NONE:
@@ -372,13 +468,13 @@ dbio_write_var(Var v)
     case TYPE_INT:
     case TYPE_CATCH:
     case TYPE_FINALLY:
-	dbio_write_num(v.v.num);
+	dbio_write_intmax(v.v.num);
 	break;
     case TYPE_FLOAT:
 	dbio_write_float(v.v.fnum);
 	break;
     case TYPE_LIST:
-	dbio_write_num(v.v.list[0].v.num);
+	dbio_write_intmax(v.v.list[0].v.num);
 	for (i = 0; i < v.v.list[0].v.num; i++)
 	    dbio_write_var(v.v.list[i + 1]);
 	break;
