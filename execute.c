@@ -882,7 +882,7 @@ do {    						    	\
 		    free_var(RUN_ACTIV.rt_env[id]);
 		    RUN_ACTIV.rt_env[id] = var_ref(from);
 		    if (to.type == TYPE_INT) {
-			if (from.v.num < MAXINT) {
+			if (from.v.num < NUM_MAX) {
 			    from.v.num++;
 			    NEXT_TOP_RT_VALUE = from;
 			} else {
@@ -890,7 +890,7 @@ do {    						    	\
 			    TOP_RT_VALUE = to;
 			}
 		    } else {
-			if (from.v.obj < MAXOBJ) {
+			if (from.v.obj < OBJ_MAX) {
 			    from.v.obj++;
 			    NEXT_TOP_RT_VALUE = from;
 			} else {

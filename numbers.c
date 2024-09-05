@@ -727,7 +727,7 @@ static package
 bf_random(Var arglist, Byte next, void *vdata, Objid progr)
 {
     int nargs = arglist.v.list[0].v.num;
-    Num num = (nargs >= 1 ? arglist.v.list[1].v.num : MAXINT);
+    Num num = (nargs >= 1 ? arglist.v.list[1].v.num : NUM_MAX);
 
     free_var(arglist);
 

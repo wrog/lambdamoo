@@ -22,15 +22,28 @@
 
 #include "config.h"
 
-#define MAXINT	((Num) 9223372036854775807LL)
-#define MAXOBJ	((Objid) MAXINT)
+/***********
+ * Numbers
+ */
 
-/* Note: it's a pretty hard assumption in MOO that integers and objects
-   are the same data type. */
+/* This will move to options.h */
+#define INT_TYPE_BITSIZE 64
+
 typedef int64_t Num;
 #define PRIdN	PRId64
 #define SCNdN	SCNd64
-typedef Num Objid;
+#define NUM_MAX	INT64_MAX
+#define NUM_MIN	INT64_MIN
+
+/***********
+ * Objects
+ *
+ * Note:  It's a pretty hard assumption in MOO that integers and objects
+ * are the same data type.
+ */
+
+typedef Num     Objid;
+#define OBJ_MAX	NUM_MAX
 
 /*
  * Special Objid's
@@ -39,6 +52,10 @@ typedef Num Objid;
 #define NOTHING		-1
 #define AMBIGUOUS	-2
 #define FAILED_MATCH	-3
+
+/***********
+ * Errors
+ */
 
 /* Do not reorder or otherwise modify this list, except to add new elements at
  * the end, since the order here defines the numeric equivalents of the error
@@ -49,6 +66,10 @@ enum error {
     E_NONE, E_TYPE, E_DIV, E_PERM, E_PROPNF, E_VERBNF, E_VARNF, E_INVIND,
     E_RECMOVE, E_MAXREC, E_RANGE, E_ARGS, E_NACC, E_INVARG, E_QUOTA, E_FLOAT
 };
+
+/*************************
+ * General Types and Vars
+ */
 
 /* Do not reorder or otherwise modify this list, except to add new elements at
  * the end, since the order here defines the numeric equivalents of the type
