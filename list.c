@@ -57,6 +57,9 @@ new_list(int size)
 	addref(emptylist.v.list);
 	return emptylist;
     }
+    else if (size < 0) {
+	panic("NEW_LIST: negative size");
+    }
     new.type = TYPE_LIST;
     new.v.list = (Var *) mymalloc((size + 1) * sizeof(Var), M_LIST);
     new.v.list[0].type = TYPE_INT;
