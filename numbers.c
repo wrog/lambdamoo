@@ -632,84 +632,58 @@ bf_ctime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
     return make_var_pack(r);
 }
 
-/* For now:  Uncoment on unicode64 branch */
-/* #define INTNUM_AND_OBJID_ARE_64_BITS */
 
-/*****FIX***:
- * (1) INTNUM_AND_OBJID_ARE_64_BITS should be an options.h setting
- *     and there should be a better name for it but not until
- *     files other than this one depend on it and configure.ac hooks
- *     are available to tell us when we can set it
- *     [waiting on proper autoconf 1->2 conversion].
- *
- * (2) typedefs below and INTNUM_MAX will move to structures.h
- *     but not until
- *     (a) Intnum has been properly introduced into MOO32
- *     (b) Intnum has replaced the Num typedef in the
- *         unicode64 branch, which was a poor name choice
- *         [too short, can't tags-search on it, obsolete
- *         terminology since NUM was replaced by INT
- *         and FLOAT anyway...]
- *
- * (3) WIDER_INTEGERS_NOT_AVAILABLE should be #defined by proper
- *     configure.ac hook whenever Intnum type is the maximum width
- *     integer available [waiting on proper autoconf 1->2 conversion].
- *
- *     Current assumption is that this *is* the case in the 64-bit
- *     world and *not* the case in the 32-bit world.  Compilation
- *     will fail on 32-bit environments where uint64_t is
- *     not defined.  Conversely, bf_random() on 64-bit environments
- *     may be unnecessarily slow if 128-bit integers are available.
- */
+/* Find an unsigned type that can hold RANDOM() results and Nums */
+#if RAND_MAX <= NUM_MAX
+#  define URNUM_BITS INT_TYPE_BITSIZE
+typedef UNum URNum;
+#  if HAVE_UNUMNUM_T
+#    define HAVE_URNUM2_T 1
+typedef UNumNum URNum2;
+#  endif
 
-/******** begin structures.h ********/
+#elif RAND_MAX == INT32_MAX
+#  define URNUM_BITS 32
+typedef uint32_t URNum;
+#  if HAVE_INT64_T
+#    define HAVE_URNUM2_T 1
+typedef uint64_t URNum2;
+#  endif
 
-
-#ifdef INTNUM_AND_OBJID_ARE_64_BITS
-typedef int64_t Intnum;
-typedef uint64_t Unsignednum;
-#define INTNUM_MAX INT64_MAX
-
-/* Assume lack of 128-bit integer type */
-#  define WIDER_INTEGERS_NOT_AVAILABLE
-#  ifndef WIDER_INTEGERS_NOT_AVAILABLE
-#    error "need typedef for Unsignednum_Wide"
+#elif RAND_MAX == INT64_MAX
+#  define URNUM_BITS 64
+typedef uint64_t URNum;
+#  if HAVE_INT128_T
+#    define HAVE_URNUM2_T 1
+typedef uint128_t URNum2;
 #  endif
 
 #else
-typedef int32_t Intnum;
-typedef uint32_t Unsignednum;
-#define INTNUM_MAX INT32_MAX
-
-/* Assume support for uint64_t otherwise uncomment */
-/* #define WIDER_INTEGERS_NOT_AVAILABLE */
-#  ifndef WIDER_INTEGERS_NOT_AVAILABLE
-typedef uint64_t Unsignednum_Wide;
-#  endif
-
+#  error weird RAND_MAX that I cannot cope with
 #endif
 
-/******** end structures.h ********/
 
 
-#ifdef WIDER_INTEGERS_NOT_AVAILABLE
+#ifndef HAVE_URNUM2_T
 /* Number of bits to shift V left in order to make
  * the high-order bit be 1 (assume V nonzero) */
 static inline char
-rlg2 (Unsignednum v)
+rlg2 (URNum v)
 {
     /* See "Using de Bruijn Sequences to Index 1 in a Computer Word"
      * by Leiserson, Prokop, Randall; MIT LCS, 1998
      */
     static const char evil[] = {
-#  ifdef INTNUM_AND_OBJID_ARE_64_BITS
+#  if URNUM_BITS == 64
 	63, 5,62, 4,24,10,61, 3,32,15,23, 9,45,29,60, 2,
 	12,34,31,14,52,50,22, 8,48,37,44,28,41,20,59, 1,
 	6, 25,11,33,16,46,30,13,35,53,51,49,38,42,21, 7,
 	26,17,47,36,54,39,43,27,18,55,40,19,56,57,58, 0,
-#  else
+#  elif URNUM_BITS == 32
 	31,22,30,21,18,10,29, 2,20,17,15,13, 9, 6,28, 1,
 	23,19,11, 3,16,14, 7,24,12, 4, 8,25, 5,26,27, 0,
+#  elif URNUM_BITS == 16
+	15, 3,14, 2, 8, 6,13, 1, 4, 9, 7, 5,10,11,12, 0,
 #  endif
     };
 
@@ -717,36 +691,36 @@ rlg2 (Unsignednum v)
     v |= v >> 2;
     v |= v >> 4;
     v |= v >> 8;
+#  if URNUM_BITS > 16
     v |= v >> 16;
-#  ifdef INTNUM_AND_OBJID_ARE_64_BITS
+#    if URNUM_BITS > 32
     v |= v >> 32;
-    return evil[(unsigned64)(v * 0x03F566ED27179461ULL) >> 58];
+    return evil[(URNum)(v * 0x03F566ED27179461ULL) >> 58];
+#    else
+    return evil[(URNum)(v * 0x07C4ACDDULL) >> 27];
+#    endif
 #  else
-    return evil[(unsigned32)(v * 0x07C4ACDDU) >> 27];
+    return evil[(URNum)(v * 0x0F59ULL) >> 12];
 #  endif
 }
 #endif
 
 /* (a * b + c) % m, guarding against overflow; assumes m > 0 */
-static inline Intnum
-muladdmod(Unsignednum a, Unsignednum b, Unsignednum c, Intnum m)
+static inline URNum
+muladdmod(URNum a, URNum b, URNum c, URNum m)
 {
-#ifndef WIDER_INTEGERS_NOT_AVAILABLE
-    return (Intnum)((a * (Unsignednum_Wide)b + c) % m);
+#ifdef HAVE_URNUM2_T
+    return (URNum)((a * (URNum2)b + c) % m);
 #else
-#  ifdef INTNUM_AND_OBJID_ARE_64_BITS
-#    define HALFWORD 32
-#  else
-#    define HALFWORD 16
-#  endif
-#  define LO(x) ((x) & ((((Unsignednum)1)<<HALFWORD)-1))
+#  define HALFWORD (URNUM_BITS/2)
+#  define LO(x) ((x) & ((1ULL<<HALFWORD)-1))
 #  define HI(x) ((x)>>HALFWORD)
 
-    Unsignednum lo = LO(a) * LO(b) + LO(c);
-    Unsignednum hi;
+    URNum lo = LO(a) * LO(b) + LO(c);
+    URNum hi;
     {
-	Unsignednum mi1 = HI(a) * LO(b) + HI(c) + HI(lo);
-	Unsignednum mi2 = LO(a) * HI(b) + LO(mi1);
+	URNum mi1 = HI(a) * LO(b) + HI(c) + HI(lo);
+	URNum mi2 = LO(a) * HI(b) + LO(mi1);
 	hi = HI(a) * HI(b) + HI(mi1) + HI(mi2);
 	lo = (LO(lo) + (LO(mi2)<<HALFWORD)) % m;
     }
@@ -775,18 +749,19 @@ muladdmod(Unsignednum a, Unsignednum b, Unsignednum c, Intnum m)
 static package
 bf_random(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    int nargs = arglist.v.list[0].v.num;
-    int num = (nargs >= 1 ? arglist.v.list[1].v.num : INTNUM_MAX);
+    Num nargs = arglist.v.list[0].v.num;
+    Num num = (nargs >= 1 ? arglist.v.list[1].v.num : NUM_MAX);
     Var r;
-    int e;
-    int rnd;
-    const int range_l =
-	((INTNUM_MAX > RAND_MAX ? RAND_MAX : (RAND_MAX - num)) + 1) % num;
+    URNum e;
+    URNum rnd;
 
     free_var(arglist);
 
     if (num <= 0)
 	return make_error_pack(E_INVARG);
+
+    const Num range_l = /* RANGE % num */
+	((NUM_MAX > RAND_MAX ? RAND_MAX : (RAND_MAX - num)) + 1) % num;
 
     r.type = TYPE_INT;
 
@@ -794,16 +769,17 @@ bf_random(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 #   error RAND_MAX+1 is not a positive power of 2 ??
 #endif
 
-#if (INTNUM_MAX > RAND_MAX)
-    /* num >= RAND_MAX possible; launch general algorithm */
+#if (NUM_MAX > RAND_MAX)
+    /* num >= RANGE possible; launch general algorithm */
 
-#   define RANGE       (RAND_MAX+1)
+#   define RANGE       ((URNum)RAND_MAX+1)
 #   define OR_ZERO(n)  (n)
 
     rnd = 0;
     e = 1;
 #else
-    /* num >= RAND_MAX not possible; unroll first loop iteration */
+    /* num >= RANGE not possible (num/RANGE == 0 always);
+       unroll first loop iteration */
 
 #   define OR_ZERO(n)  0
 
@@ -817,25 +793,30 @@ bf_random(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 #endif
 
     for (;;) {
-	/* INVARIANT: rnd uniform over [0..e-1] */
-	int rnd_next = RANDOM();
+	/* INVARIANT: rnd is uniform over [0..e-1] */
+	URNum rnd_next = RANDOM();
 
-#if RAND_MAX < INTNUM_MAX
-	/* compiler should turn [/%*]RANGE into bitwise ops */
+#if RAND_MAX < NUM_MAX
+	/* while (e*RANGE < num) ... */
 	while (e < (num/RANGE) ||
 	       ((e == num/RANGE) && (num%RANGE != 0))) {
 	    rnd = rnd*RANGE + rnd_next;
 	    e *= RANGE;
 	    rnd_next = RANDOM();
+	    /* I expect the compiler to turn all of these
+	     * [/%*]RANGE operations into bitwise ops.
+	     */
 	}
 #endif
 	/* INVARIANTS:
 	 *   e*RANGE >= num
-	 *   rnd uniform over [0..e-1]
-	 *   rnd*RANGE + rnd_next uniform over [0..e*RANGE-1]
+	 *   rnd is uniform over [0..e-1]
+	 *   rnd*RANGE + rnd_next is uniform over [0..e*RANGE-1]
 	 */
 	if (rnd > OR_ZERO(num/RANGE)) {
-	    /* rnd*RANGE > num */
+	    /* (rnd-1)*RANGE >= (num/RANGE)*RANGE == num - num%RANGE
+	     * rnd*RANGE >= num + (RANGE - num%RANGE) > num > (e*RANGE)%num
+	     */
 	    r.v.num = 1 + muladdmod(rnd, range_l, rnd_next, num);
 	    break;
 	}
