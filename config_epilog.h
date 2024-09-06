@@ -120,6 +120,14 @@
 #  error This platform does not have 64-bit integers?
 #endif
 
+#ifndef HAVE_INT128_T
+#  ifdef HAVE___INT128
+     typedef __int128           int128_t;
+     typedef unsigned __int128 uint128_t;
+#    define HAVE_INT128_T 1
+#  endif
+#endif
+
 #ifndef HAVE_STRTOIMAX
 # ifdef HAVE_LONG_LONG
 #  define strtoimax strtoll

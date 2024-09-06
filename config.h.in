@@ -251,6 +251,15 @@
 #undef NEED_STDINT_H
 #undef NEED_INTTYPES_H
 
+/*
+ * 128-bit ints are not yet part of the standard but probably will be
+ * at some point.  __int128 is a GNU extension that Clang also
+ * recognizes.
+ */
+#undef HAVE_INT128_T
+#undef HAVE___INT128
+
+
 /* continue on to the part that ./configure should not be touching */
 #include "config_epilog.h"
 
