@@ -37,6 +37,16 @@ typedef uint32_t UNum;
 #define NUM_MAX	INT32_MAX
 #define NUM_MIN	INT32_MIN
 
+#if HAVE_INT64_T
+/*
+ *  I was originally going to insist 'Num' be called something else,
+ *  but I decided to let that go.  This is your pennance:    --wrog
+ */
+#  define HAVE_UNUMNUM_T 1
+typedef  int64_t   NumNum;
+typedef uint64_t  UNumNum;
+#endif
+
 
 /***********
  * Objects
