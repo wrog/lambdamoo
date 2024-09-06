@@ -56,6 +56,7 @@
 #    define SCNo32 "o"
 #    define SCNu32 "u"
 #    define SCNx32 "x"
+#    define HAVE_INT32_T 1
 #  elif LONG_MAX == 2147483647
      typedef long int		int32_t;
      typedef unsigned long	uint32_t;
@@ -71,9 +72,12 @@
 #    define SCNo32 "lo"
 #    define SCNu32 "lu"
 #    define SCNx32 "lx"
-#  else
-#    error I cannot figure out how to express a 32-bit integer on your machine.
+#    define HAVE_INT32_T 1
 #  endif
+#endif
+
+#ifndef HAVE_INT32_T
+#  error This platform does not have 32-bit integers?
 #endif
 
 #ifndef HAVE_INT64_T
@@ -92,9 +96,10 @@
 #    define SCNo64 "lo"
 #    define SCNu64 "lu"
 #    define SCNx64 "lx"
+#    define HAVE_INT64_T 1
 #  elif defined(HAVE_LONG_LONG) && LONG_LONG_MAX == 9223372036854775807
-     typedef long long     int64;
-     typedef unsigned long long unsigned64;
+     typedef long long     int64_t;
+     typedef unsigned long long uint64_t;
 #    define INT64_MAX      LONG_LONG_MAX
 #    define PRId64 "lld"
 #    define PRIi64 "lli"
@@ -107,9 +112,12 @@
 #    define SCNo64 "llo"
 #    define SCNu64 "llu"
 #    define SCNx64 "llx"
-#  else
-#    error I cannot figure out how to express a 64-bit integer on your machine.
+#    define HAVE_INT64_T 1
 #  endif
+#endif
+
+#ifndef HAVE_INT64_T
+#  error This platform does not have 64-bit integers?
 #endif
 
 #ifndef HAVE_STRTOIMAX
