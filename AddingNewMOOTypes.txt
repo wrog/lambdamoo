@@ -28,7 +28,7 @@ In addition, for visible types, you must:
 	   first_user_slot(), in sym_table.c
 -- consider adding a new kind of MOO literal or expression that produces values
    of the new type.
--- add a case to each of list2str() and print_to_stream(), in list.c; the
+-- add a case to each of stream_add_tostr() and unparse_value(), in list.c; the
    former is used by the MOO function tostr() and the latter by toliteral().
 -- add a case to to each of become_integer() and become_float(), in numbers.c;
    the former is used by toint() and toobj() and the latter by tofloat().
