@@ -29,6 +29,7 @@
 #include "ast.h"
 #include "code_gen.h"
 #include "config.h"
+#include "exceptions.h"
 #include "functions.h"
 #include "keywords.h"
 #include "list.h"
@@ -803,96 +804,49 @@ start_over:
     }
 
     if (c == '#') {
-	int            negative = 0;
-	Objid          oid = 0;
-
-	c = lex_getc();
-	if (c == '-') {
-	    negative = 1;
-	    c = lex_getc();
+	Var pn = parse_number(0, lex_getc(), lex_getc, lex_ungetc);
+	if (pn.type == TYPE_INT) {
+	    yylval.object = pn.v.num;
+	    return tOBJECT;
 	}
-	if (!isdigit(c)) {
-	    yyerror("Malformed object number");
-	    lex_ungetc(c);
-	    return 0;
-	}
-	do {
-	    oid = oid * 10 + (c - '0');
-	    c = lex_getc();
-	} while (isdigit(c));
-	lex_ungetc(c);
-
-	yylval.object = negative ? -oid : oid;
-	return tOBJECT;
+	else if (pn.type != TYPE_ERR)
+	    panic("parse_number(#...) returned unexpected type");
+	else if (pn.v.err == E_RANGE)
+	    yyerror("Object number outside of allowed range");
+	else
+	    yyerror("Malformed object number literal");
+	return 0;
     }
 
-    if (isdigit(c) || (c == '.'  &&  language_version >= DBV_Float)) {
-	Num	n = 0;
-	int	type = tINTEGER;
+    if (isdigit(c) ||
+	(c == '.'  &&  language_version >= DBV_Float)) {
 
-	while (isdigit(c)) {
-	    n = n * 10 + (c - '0');
-	    stream_add_char(token_stream, c);
+	Var pn = parse_number(
+	     PN_NONNEG|(PN_FLOAT_OK*(language_version >= DBV_Float)),
+	     c, lex_getc, lex_ungetc);
+
+	if (pn.type == TYPE_INT) {
+	    yylval.integer = pn.v.num;
+	    return tINTEGER;
+	}
+	else if (pn.type == TYPE_FLOAT) {
+	    yylval.real = pn.v.fnum;
+	    return tFLOAT;
+	}
+	else if (pn.type != TYPE_ERR)
+	    panic("parse_number returned unexpected type");
+	else if (pn.v.err == E_NONE) {
 	    c = lex_getc();
+	    if (c == '.') goto normal_dot;
+	    else panic("parse_number ungot unexpected char.");
 	}
-
-	if (language_version >= DBV_Float && c == '.') {
-	    /* maybe floating-point (but maybe `..') */
-	    int cc;
-
-	    lex_ungetc(cc = lex_getc()); /* peek ahead */
-	    if (isdigit(cc)) {	/* definitely floating-point */
-		type = tFLOAT;
-		do {
-		    stream_add_char(token_stream, c);
-		    c = lex_getc();
-		} while (isdigit(c));
-	    } else if (stream_length(token_stream) == 0)
-		/* no digits before or after `.'; not a number at all */
-		goto normal_dot;
-	    else if (cc != '.') {
-		/* Some digits before dot, not `..' */
-		type = tFLOAT;
-		stream_add_char(token_stream, c);
-		c = lex_getc();
-	    }
-	}
-
-	if (language_version >= DBV_Float && (c == 'e' || c == 'E')) {
-	    /* better be an exponent */
-	    type = tFLOAT;
-	    stream_add_char(token_stream, c);
-	    c = lex_getc();
-	    if (c == '+' || c == '-') {
-		stream_add_char(token_stream, c);
-		c = lex_getc();
-	    }
-	    if (!isdigit(c)) {
-		yyerror("Malformed floating-point literal");
-		lex_ungetc(c);
-		return 0;
-	    }
-	    do {
-		stream_add_char(token_stream, c);
-		c = lex_getc();
-	    } while (isdigit(c));
-	}
-
-	lex_ungetc(c);
-
-	if (type == tINTEGER)
-	    yylval.integer = n;
-	else {
-	    double	d;
-
-	    d = strtod(reset_stream(token_stream), 0);
-	    if (!IS_REAL(d)) {
-		yyerror("Floating-point literal out of range");
-		d = 0.0;
-	    }
-	    yylval.real = d;
-	}
-	return type;
+	else if (pn.v.err == E_RANGE)
+	    yyerror("Literal value outside of allowed range");
+	else if (pn.v.err == E_INVARG)
+	    yyerror("Malformed numeric literal");
+	else
+	    panic("parse_number returned weird error code.");
+	return 0;
     }
 
     if (isalpha(c) || c == '_') {
