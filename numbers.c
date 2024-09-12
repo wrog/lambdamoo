@@ -33,6 +33,7 @@
 #include "storage.h"
 #include "structures.h"
 #include "utf.h"
+#include "utf-ctype.h"
 #include "utils.h"
 
 #include "bf_register.h"
@@ -56,6 +57,10 @@ parse_number(unsigned flags, int32_t c_first,
     Var ret = zero;
     /* ret.type = TYPE_INT minus compiler
        warnings about uninitialized .num */
+
+#if UNICODE_NUMBERS
+    uint32_t dfamily = 0;
+#endif
 
     /* state flags */
 
@@ -87,13 +92,13 @@ parse_number(unsigned flags, int32_t c_first,
 	} while (0)				\
 
     if (flags & PN_LDSPACE)
-	while (isspace(c))
+	while (my_isspace(c))
 	    NEXTC(goto donechars);
 
     if ((flags & PN_OCTOTHORPE) && (c == '#')) {
 	NEXTC(goto donechars);
 	if (flags & PN_OCTOSPACE)
-	    while (isspace(c))
+	    while (my_isspace(c))
 		NEXTC(goto donechars);
     }
 
@@ -133,13 +138,28 @@ parse_number(unsigned flags, int32_t c_first,
 	    state &= ~(F_DIGIT|F_XSIGN);
 	    break;
 	default:
-	    if (flags & PN_TRSPACE) {
-		while (isspace(c))
-		    NEXTC(goto donechars);
+#if UNICODE_NUMBERS
+	    if (!my_isdigit(c)) {
+#endif
+		if (flags & PN_TRSPACE) {
+		    while (my_isspace(c))
+			NEXTC(goto donechars);
+		}
+		goto badchar;
+#if UNICODE_NUMBERS
 	    }
-	    goto badchar;
+	    int dval = my_digitval(c);
+	    if (!dfamily) {
+		dfamily = c - dval;
+	    }
+	    else if (dfamily + dval != (uint32_t)c) {
+		goto badchar;
+	    }
+	    c = '0' + dval;
+#else /* !UNICODE_NUMBERS */
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
+#endif /* !UNICODE_NUMBERS */
 	    state |= F_DIGIT|F_XSIGN;
 	    break;
 	}
