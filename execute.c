@@ -2891,7 +2891,6 @@ read_activ(activation * a, int which_vector)
     const char **old_names;
     unsigned old_size, stack_in_use;
     unsigned i;
-    const char *func_name;
     int max_stack;
 
     if (dbio_input_version < DBV_Float)
@@ -2951,17 +2950,26 @@ read_activ(activation * a, int which_vector)
 	return 0;
     }
     if (a->bi_func_pc != 0) {
-	if (!dbio_read_string(&func_name))
+	const char *func_name;
+	unsigned fnum;
+
+	if (!dbio_scxnf("%ms", &func_name)) {
+	    errlog("READ_ACTIV: Built-in function name expected.\n");
 	    return 0;
-	if ((i = number_func_by_name(func_name)) == FUNC_NOT_FOUND) {
+	}
+	if ((fnum = number_func_by_name(func_name)) == FUNC_NOT_FOUND) {
 	    errlog("READ_ACTIV: Unknown built-in function `%s'\n", func_name);
 	    return 0;
 	}
-	a->bi_func_id = i;
+	a->bi_func_id = fnum;
 	if (!read_bi_func_data(a->bi_func_id, &a->bi_func_data,
 			       &a->bi_func_pc)) {
 	    errlog("READ_ACTIV: Bad saved state for built-in function `%s'\n",
-		   func_name);
+		   /* read_bi_func_data() may do dbio_*() and
+		    * may thus overwrite func_name, but we know
+		    * func_name was found, so this has to work:
+		    */
+		   name_func_by_num(fnum));
 	    return 0;
 	}
     }

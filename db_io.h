@@ -112,12 +112,6 @@ inline int dbio_read_##intxx(intxx_t *p) {		\
 
 extern int dbio_read_objid(Objid *);
 
-/* For this function, any string assigned will always be in private
- * DBIO module storage, to be overwritten by the next dbio_read*()
- * call; caller must make its own copy if persistence is needed.
- */
-extern int dbio_read_string(const char **);
-
 /*  For the following functions, in the event of a succesful
  *  return (>0) the caller is responsible for eventually freeing
  *  any allocated data via free_str() or free_var(), depending.
