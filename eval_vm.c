@@ -95,16 +95,16 @@ read_vm(int task_id)
 {
     unsigned i, top, func_id, max;
     int vector;
-    char c;
     vm the_vm;
 
-    if (dbio_scanf("%u %d %u%c", &top, &vector, &func_id, &c) != 4
-	|| (c == ' '
-	    ? dbio_scanf("%u%c", &max, &c) != 2 || c != '\n'
-	    : (max = DEFAULT_MAX_STACK_DEPTH, c != '\n'))) {
+    int scn = dbio_scxnf("%u %d %u\v %u", &top, &vector, &func_id, &max);
+    if (!scn) {
 	errlog("READ_VM: Bad vm header\n");
 	return 0;
     }
+    else if (scn < 2)
+	max = DEFAULT_MAX_STACK_DEPTH;
+
     the_vm = new_vm(task_id, top + 1);
     the_vm->max_stack_size = max;
     the_vm->top_activ_stack = top;

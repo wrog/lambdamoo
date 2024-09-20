@@ -33,7 +33,7 @@
 typedef  int64_t    Num;
 typedef uint64_t   UNum;
 #  define PRIdN	   PRId64
-#  define SCNdN	   SCNd64
+#  define SCNdN_   SCNd64
 #  define NUM_MAX  INT64_MAX
 #  define NUM_MIN  INT64_MIN
 
@@ -52,7 +52,7 @@ typedef uint128_t  UNumNum;
 typedef  int32_t    Num;
 typedef uint32_t   UNum;
 #  define PRIdN	   PRId32
-#  define SCNdN	   SCNd32
+#  define SCNdN_   SCNd32
 #  define NUM_MAX  INT32_MAX
 #  define NUM_MIN  INT32_MIN
 
@@ -71,7 +71,7 @@ typedef uint64_t  UNumNum;
 typedef  int16_t    Num;
 typedef uint16_t   UNum;
 #  define PRIdN	   PRId16
-#  define SCNdN	   SCNd16
+#  define SCNdN_   SCNd16
 #  define NUM_MAX  INT16_MAX
 #  define NUM_MIN  INT16_MIN
 
@@ -84,6 +84,13 @@ typedef uint64_t  UNumNum;
 #else
 #  error "?? bad INT_TYPE_BITSIZE not handled in options_epilog.h ??"
 #endif        /* INT_TYPE_BITSIZE */
+
+#define SCNdN  SCNdN_"\a"
+/* For dbio_scxnf() only.  (scanf() is no longer used here.)
+ * Extra character distinguishes this from other uses of SCNd##
+ * in a way that won't screw up typechecking.
+ */
+
 
 /***********
  * Objects

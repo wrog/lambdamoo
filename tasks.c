@@ -1441,25 +1441,20 @@ write_task_queue(void)
 int
 read_task_queue(void)
 {
-    int count, dummy, suspended_count, suspended_task_header;
+    int count;
 
     /* Skip obsolete clock stuff */
-    if (dbio_scanf("%d clocks\n", &count) != 1) {
+    if (!dbio_scxnf("%d clocks", &count)) {
 	errlog("READ_TASK_QUEUE: Bad clock count.\n");
 	return 0;
     }
     for (; count > 0; count--)
-	/* I use a `dummy' variable here and elsewhere instead of the `*'
-	 * assignment-suppression syntax of `scanf' because it allows more
-	 * straightforward error checking; unfortunately, the standard says
-	 * that suppressed assignments are not counted in determining the
-	 * returned value of `scanf'...
-	 */
-	if (dbio_scanf("%d %d %d\n", &dummy, &dummy, &dummy) != 3) {
+	if (!dbio_scxnf("%*d %*d %*d")) {
 	    errlog("READ_TASK_QUEUE: Bad clock; count = %d\n", count);
 	    return 0;
 	}
-    if (dbio_scanf("%d queued tasks\n", &count) != 1) {
+
+    if (!dbio_scxnf("%d queued tasks", &count)) {
 	errlog("READ_TASK_QUEUE: Bad task count.\n");
 	return 0;
     }
@@ -1467,17 +1462,14 @@ read_task_queue(void)
 	unsigned first_lineno;
 	int id;
 	unsigned old_size;
-	long st;
-	char c;
+	intmax_t st;
 	time_t start_time;
 	Program *program;
 	Var *rt_env, *old_rt_env;
 	const char **old_names;
 	activation a;
 
-	if (dbio_scanf("%d %u %ld %d%c",
-		       &dummy, &first_lineno, &st, &id, &c) != 5
-	    || c != '\n') {
+	if (!dbio_scxnf("%*d %u %jd %d", &first_lineno, &st, &id)) {
 	    errlog("READ_TASK_QUEUE: Bad numbers, count = %d.\n", count);
 	    return 0;
 	}
@@ -1502,38 +1494,32 @@ read_task_queue(void)
 	enqueue_ft(program, a, rt_env, MAIN_VECTOR, start_time, id);
     }
 
-    suspended_task_header = dbio_scanf("%d suspended tasks\n",
-				       &suspended_count);
-    if (suspended_task_header == EOF)
-	return 1;		/* old version */
-
-    if (suspended_task_header != 1) {
+    int suspended_count;
+    int sthscan = dbio_scxnf("\v%d suspended tasks", &suspended_count);
+    if (!sthscan) {
 	errlog("READ_TASK_QUEUE: Bad suspended task count.\n");
 	return 0;
     }
+    else if (sthscan == 1)
+	return 1;	    /* old version before suspend() existed */
+
     for (; suspended_count > 0; suspended_count--) {
 	task *t = (task *) mymalloc(sizeof(task), M_TASK);
-	int task_id, start_time;
-	char c;
+	int task_id;
+	intmax_t start_time, vtype;
 
 	t->kind = TASK_SUSPENDED;
-	if (dbio_scanf("%d %d%c", &start_time, &task_id, &c) != 3) {
+	int thscan = dbio_scxnf("%jd %d\v %jd", &start_time, &task_id, &vtype);
+	if (!thscan) {
 	    errlog("READ_TASK_QUEUE: Bad suspended task header, count = %d\n",
 		   suspended_count);
 	    return 0;
 	}
 	t->t.suspended.start_time = start_time;
-	if (c == ' ') {
-	    if (!dbio_read_var(&t->t.suspended.value))
-		return 0;
-	}
-	else if (c == '\n')
+	if (thscan < 2)
 	    t->t.suspended.value = zero;
-	else {
-	    errlog("READ_TASK_QUEUE: Bad suspended task value, count = %d\n",
-		   suspended_count);
+	else if (!dbio_read_var_value(vtype, &t->t.suspended.value))
 	    return 0;
-	}
 
 	if (!(t->t.suspended.the_vm = read_vm(task_id))) {
 	    errlog("READ_TASK_QUEUE: Bad suspended task vm, count = %d\n",

@@ -44,7 +44,7 @@
 static char *input_db_name, *dump_db_name;
 static int dump_generation = 0;
 static const char *header_format_string
-= "** LambdaMOO Database, Format Version %u **\n";
+= "** LambdaMOO Database, Format Version %u **";
 
 DB_Version dbio_input_version;
 
@@ -111,17 +111,21 @@ read_object(void)
     Objid oid;
     Object *o;
 
-    if (dbio_scanf("#%"SCNdN, &oid) != 1 || oid != db_last_used_objid() + 1)
+    int sc = dbio_scxnf("#%"SCNdN"\v recycled", &oid);
+    if (!sc) {
+	errlog("READ_OBJECT: Bad first line\n");
 	return 0;
+    }
+    if (oid != db_last_used_objid() + 1) {
+	errlog("READ_OBJECT: Object number is out of order (expecting 1+#%"PRIdN")\n",
+	       db_last_used_objid());
+	return 0;
+    }
 
-    const char *s;
-    if (!dbio_read_string(&s))
-	return 0;
-    else if (strcmp(s, " recycled") == 0) {
+    if (sc == 2) {
 	dbpriv_new_recycled_object();
 	return 1;
-    } else if (s[0])
-	return 0;
+    }
 
     /* Every 'return 0' from here to the end of this function
      * should arguably be jumping to or calling a routine that
@@ -420,30 +424,36 @@ static int
 read_db_file(void)
 {
     Objid oid;
-    Num i, nobjs, nprogs, nusers, vnum, dummy;
+    Num i, nobjs, nprogs, nusers, vnum;
     Var user_list;
     db_verb_handle h;
     Program *program;
 
-    if (dbio_scanf(header_format_string, &dbio_input_version) != 1)
+    /* Evidently, prehistory DBs had no header line, they would just
+     * go straight to the object count.  Therefore, a prehistory DB
+     * will not start with '*'.  Since stdio allows us to put back
+     * one character, we can do a quick probe.  I prefer this to
+     * further messing with dbio_scxnf.  --wrog
+     */
+    if (header_format_string[0] != dbio_peek_byte()) {
 	dbio_input_version = DBV_Prehistory;
-
-    if (!check_db_version(dbio_input_version)) {
-	errlog("READ_DB_FILE: Unknown DB version number: %d\n",
+    }
+    else if (!dbio_scxnf(header_format_string, &dbio_input_version)) {
+	errlog("READ_DB_FILE: Bad DB header (no version?)\n");
+	return 0;
+    }
+    else if (!check_db_version(dbio_input_version)) {
+	errlog("READ_DB_FILE: Unknown DB version number: %u\n",
 	       dbio_input_version);
 	return 0;
     }
-    /* I use a `dummy' variable here and elsewhere instead of the `*'
-     * assignment-suppression syntax of `scanf' because it allows more
-     * straightforward error checking; unfortunately, the standard says that
-     * suppressed assignments are not counted in determining the returned value
-     * of `scanf'...
-     */
-    if (dbio_scanf("%"SCNdN"\n%"SCNdN"\n%"SCNdN"\n%"SCNdN"\n",
-		   &nobjs, &nprogs, &dummy, &nusers) != 4) {
-	errlog("READ_DB_FILE: Bad header\n");
+
+    if (!dbio_scxnf("%"SCNdN"\n%"SCNdN"\n%*d\n%"SCNdN,
+		    &nobjs, &nprogs, &nusers)) {
+	errlog("READ_DB_FILE: Bad DB header (missing counts?)\n");
 	return 0;
     }
+
     user_list = new_list(nusers);
     for (i = 1; i <= nusers; i++) {
 	user_list.v.list[i].type = TYPE_OBJ;
@@ -468,7 +478,7 @@ read_db_file(void)
     }
     oklog("LOADING: Reading %"PRIdN" MOO verb programs...\n", nprogs);
     for (i = 1; i <= nprogs; i++) {
-	if (dbio_scanf("#%"SCNdN":%"SCNdN"\n", &oid, &vnum) != 2) {
+	if (!dbio_scxnf("#%"SCNdN":%"SCNdN, &oid, &vnum)) {
 	    errlog("READ_DB_FILE: Bad program header, i = %"PRIdN".\n", i);
 	    return 0;
 	}
@@ -531,7 +541,7 @@ write_db_file(const char *reason)
 
     TRY {
 	dbio_printf(header_format_string, current_db_version);
-	dbio_printf("%"PRIdN"\n%d\n%d\n%"PRIdN"\n",
+	dbio_printf("\n%"PRIdN"\n%d\n%d\n%"PRIdN"\n",
 		    max_oid + 1, nprogs, 0, user_list.v.list[0].v.num);
 	for (i = 1; i <= user_list.v.list[0].v.num; i++)
 	    dbio_write_objid(user_list.v.list[i].v.obj);

@@ -2524,19 +2524,21 @@ bf_call_function_write(void *data)
 static void *
 bf_call_function_read(void)
 {
-    struct cf_state *s = alloc_data(sizeof(struct cf_state));
-    const char *line;
-    const char *hdr = "bf_call_function data: fname = ";
-    int hlen = strlen(hdr);
-    if (!dbio_read_string(&line))
+    const char *fname;
+    if (!dbio_scxnf("bf_call_function data: fname = %ms", &fname))
 	return 0;
 
-    if (!strncmp(line, hdr, hlen)) {
-	line += hlen;
-	if ((s->fnum = number_func_by_name(line)) == FUNC_NOT_FOUND)
-	    errlog("CALL_FUNCTION: Unknown built-in function: %s\n", line);
-	else if (read_bi_func_data(s->fnum, &s->data, pc_for_bi_func_data()))
+    unsigned fnum = number_func_by_name(fname);
+
+    if (fnum == FUNC_NOT_FOUND) {
+	errlog("CALL_FUNCTION: Unknown built-in function: %s\n", fname);
+    }
+    else {
+	struct cf_state *s = alloc_data(sizeof(struct cf_state));
+	if (read_bi_func_data(s->fnum = fnum, &s->data, pc_for_bi_func_data())) {
 	    return s;
+	}
+	free_data(s);
     }
     return 0;
 }
@@ -2757,26 +2759,13 @@ write_activ_as_pi(activation a)
 int
 read_activ_as_pi(activation * a)
 {
-    Objid dummy;
-    char c;
+    Var v;
+    if (!dbio_read_var(&v))
+	return 0;
+    free_var(v);
 
-    {
-	Var v;
-	if (!dbio_read_var(&v))
-	    return 0;
-	free_var(v);
-    }
-
-    /* I use a `dummy' variable here and elsewhere instead of the `*'
-     * assignment-suppression syntax of `scanf' because it allows more
-     * straightforward error checking; unfortunately, the standard says that
-     * suppressed assignments are not counted in determining the returned value
-     * of `scanf'...
-     */
-    if (dbio_scanf("%"SCNdN" %"SCNdN" %"SCNdN" %"SCNdN" %"SCNdN" %"SCNdN" %"SCNdN" %"SCNdN" %d%c",
-		 &a->this, &dummy, &dummy, &a->player, &dummy, &a->progr,
-		   &a->vloc, &dummy, &a->debug, &c) != 10
-	|| c != '\n') {
+    if (!dbio_scxnf("%"SCNdN" %*d %*d %"SCNdN" %*d %"SCNdN" %"SCNdN" %*d %d",
+		    &a->this, &a->player, &a->progr, &a->vloc, &a->debug)) {
 	errlog("READ_A: Bad numbers.\n");
 	return 0;
     }
@@ -2804,7 +2793,7 @@ read_rt_env(const char ***old_names, Var ** rt_env, unsigned *old_size)
 {
     unsigned i;
 
-    if (dbio_scanf("%u variables\n", old_size) != 1) {
+    if (!dbio_scxnf("%u variables", old_size)) {
 	errlog("READ_RT_ENV: Bad count.\n");
 	return 0;
     }
@@ -2904,11 +2893,10 @@ read_activ(activation * a, int which_vector)
     unsigned i;
     const char *func_name;
     int max_stack;
-    char c;
 
     if (dbio_input_version < DBV_Float)
 	version = dbio_input_version;
-    else if (dbio_scanf("language version %u\n", &v) != 1) {
+    else if (!dbio_scxnf("language version %u", &v)) {
 	errlog("READ_ACTIV: Malformed language version\n");
 	return 0;
     } else if (version = v, !check_db_version(version)) {
@@ -2932,7 +2920,7 @@ read_activ(activation * a, int which_vector)
 		 : a->prog->fork_vectors[which_vector].max_stack);
     alloc_rt_stack(a, max_stack);
 
-    if (dbio_scanf("%u rt_stack slots in use\n", &stack_in_use) != 1) {
+    if (!dbio_scxnf("%u rt_stack slots in use", &stack_in_use)) {
 	errlog("READ_ACTIV: Bad stack_in_use number\n");
 	return 0;
     }
@@ -2948,18 +2936,16 @@ read_activ(activation * a, int which_vector)
     if (!dbio_read_var(&a->temp))
 	return 0;
 
-    if (dbio_scanf("%u %u%c", &a->pc, &i, &c) != 3) {
-	errlog("READ_ACTIV: bad pc, next. stack_in_use = %u\n", stack_in_use);
+
+    int pcscan = dbio_scxnf("%u %u\v %u", &a->pc, &i, &a->error_pc);
+    if (!pcscan) {
+	errlog("READ_ACTIV: bad pc, next, error_pc. stack_in_use = %u\n", stack_in_use);
 	return 0;
     }
     a->bi_func_pc = i;
-
-    if (c == '\n')
+    if (pcscan < 2)
 	a->error_pc = a->pc;
-    else if (dbio_scanf("%u\n", &a->error_pc) != 1) {
-	errlog("READ_ACTIV: no error pc.\n");
-	return 0;
-    }
+
     if (!check_pc_validity(a->prog, which_vector, a->pc)) {
 	errlog("READ_ACTIV: Bad PC for suspended task.\n");
 	return 0;

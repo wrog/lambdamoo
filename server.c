@@ -1206,36 +1206,28 @@ write_active_connections(void)
 int
 read_active_connections(void)
 {
-    int count, i, have_listeners = 0;
-    char c;
+    int count;
+    int ascn = dbio_scxnf("\v%d active connections\v with listeners", &count);
 
-    i = dbio_scanf("%d active connections%c", &count, &c);
-    if (i == EOF) {		/* older database format */
-	checkpointed_connections = zero;
-	return 1;
-    } else if (i != 2) {
+    if (!ascn) {
 	errlog("READ_ACTIVE_CONNECTIONS: Bad active connections count.\n");
 	return 0;
-    } else if (c == ' ') {
-	const char *wls;
-	if (!dbio_read_string(&wls))
-	    return 0;
-	if (strcmp(wls, "with listeners") != 0) {
-	    errlog("READ_ACTIVE_CONNECTIONS: Bad listeners tag.\n");
-	    return 0;
-	} else
-	    have_listeners = 1;
-    } else if (c != '\n') {
-	errlog("READ_ACTIVE_CONNECTIONS: Bad EOL.\n");
-	return 0;
     }
+    if (ascn == 1) {
+	/* older database format did not record connections */
+	checkpointed_connections = zero;
+	return 1;
+    }
+    int have_listeners = (ascn > 2);
     checkpointed_connections = new_list(count);
+
+    int i;
     for (i = 1; i <= count; i++) {
 	Objid who, listener;
 	Var v;
 
 	if (have_listeners) {
-	    if (dbio_scanf("%"SCNdN" %"SCNdN"\n", &who, &listener) != 2) {
+	    if (!dbio_scxnf("%"SCNdN" %"SCNdN, &who, &listener)) {
 		errlog("READ_ACTIVE_CONNECTIONS: Bad conn/listener pair.\n");
 		return 0;
 	    }

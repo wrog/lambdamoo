@@ -139,19 +139,6 @@ dbio_read_line_noisy(const char *caller, const char **s, const char **pend)
     return 0;
 }
 
-int
-dbio_scanf(const char *format,...)
-{
-    va_list args;
-    int count;
-
-    va_start(args, format);
-    count = vfscanf(input, format, args);
-    va_end(args);
-
-    return count;
-}
-
 /*--------------------------*
  |  integer range checking  |
  *--------------------------*/
@@ -195,7 +182,6 @@ static struct intrange {
        DBIO_RANGE_SPEC_LIST(DBIO_DO_)
 };
 #undef DBIO_DO_
-
 
 static intmax_t
 dbio_string_to_integer(enum dbio_intrange range_id, const char *s, const char **end)
@@ -346,6 +332,190 @@ dbio_read_var_value(intmax_t vtype, Var *vp)
 	return 0;
     }
     return 1;
+}
+
+/*---------------------*
+ |  dbio_scxnf         |
+ *---------------------*/
+
+static struct scanfmt {
+    enum dbio_intrange range_id;
+    const char *cspec;
+    size_t cslen;
+}
+#define DBIO_DO_(INTXX,_2,_3,SCNxdd)				\
+        { DBIO_RANGE_##INTXX, SCNxdd, (sizeof SCNxdd)-1 },	\
+
+    dbio_scanfmts[] = {
+        DBIO_RANGE_SPEC_LIST(DBIO_DO_)
+	{ DBIO_RANGE__LENGTH, NULL, 0 }
+};
+#undef DBIO_DO_
+
+int
+dbio_scxnf(const char *format,...)
+{
+    va_list args;
+    va_start(args, format);
+
+/* Famous Last Words (Pavel):
+ * "... Fortunately, we only use a small fraction of the full
+ *      functionality of scanf in the server, so it's not
+ *      unbearably unpleasant to have to reimplement it here."
+ */
+
+    int rcount = 1;
+    const char *line, *lend, *lc;
+    const char *fc = format;
+    dbio_last_error = NULL;
+
+ nextline:
+    lc = line = dbio_read_line(&lend);
+    if (!line) {
+	/* format must be entirely optional lines
+	 * from here on; skip all of them.
+	 */
+	while (*fc == '\v') {
+	    do if (!*++fc) goto done;
+	    while (*fc != '\n');
+	    ++fc;
+	}
+	dbio_last_error = "premature EOF";
+	goto fail;
+    }
+    if (*fc == '\v') { ++fc; ++rcount; }
+
+ state1:
+    /* lc is somewhere along an actual subject line.
+     * fc is somewhere along a line format *after* any initial \v,
+     * meaning any \v we encounter now is a middle-of-the-line '\v'.
+     * Every prior \v for this line has been resolved
+     * (i e. chars were present, therefore this segment is
+     * no longer optional).
+     */
+    if (lc == lend) {
+	/* the 6 cases for *fc we have to deal with:
+	 *  <space>  \0  \v  %  everything-else  \n
+	 */
+	while (*fc == ' ') ++fc;
+	if (!*fc) goto done;
+	if (*fc == '\v') {
+	    do if (!*++fc) goto done;
+	    while (*fc != '\n');
+	}
+	else if (*fc == '%')
+	    goto convspec;
+	else if (*fc != '\n') {
+	    dbio_last_error = "could not match entire format";
+	    goto fail;
+	}
+	++fc;
+	goto nextline;
+    }
+    /* the 6 cases for *fc, in a different order:
+     *  \v  \0  \n  <space>  everything-else  %
+     */
+    while (*fc == '\v') { ++fc;	++rcount; }
+    if (!*fc || *fc == '\n') {
+	dbio_last_error = "unexpected junk at end-of-line";
+	goto fail;
+    }
+    if (*fc == ' ') {
+	while (isspace(*lc) && ++lc < lend);
+	++fc;
+	goto state1;
+    }
+    if (*fc != '%') {
+	if (!(lc < lend && *lc == *fc)) {
+	    dbio_last_error = "character mismatch";
+	    goto fail;
+	}
+	++lc;
+	++fc;
+	goto state1;
+    }
+    /*
+     * We have a conversion spec (*fc == '%')
+     * (note end-of-line case jumps here because
+     * eol makes no difference for '%'s,
+     * so from here down, *lc could be '\0
+     * (or equivalently we could have lc == lcend)
+     */
+ convspec: ;
+    /* recall the four classes of conversion spec
+     * we have to handle:
+     *
+     *    %ms   %*s   %*d   %<...>(du)
+     */
+    int noassign = 0;
+    if (*++fc == '*') {
+	++fc;
+	noassign = 1;
+    }
+    if (*fc == 'm') {		/* %ms */
+	if (noassign)
+	    panic("DBIO_SCXNF: %*m... makes no sense");
+	if (*++fc != 's')
+	    panic("DBIO_SCXNF: %m must be followed by 's'");
+	if (*++fc)
+	    panic("DBIO_SCXNF: %ms must be at the end");
+	const char **sp = va_arg(args, const char **);
+	(*sp) = lc;
+	goto done;
+    }
+    if (*fc == 's') {		/* %*s */
+	if (!noassign)
+	    panic("DBIO_SCXNF: missing 'm' (must be %ms, not %s)");
+	if (!*++fc)
+	    goto done;
+	if (*fc++ != '\n')
+	    panic("DBIO_SCXNF: %*s can only be followed by a newline");
+	goto nextline;
+    }
+    if (noassign) {		/* %*d */
+	if (*fc++ != 'd')
+	    panic("DBIO_SCXNF: %* can only be followed by s or d");
+	if (*lc == '-') ++lc;
+	if (!isdigit(*lc)) {
+	    dbio_last_error = "expected an integer to skip";
+	    goto fail;
+	}
+	while (isdigit(*++lc));
+	goto state1;
+    }
+    /* We have to actually read a number and assign it */
+    struct scanfmt *sf = dbio_scanfmts;
+    while ((sf->cspec
+	    || (panic("DBIO_SCXNF: Unsupported directive!"),0))
+	   && (0 != strncmp(sf->cspec, fc, sf->cslen)))
+	++sf;
+    fc += sf->cslen;
+
+    intmax_t i = dbio_string_to_integer(sf->range_id, lc, &lc);
+    if (dbio_last_error)
+	goto fail;
+
+#define DBIO_DO_(INTXX,intxx_t,_3,_4)			\
+	case DBIO_RANGE_##INTXX: {			\
+	    intxx_t *ip = va_arg(args, intxx_t *);	\
+	    *ip = (intxx_t)i;				\
+	    break;					\
+	}						\
+
+    switch (sf->range_id) {
+	DBIO_RANGE_SPEC_LIST(DBIO_DO_);
+    default:
+	/* really should not happen */
+	panic("DBIO_SCXNF: Unsupported directive?");
+    }
+#undef DBIO_DO_
+    goto state1;
+
+ fail:
+    rcount = 0;
+ done:
+    va_end(args);
+    return rcount;
 }
 
 /*---------------------*

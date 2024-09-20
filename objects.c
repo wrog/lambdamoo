@@ -176,8 +176,8 @@ bf_move_read(void)
 {
     struct bf_move_data *data = alloc_data(sizeof(*data));
 
-    if (dbio_scanf("bf_move data: what = %"SCNdN", where = %"SCNdN"\n",
-		   &data->what, &data->where) == 2)
+    if (dbio_scxnf("bf_move data: what = %"SCNdN", where = %"SCNdN,
+		   &data->what, &data->where))
 	return data;
     else
 	return 0;
@@ -303,7 +303,7 @@ bf_create_read(void)
 {
     Objid *data = alloc_data(sizeof(Objid));
 
-    if (dbio_scanf("bf_create data: oid = %"SCNdN"\n", data) == 1)
+    if (dbio_scxnf("bf_create data: oid = %"SCNdN, data))
 	return data;
     else
 	return 0;
@@ -508,16 +508,8 @@ static void *
 bf_recycle_read(void)
 {
     Objid *data = alloc_data(sizeof(*data));
-    int dummy;
 
-    /* I use a `dummy' variable here and elsewhere instead of the `*'
-     * assignment-suppression syntax of `scanf' because it allows more
-     * straightforward error checking; unfortunately, the standard says that
-     * suppressed assignments are not counted in determining the returned value
-     * of `scanf'...
-     */
-    if (dbio_scanf("bf_recycle data: oid = %"SCNdN", cont = %d\n",
-		   data, &dummy) == 2)
+    if (dbio_scxnf("bf_recycle data: oid = %"SCNdN", cont = %*d", data))
 	return data;
     else
 	return 0;

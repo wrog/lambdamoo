@@ -43,8 +43,6 @@ extern int dbio_skip_lines(size_t n, const char *caller);
 				 * otherwise.
 				 */
 
-extern int dbio_scanf(const char *format,...) FORMAT(scanf,1,2);
-
 /*--------------------------*
  |  integer range checking  |
  *--------------------------*
@@ -56,10 +54,13 @@ extern int dbio_scanf(const char *format,...) FORMAT(scanf,1,2);
  *    (and if that value is quoted here, then it's unquoted
  *    in the actual format string and vice versa, e.g.,
  *    use '%jd' for intmax_t, but '%"SCNdN"' for Num).
+ *
+ *  (Due to how SCNdN is defined and searched for,
+ *   NUM *must* be at the beginning of this list.)
  */
 #define DBIO_RANGE_SPEC_LIST(DEF)		\
-    DEF(INTMAX, intmax_t, intmax,    "jd")	\
     DEF(NUM,         Num, num,      SCNdN)	\
+    DEF(INTMAX, intmax_t, intmax,    "jd")	\
     DEF(INT16,   int16_t, int16,   SCNd16)	\
     DEF(UINT16, uint16_t, uint16,  SCNu16)	\
     DEF(INT,         int, int,        "d")	\
@@ -148,6 +149,126 @@ extern Program *dbio_read_program(DB_Version version,
 				 * messages.  If FMTR is null, then DATA should
 				 * be the required string.
 				 */
+
+/*--------------*
+ |  dbio_scxnf  |
+ *--------------*/
+
+extern int dbio_scxnf(const char *format,...) FORMAT(scanf,1,2);
+/*
+  !!  WARNING: This is NOT scanf().  It does not invoke scanf() or
+  !!  any other function of that family.  This is its own thing.
+  !!  Even if it visibly seems to be making use of the same conversion
+  !!  specifications in order to take advantage of compiler support
+  !!  for typechecking them, those specifications do NOT behave the
+  !!  same way here.  Please read:
+ *
+ * The FORMAT string is expected to consist of one or more line formats
+ * separated by newlines (10,'\n').  For each line format, we attempt
+ * to read a line of input (the "subject") that, once stripped of its
+ * trailing newline, must then match that format.
+ *
+ * Only entire lines are matched.
+ * EOF after one or more chars but no newline is always an error.
+ *
+ * (N.B.:  Ending the format string with an '\n' implies a final
+ * empty ('') format which can only be satisfied by an empty line.)
+ *
+ * If any line match fails, no further lines are read and the return
+ * value is 0.  Unlike with the dbio_read_* functions, it will be
+ * up to the caller to call errlog() with an appropriate diagnostic.
+ *
+ * If all matches succeed, the return value is 1 + the number of
+ * optional lines/segments matched and will thus be at most
+ * 1 + the number of '\v's in the format string.
+ *
+ * For the purposes of this function, 'char' means 'byte', i.e.,
+ * non-ASCII UTF-8 sequences in the subject will be read as bytes
+ * and, in order to not cause match failure, will either have to
+ * match identical sequences in the format or be scooped up by a %s
+ * or %*s conversion.
+ *
+ * Chars in the format that are not listed below as having special
+ * meaning must match the subject byte-for-byte.
+ *
+ * The following chars have special meaning:
+ *
+ * Newline (10,'\n')
+ *   line format separator, as described above.
+ *
+ * Vertical-tab (11,'\v')
+ *   as the first character of a line format:
+ *     The rest of this format is for an *optional* line, i.e.,
+ *     the input must either be a matching line or EOF.  This
+ *     is the only situation where EOF on input is not an error.
+ *
+ *   otherwise:
+ *     The rest of this format is for an *optional* segment, i.e.,
+ *     the subject line must either end here or match the rest of
+ *     the format.
+ *
+ * Space (32,' ')
+ *   matches 0 or more (non-newline) whitespace chars in the subject
+ *   and is the ONLY whitespace char in format strings that does this.
+ *
+ * (0-8,12-31,127)
+ * !!  All remaining ASCII whitespace and control characters *other*
+ * !!  than those mentioned or horizontal-tab (9,'\t') are reserved
+ * !!  for internal purposes and MUST NOT BE USED in format strings.
+ *   (Thus far, no such characters are part of the DB file format,
+ *   and should thus be appearing at most in MOO string values,
+ *   which are not parsed by dbio_scxnf()).
+ *
+ * '%' (37)
+ *   This character is as for scanf, introducing a conversion spec.
+ *   Each '%' that does not suppress assignment (%*....) is paired
+ *   with the next remaining unused argument, which must be a
+ *   (non-NULL) pointer to an lvalue of the correct type.  Upon
+ *   successful return (>0), all locations corresonding to conversion
+ *   specs other than those in skipped optional segments/lines will
+ *   have been assigned.
+ *
+ *   (If the return value is not sufficient for you to know *which*
+ *    optional segments/lines were matched vs. skipped, you are
+ *    probably trying to do too much in a single dbio_scxnf() call.)
+ *
+ *   Only the conversion specs listed below are recognized; do not use
+ *   any others.  While they have been chosen to resemble scanf
+ *   conversion specs so that a modern compiler may check the
+ *   arguments without needing any weird options, the meanings are
+ *   decidely different.
+ *
+ *   %*s       - no assignment
+ *        must be at the end of a line format,
+ *        skips the rest of the sujbect line.
+ *
+ *   %ms       - const char **
+ *        must be at the end of the LAST line format, consumes all
+ *        remaining chars in the subject, and assigns a pointer to them
+ *        Note that the storage for this will get reused by the
+ *        next database read; the pointer will need to be str_dup()ed
+ *        or str_intern()ed if you want to keep it around.
+ *        (n.b.  '%m' is not C99, but it *was* standardized by POSIX
+ *               in 2008, so I think we are relatively safe)
+ *
+ *   %*d       - no assignment
+ *        expect a decimal integer (-?[0-9]+) of arbitrary length
+ *        and skip over it.  No range checking is performed.
+ *
+ *   %"SCNdN"  - Num *
+ *   %"SCNu16" - uint16_t *
+ *   %"SCNd16" - int16_t *
+ *   %jd       - intmax_t *
+ *   %d        - int *
+ *   %u        - unsigned *
+ *        These all consume an arbitrarily long decimal integer
+ *        but it is an error if the lvalue being assigned
+ *        cannot represent the corresponding integer value.
+ *
+ *   Unlike their scanf() counterparts, none of these conversions skips
+ *   leading whitespace.  If you want that behavior, you can precede
+ *   the % with a space.
+ */
 
 
 /*********** Output ***********/
