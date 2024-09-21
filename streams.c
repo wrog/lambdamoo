@@ -145,6 +145,12 @@ stream_length(Stream * s)
     return s->current;
 }
 
+int32_t
+stream_last_byte(Stream *s)
+{
+    return s->current ? s->buffer[s->current - 1] : -1;
+}
+
 /*
  * Return a fixed length buffer (in *BUF and *LEN)
  * growing stream as necessary so that *LEN >= NEED

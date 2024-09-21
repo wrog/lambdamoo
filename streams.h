@@ -39,6 +39,7 @@ extern void free_stream(Stream *);
 extern char *stream_contents(Stream *);
 extern char *reset_stream(Stream *);
 extern size_t stream_length(Stream *);
+extern int32_t stream_last_byte(Stream *s);
 
 /*
  * How to provide fixed-size buffers for others to fill:
