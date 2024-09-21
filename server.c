@@ -54,7 +54,7 @@ int in_child = 0;
 
 static const char *shutdown_message = 0;	/* shut down if non-zero */
 static int in_emergency_mode = 0;
-static Var checkpointed_connections;
+static Var checkpointed_connections = { .type = TYPE_NONE }; /* non-list */
 
 typedef enum {
     CHKPT_OFF, CHKPT_TIMER, CHKPT_SIGNAL, CHKPT_FUNC
@@ -424,14 +424,18 @@ main_loop(void)
     int i;
 
     /* First, notify DB of disconnections for all checkpointed connections */
-    for (i = 1; i <= checkpointed_connections.v.list[0].v.num; i++) {
-	Var v;
+    for (i = 1;
+	 i <= (TYPE_LIST == checkpointed_connections.type
+	       ? checkpointed_connections.v.list[0].v.num
+	       : 0);
+	 i++) {
 
-	v = checkpointed_connections.v.list[i];
+	Var v = checkpointed_connections.v.list[i];
 	call_notifier(v.v.list[1].v.obj, v.v.list[2].v.obj,
 		      "user_disconnected");
     }
     free_var(checkpointed_connections);
+    checkpointed_connections = zero;
 
     /* Second, run #0:server_started() */
     run_server_task(-1, SYSTEM_OBJECT, "server_started", new_list(0), "", 0);
@@ -1123,13 +1127,33 @@ boot_player(Objid player)
 void
 write_active_connections(void)
 {
-    int count = 0;
+    /*  As things currently stand, it is impossible for there to both
+     *  be checkpointed and active connections at the same time, since
+     *  the first call to network_process_io() is after the checkpointed
+     *  connections have been cleared out, but that might conceivably
+     *  change at some point.  In any case, checkpointed connections
+     *  should be preserved since we may be coming here straight
+     *  from emergency wizard mode.   --wrog
+     */
+    int have_ckpted = (TYPE_LIST == checkpointed_connections.type);
+    int count = have_ckpted
+	? checkpointed_connections.v.list[0].v.num
+	: 0;
+
     shandle *h;
 
     for (h = all_shandles; h; h = h->next)
 	count++;
 
     dbio_printf("%d active connections with listeners\n", count);
+
+    if (have_ckpted) {
+	int i;
+	for (i = 1; i <= count; i++) {
+	    Var v = checkpointed_connections.v.list[i];
+	    dbio_printf("%"PRIdN" %"PRIdN"\n", v.v.list[1].v.obj, v.v.list[2].v.obj);
+	}
+    }
 
     for (h = all_shandles; h; h = h->next)
 	dbio_printf("%d %d\n", h->player, h->listener);
@@ -1143,7 +1167,7 @@ read_active_connections(void)
 
     i = dbio_scanf("%d active connections%c", &count, &c);
     if (i == EOF) {		/* older database format */
-	checkpointed_connections = new_list(0);
+	checkpointed_connections = zero;
 	return 1;
     } else if (i != 2) {
 	errlog("READ_ACTIVE_CONNECTIONS: Bad active connections count.\n");
