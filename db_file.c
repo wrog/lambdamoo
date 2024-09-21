@@ -125,7 +125,7 @@ read_object(void)
 
     o = dbpriv_new_object();
     o->name = dbio_read_string_intern();
-    (void) dbio_read_string();	/* discard old handles string */
+    dbio_skip_lines(1);		/* discard old handles string */
     o->flags = dbio_read_num();
 
     o->owner = dbio_read_objid();

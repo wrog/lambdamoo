@@ -36,6 +36,9 @@ extern int dbio_peek_byte(void);
 				 * Returns 0-255 or EOF.
 				 */
 
+extern void dbio_skip_lines(size_t n);
+				/* Read and discard N lines of input */
+
 extern void dbio_read_line(char *s, int n);
 				/* Reads at most N-1 characters through the
 				 * next newline into S, terminating S with a

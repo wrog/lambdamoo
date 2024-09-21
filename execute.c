@@ -2773,10 +2773,9 @@ read_activ_as_pi(activation * a)
 	errlog("READ_A: Bad numbers.\n");
 	return 0;
     }
-    dbio_read_string();		/* was argstr */
-    dbio_read_string();		/* was dobjstr */
-    dbio_read_string();		/* was iobjstr */
-    dbio_read_string();		/* was prepstr */
+    dbio_skip_lines(4);
+    /* was argstr, dobjstr, iobjstr, prepstr */
+
     a->verb = dbio_read_string_intern();
     a->verbname = dbio_read_string_intern();
     return 1;

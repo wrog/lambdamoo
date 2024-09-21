@@ -62,6 +62,14 @@ dbio_peek_byte(void)
 }
 
 void
+dbio_skip_lines(size_t n)
+{
+    int32_t c;
+    while ((EOF != (c = getc(input)))
+	   && (c != '\n' || --n));
+}
+
+void
 dbio_read_line(char *s, int n)
 {
     fgets(s, n, input);
