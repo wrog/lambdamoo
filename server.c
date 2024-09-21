@@ -1182,6 +1182,7 @@ read_active_connections(void)
     return 1;
 }
 
+#ifndef NOMAIN
 int
 main(int argc, char **argv)
 {
@@ -1278,7 +1279,7 @@ main(int argc, char **argv)
 
     return 0;
 }
-
+#endif
 
 /**** built in functions ****/
 
