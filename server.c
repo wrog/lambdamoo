@@ -591,33 +591,62 @@ server_connection_options(shandle * h, Var list)
 
 #undef SERVER_CO_TABLE
 
-static char *
-read_stdin_line(void)
+static const char *abort_line = "abort";
+
+/* Read even a very long line of input.
+ * Return NULL on EOF at the beginning of a line.
+ * Return abort_line if we see 1 or more chars
+ *   followed by an EOF with no newline.
+ * (Assumes s is empty and always resets it).
+ */
+static const char *
+read_stdin_line(Stream *s)
 {
-    static Stream *s = 0;
-    char *line, buffer[1000];
-    int buflen;
+    const char *line;
+    char buffer[1000];
+    size_t buflen;
+    int saw_newline = 0;
 
     fflush(stdout);
-    if (!s)
-	s = new_stream(100);
-
-    do {			/* Read even a very long line of input */
-	fgets(buffer, sizeof(buffer), stdin);
-	buflen = strlen(buffer);
-	if (buflen == 0)
-	    return 0;
+    do{
+	if (!fgets(buffer, sizeof(buffer), stdin)
+	    || (0 == (buflen = strlen(buffer))))
+	    break;
 	if (buffer[buflen - 1] == '\n') {
-	    buffer[buflen - 1] = '\0';
-	    buflen--;
+	    buffer[--buflen] = '\0';
+	    ++saw_newline;
 	}
-	stream_add_string(s, buffer);
+	stream_add_bytes(s, buffer, buflen);
     } while (buflen == sizeof(buffer) - 1);
+
+    if (!saw_newline) {
+	if (!stream_length(s))
+	    return NULL;
+	(void)reset_stream(s);
+	return abort_line;
+    }
+
     line = reset_stream(s);
     while (*line == ' ')
 	line++;
 
     return line;
+}
+
+static int
+read_stdin_verbcode(Stream *s, Var *code)
+{
+    Var str;
+    str.type = TYPE_STR;
+    for (;;) {
+	const char *line = read_stdin_line(s);
+	if (!line || line == abort_line)
+	    return 0;
+	if (0 == strcmp(line, "."))
+	    return 1;
+	str.v.str = str_dup(line);
+	*code = listappend(*code, str);
+    }
 }
 
 static void
@@ -629,11 +658,11 @@ emergency_notify(Objid player, const char *line)
 static int
 emergency_mode(void)
 {
-    char *line;
+    const char *line;
     Var words;
     int nargs;
     const char *command;
-    Stream *s = new_stream(100);
+    Stream *s = new_stream(0);
     Objid wizard = -1;
     int debug = 1;
     int start_ok = -1;
@@ -673,10 +702,10 @@ emergency_mode(void)
 	    printf("** Now running emergency commands as #%d ...\n", wizard);
 	}
 	printf("\nMOO (#%d)%s: ", wizard, debug ? "" : "[!d]");
-	line = read_stdin_line();
+	line = read_stdin_line(s);
 
 	if (!line)
-	    start_ok = 0;	/* treat EOF as "quit" */
+	    start_ok = 0;	/* EOF at start of line = "quit" */
 	else if (*line == ';') {	/* eval command */
 	    Var code, errors;
 	    Program *program;
@@ -698,16 +727,10 @@ emergency_mode(void)
 	    if (*line == '\0') {	/* long form */
 		printf("Type one or more lines of code, ending with `.' ");
 		printf("alone on a line.\n");
-		for (;;) {
-		    line = read_stdin_line();
-		    if (!strcmp(line, "."))
-			break;
-		    else {
-			str.v.str = str_dup(line);
-			code = listappend(code, str);
-		    }
-		}
-	    } else {
+		if (!read_stdin_verbcode(s, &code))
+		    goto abort;
+	    }
+	    else {
 		str.v.str = str_dup(line);
 		code = listappend(code, str);
 	    }
@@ -764,17 +787,12 @@ emergency_mode(void)
 					      &message, &vname);
 		printf("%s\n", message);
 		if (h.ptr) {
-		    Var code, str, errors;
-		    char *line;
+		    Var code, errors;
 		    Program *program;
 
 		    code = new_list(0);
-		    str.type = TYPE_STR;
-
-		    while (strcmp(line = read_stdin_line(), ".")) {
-			str.v.str = str_dup(line);
-			code = listappend(code, str);
-		    }
+		    if (!read_stdin_verbcode(s, &code))
+			goto abort;
 
 		    program = parse_list_as_program(code, &errors);
 		    if (program) {
@@ -817,8 +835,7 @@ emergency_mode(void)
 		else
 		    printf("%s\n", message);
 	    } else if (!mystrcasecmp(command, "abort") && nargs == 0) {
-	        printf("Bye.  (%s)\n\n", "NOT saving database");
-		exit(1);
+		goto abort;
 	    } else if (!mystrcasecmp(command, "quit") && nargs == 0) {
 		start_ok = 0;
 	    } else if (!mystrcasecmp(command, "continue") && nargs == 0) {
@@ -879,6 +896,9 @@ emergency_mode(void)
     oklog("EMERGENCY_MODE: Leaving mode; %s continue...\n",
 	  start_ok ? "will" : "won't");
     return start_ok;
+ abort:
+    printf("Bye.  (%s)\n\n", "NOT saving database");
+    exit(1);
 }
 
 
