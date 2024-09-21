@@ -52,6 +52,15 @@ dbpriv_set_dbio_input(FILE * f)
     input = f;
 }
 
+int
+dbio_peek_byte(void)
+{
+    int c = fgetc(input);
+    if (EOF != c)
+	ungetc(c, input);
+    return c;
+}
+
 void
 dbio_read_line(char *s, int n)
 {
