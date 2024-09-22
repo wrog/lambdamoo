@@ -39,12 +39,6 @@ extern int dbio_peek_byte(void);
 extern void dbio_skip_lines(size_t n);
 				/* Read and discard N lines of input */
 
-extern void dbio_read_line(char *s, int n);
-				/* Reads at most N-1 characters through the
-				 * next newline into S, terminating S with a
-				 * null.  (Like the `fgets()' function.)
-				 */
-
 extern int dbio_scanf(const char *format,...) FORMAT(scanf,1,2);
 
 extern int64_t dbio_read_num(void);

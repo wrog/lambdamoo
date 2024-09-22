@@ -69,10 +69,55 @@ dbio_skip_lines(size_t n)
 	   && (c != '\n' || --n));
 }
 
-void
-dbio_read_line(char *s, int n)
+/*------------------------*
+ |  reading entire lines  |
+ *------------------------*/
+
+static Stream *dbio_line_stream = 0;
+
+static void
+dbio_free_line_stream(void)
 {
-    fgets(s, n, input);
+    if (dbio_line_stream) {
+	free_stream(dbio_line_stream);
+	dbio_line_stream = 0;
+    }
+}
+
+void
+dbpriv_dbio_input_finished(void)
+{
+    dbio_free_line_stream();
+}
+
+static const char *
+dbio_read_line(const char **end)
+{
+    char *buffer;
+    size_t blen, len;
+
+    if (!dbio_line_stream)
+	dbio_line_stream = new_stream(0);
+
+    do {
+	stream_beginfill(dbio_line_stream, 2, &buffer, &blen);
+	if (!fgets(buffer, blen + 1, input))
+	    break;
+	len = strlen(buffer);
+	stream_endfill(dbio_line_stream, blen - len);
+    } while (len == blen && buffer[len-1] != '\n');
+
+    if (stream_last_byte(dbio_line_stream) != '\n') {
+	if (end)
+	    *end = NULL;
+	return NULL;
+    }
+    stream_delete_char(dbio_line_stream);
+    if (end) {
+	size_t rlen = stream_length(dbio_line_stream);
+	*end = stream_contents(dbio_line_stream) + rlen;
+    }
+    return reset_stream(dbio_line_stream);
 }
 
 int
@@ -87,6 +132,10 @@ dbio_scanf(const char *format,...)
 
     return count;
 }
+
+/*-----------------------------*
+ |  reading individual values  |
+ *-----------------------------*/
 
 int64_t
 dbio_read_num(void)
@@ -127,44 +176,14 @@ dbio_read_objid(void)
 const char *
 dbio_read_string(void)
 {
-    static Stream *str = 0;
-    static char buffer[1024];
-    int len, used_stream = 0;
-
-    if (str == 0)
-	str = new_stream(1024);
-
-  try_again:
-    fgets(buffer, sizeof(buffer), input);
-    len = strlen(buffer);
-    if (len == sizeof(buffer) - 1 && buffer[len - 1] != '\n') {
-	stream_add_string(str, buffer);
-	used_stream = 1;
-	goto try_again;
-    }
-    if (buffer[len - 1] == '\n')
-	buffer[len - 1] = '\0';
-
-    if (used_stream) {
-	stream_add_string(str, buffer);
-	return reset_stream(str);
-    } else
-	return buffer;
+    return dbio_read_line(NULL);
 }
 
 const char *
 dbio_read_string_intern(void)
 {
-    const char *s, *r;
-
-    s = dbio_read_string();
-    r = str_intern(s);
-
-    /* puts(r); */
-
-    return r;
+    return str_intern(dbio_read_line(NULL));
 }
-
 
 Var
 dbio_read_var(void)
@@ -209,6 +228,10 @@ dbio_read_var(void)
     }
     return r;
 }
+
+/*---------------------*
+ |  dbio_read_program  |
+ *---------------------*/
 
 struct state {
     char prev_char;
