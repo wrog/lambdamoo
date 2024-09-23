@@ -58,9 +58,14 @@ extern const char *dbio_read_string_intern(void);
 				 */
 
 extern Var dbio_read_var(void);
-				/* The DBIO module retains no references to
-				 * the returned value, so freeing it is
-				 * entirely the responsibility of the caller.
+extern Var dbio_read_var_value(intmax_t vtype);
+                                /* dbio_read_var() reads the type first,
+				 * then the value;  dbio_read_var_value(type)
+				 * reads a value given the type.
+				 *
+				 * In both cases, the DBIO module retains no
+				 * references to the returned value, so freeing
+				 * it is the responsibility of the caller.
 				 */
 
 extern Program *dbio_read_program(DB_Version version,

@@ -188,15 +188,19 @@ dbio_read_string_intern(void)
 Var
 dbio_read_var(void)
 {
-    Var r;
-    int i, l = dbio_read_num();
+    return dbio_read_var_value(dbio_read_num());
+}
 
-    if (l == (int) TYPE_ANY && dbio_input_version == DBV_Prehistory)
-	l = TYPE_NONE;		/* Old encoding for VM's empty temp register
-				 * and any as-yet unassigned variables.
-				 */
-    r.type = (var_type) l;
-    switch (l) {
+Var
+dbio_read_var_value(intmax_t vtype)
+{
+    Var r;
+    if (vtype == TYPE_ANY && dbio_input_version == DBV_Prehistory)
+	vtype = TYPE_NONE;  /* Old encoding for VM's empty temp register
+			     * and any as-yet unassigned variables.
+			     */
+    r.type = (var_type) vtype;
+    switch (vtype) {
     case TYPE_CLEAR:
     case TYPE_NONE:
 	break;
@@ -214,15 +218,16 @@ dbio_read_var(void)
     case _TYPE_FLOAT:
 	r.v.fnum = dbio_read_float();
 	break;
-    case _TYPE_LIST:
-	l = dbio_read_num();
-	r = new_list(l);
-	for (i = 0; i < l; i++)
-	    r.v.list[i + 1] = dbio_read_var();
+    case _TYPE_LIST: ;
+	Num len = dbio_read_num();
+	r = new_list(len); /* overwrites r.type */
+	Num i;
+	for (i = 1; i <= len; ++i)
+	    r.v.list[i] = dbio_read_var();
 	break;
     default:
-	errlog("DBIO_READ_VAR: Unknown type (%d) at DB file pos. %ld\n",
-	       l, ftell(input));
+	errlog("DBIO_READ_VAR: Unknown type (%jd) at DB file pos. %ld\n",
+	       vtype, ftell(input));
 	r = zero;
 	break;
     }
