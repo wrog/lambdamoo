@@ -51,15 +51,15 @@ DB_Version dbio_input_version;
 
 /*********** Verb and property I/O ***********/
 
-static void
+static int
 read_verbdef(Verbdef * v)
 {
-    v->name = dbio_read_string_intern();
-    v->owner = dbio_read_objid();
-    v->perms = dbio_read_uint16();
-    v->prep = dbio_read_int16();
     v->next = 0;
     v->program = 0;
+    return (dbio_read_string_intern(&v->name) &&
+	    dbio_read_objid(&v->owner) &&
+	    dbio_read_uint16(&v->perms) &&
+	    dbio_read_int16(&v->prep));
 }
 
 static void
@@ -71,11 +71,12 @@ write_verbdef(Verbdef * v)
     dbio_write_intmax(v->prep);
 }
 
-static Propdef
-read_propdef(void)
+static int
+read_propdef(Propdef *p)
 {
-    const char *name = dbio_read_string_intern();
-    return dbpriv_new_propdef(name);
+    const char *name;
+    return dbio_read_string_intern(&name) &&
+	((*p = dbpriv_new_propdef(name)), 1);
 }
 
 static void
@@ -84,12 +85,13 @@ write_propdef(Propdef * p)
     dbio_write_string(p->name);
 }
 
-static void
+static int
 read_propval(Pval * p)
 {
-    p->var = dbio_read_var();
-    p->owner = dbio_read_objid();
-    p->perms = dbio_read_uint16();
+    return
+	dbio_read_var(&p->var)      &&
+	dbio_read_objid(&p->owner)  &&
+	dbio_read_uint16(&p->perms);
 }
 
 static void
@@ -108,62 +110,86 @@ read_object(void)
 {
     Objid oid;
     Object *o;
-    intmax_t i;
-    Verbdef *v, **prevv;
-    intmax_t nprops;
 
     if (dbio_scanf("#%"SCNdN, &oid) != 1 || oid != db_last_used_objid() + 1)
 	return 0;
 
-    const char *s = dbio_read_string();
-    if (strcmp(s, " recycled") == 0) {
+    const char *s;
+    if (!dbio_read_string(&s))
+	return 0;
+    else if (strcmp(s, " recycled") == 0) {
 	dbpriv_new_recycled_object();
 	return 1;
     } else if (s[0])
 	return 0;
 
+    /* Every 'return 0' from here to the end of this function
+     * should arguably be jumping to or calling a routine that
+     * frees this partly-created object, but since
+     *   returning 0 from here does
+     *   an immediate return 0 from read_db_file() which does
+     *   an immediate return 0 from db_load() which does
+     *   an immediate exit(1),
+     * it is not clear there would be any point --wrog
+     */
     o = dbpriv_new_object();
-    o->name = dbio_read_string_intern();
-    dbio_skip_lines(1);		/* discard old handles string */
-    o->flags = dbio_read_uint16();
 
-    o->owner = dbio_read_objid();
+    intmax_t i;
+    intmax_t nverbdefs;
+    if (!(dbio_read_string_intern(&o->name) &&
+	  dbio_skip_lines(1, "READ_OBJECT") &&
+	  /* discard old handles string */
 
-    o->location = dbio_read_objid();
-    o->contents = dbio_read_objid();
-    o->next = dbio_read_objid();
+	  dbio_read_uint16(&o->flags)   &&
+	  dbio_read_objid(&o->owner)    &&
 
-    o->parent = dbio_read_objid();
-    o->child = dbio_read_objid();
-    o->sibling = dbio_read_objid();
+	  dbio_read_objid(&o->location) &&
+	  dbio_read_objid(&o->contents) &&
+	  dbio_read_objid(&o->next)     &&
 
-    o->verbdefs = 0;
-    prevv = &(o->verbdefs);
-    for (i = dbio_read_intmax(); i > 0; i--) {
-	v = mymalloc(sizeof(Verbdef), M_VERBDEF);
-	read_verbdef(v);
+	  dbio_read_objid(&o->parent)   &&
+	  dbio_read_objid(&o->child)    &&
+	  dbio_read_objid(&o->sibling)  &&
+	  dbio_read_intmax(&nverbdefs)))
+	return 0;
+
+    Verbdef **prevv = &(o->verbdefs);
+    *prevv = NULL;
+    for (i = nverbdefs; i > 0; --i) {
+	Verbdef *v = mymalloc(sizeof(Verbdef), M_VERBDEF);
+	if (!read_verbdef(v))
+	    return 0;
 	*prevv = v;
 	prevv = &(v->next);
     }
 
-    o->propdefs.cur_length = 0;
-    o->propdefs.max_length = 0;
-    o->propdefs.l = 0;
-    if ((i = dbio_read_intmax()) != 0) {
-	o->propdefs.l = mymalloc(i * sizeof(Propdef), M_PROPDEF);
-	o->propdefs.cur_length = i;
-	o->propdefs.max_length = i;
-	for (i = 0; i < o->propdefs.cur_length; i++)
-	    o->propdefs.l[i] = read_propdef();
+
+    intmax_t npropdefs;
+    if (!dbio_read_intmax(&npropdefs))
+	return 0;
+
+    o->propdefs.cur_length = npropdefs;
+    o->propdefs.max_length = npropdefs;
+    o->propdefs.l = NULL;
+    if (npropdefs != 0) {
+	o->propdefs.l = mymalloc(npropdefs * sizeof(Propdef), M_PROPDEF);
+	for (i = 0; i < npropdefs; i++)
+	    if (!read_propdef(&o->propdefs.l[i]))
+		return 0;
     }
-    nprops = dbio_read_intmax();
+
+    intmax_t nprops;
+    if (!dbio_read_intmax(&nprops))
+	return 0;
+
     if (nprops)
 	o->propval = mymalloc(nprops * sizeof(Pval), M_PVAL);
     else
 	o->propval = 0;
 
     for (i = 0; i < nprops; i++) {
-	read_propval(o->propval + i);
+	if (!read_propval(o->propval + i))
+	    return 0;
     }
 
     return 1;
@@ -421,7 +447,8 @@ read_db_file(void)
     user_list = new_list(nusers);
     for (i = 1; i <= nusers; i++) {
 	user_list.v.list[i].type = TYPE_OBJ;
-	user_list.v.list[i].v.obj = dbio_read_objid();
+	if (!dbio_read_objid(&user_list.v.list[i].v.obj))
+	    return 0;
     }
     dbpriv_set_all_users(user_list);
 

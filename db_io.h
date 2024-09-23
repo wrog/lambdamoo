@@ -36,8 +36,12 @@ extern int dbio_peek_byte(void);
 				 * Returns 0-255 or EOF.
 				 */
 
-extern void dbio_skip_lines(size_t n);
-				/* Read and discard N lines of input */
+extern int dbio_skip_lines(size_t n, const char *caller);
+				/* Read and discard N lines of input.
+				 * Return true iff successful.
+				 * errlog() about failure in CALLER
+				 * otherwise.
+				 */
 
 extern int dbio_scanf(const char *format,...) FORMAT(scanf,1,2);
 
@@ -72,56 +76,68 @@ enum dbio_intrange {
 
 /*---------------------------*
  |  dbio_read_*() functions  |
- *---------------------------*/
+ *---------------------------*
+ *  The dbio_read_* functions (NOT including dbio_read_program) read
+ *  individual data items, and, when successful, assign the value read
+ *  to the designated lvalue (*P) argument and return non-zero.
+ *
+ *  When an error or premature EOF occurs, the return value is zero
+ *  with an error message being written to the server log, in which
+ *  case you should not count on (*P) to be anything in particular.
+ */
 
-extern intmax_t dbio_read_integer(enum dbio_intrange);
-                /* a.k.a. dbio_read_intmax() dbio_read_num()
-		 *        dbio_read_int16() dbio_read_uint16()
-		 *        dbio_read_int() dbio_read_uint()
+extern int dbio_read_integer(enum dbio_intrange r, intmax_t *p);
+                /* a.k.a. dbio_read_intmax(p)  dbio_read_num(p)
+		 *        dbio_read_int16(p)   dbio_read_uint16(p)
+		 *        dbio_read_int(p)     dbio_read_uint(p)
 		 *
-		 * Reads an integer, does format and range checking.
-		 * (uses str_to_imax() to read all available digits
-		 * even for (u)int16.
-		 *
-		 * Also calls errlog() on errors
-		 * (so caller does not have to).
+		 * Reads an integer, with range checking (uses
+		 * str_to_imax() to read all available digits even for
+		 * (u)int16); the value read is assigned via the last
+		 * argument.
 		 */
 
-#   define DBIO_DO_(INTXX,intxx_t,intxx,_4)			\
-								\
-inline intxx_t dbio_read_##intxx(void) {			\
-    return (intxx_t)dbio_read_integer(DBIO_RANGE_##INTXX);	\
-}								\
+#   define DBIO_DO_(INTXX,intxx_t,intxx,_4)		\
+							\
+inline int dbio_read_##intxx(intxx_t *p) {		\
+    intmax_t i = 0;					\
+    int r = dbio_read_integer(DBIO_RANGE_##INTXX, &i);	\
+    *p = (intxx_t)i;					\
+    return r;						\
+}							\
 
     DBIO_RANGE_SPEC_LIST(DBIO_DO_)
 #   undef DBIO_DO_
 
+extern int dbio_read_objid(Objid *);
 
-extern Objid dbio_read_objid(void);
-extern double dbio_read_float(void);
+/* For this function, any string assigned will always be in private
+ * DBIO module storage, to be overwritten by the next dbio_read*()
+ * call; caller must make its own copy if persistence is needed.
+ */
+extern int dbio_read_string(const char **);
 
-extern const char *dbio_read_string(void);
-				/* The returned string is in private storage of
-				 * the DBIO module, so the caller should
-				 * str_dup() it if it is to persist.
+/*  For the following functions, in the event of a succesful
+ *  return (>0) the caller is responsible for eventually freeing
+ *  any allocated data via free_str() or free_var(), depending.
+ *  For an error return (==0), all such memory will have already
+ *  been reclaimed and any Var or char* assigned here can
+ *  (and must) be safely ignored.
+ */
+extern int dbio_read_float(Var *);
+extern int dbio_read_string_intern(const char **);
+
+extern int dbio_read_var(Var *v);
+extern int dbio_read_var_value(intmax_t vtype, Var *v);
+                                /* dbio_read_var() reads a type (integer) first,
+				 * then the value;
+				 * dbio_read_var_value(type) is for reading
+				 * a value where the type is already known.
 				 */
 
-extern const char *dbio_read_string_intern(void);
-				/* The returned string is duplicated
-				 * and possibly interned in a db-load
-				 * string intern table.
-				 */
-
-extern Var dbio_read_var(void);
-extern Var dbio_read_var_value(intmax_t vtype);
-                                /* dbio_read_var() reads the type first,
-				 * then the value;  dbio_read_var_value(type)
-				 * reads a value given the type.
-				 *
-				 * In both cases, the DBIO module retains no
-				 * references to the returned value, so freeing
-				 * it is the responsibility of the caller.
-				 */
+/*---------------------*
+ |  dbio_read_program  |
+ *---------------------*  is different */
 
 extern Program *dbio_read_program(DB_Version version,
 				  const char *(*fmtr) (void *),

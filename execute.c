@@ -2525,9 +2525,11 @@ static void *
 bf_call_function_read(void)
 {
     struct cf_state *s = alloc_data(sizeof(struct cf_state));
-    const char *line = dbio_read_string();
+    const char *line;
     const char *hdr = "bf_call_function data: fname = ";
     int hlen = strlen(hdr);
+    if (!dbio_read_string(&line))
+	return 0;
 
     if (!strncmp(line, hdr, hlen)) {
 	line += hlen;
@@ -2758,7 +2760,12 @@ read_activ_as_pi(activation * a)
     Objid dummy;
     char c;
 
-    free_var(dbio_read_var());
+    {
+	Var v;
+	if (!dbio_read_var(&v))
+	    return 0;
+	free_var(v);
+    }
 
     /* I use a `dummy' variable here and elsewhere instead of the `*'
      * assignment-suppression syntax of `scanf' because it allows more
@@ -2773,12 +2780,11 @@ read_activ_as_pi(activation * a)
 	errlog("READ_A: Bad numbers.\n");
 	return 0;
     }
-    dbio_skip_lines(4);
-    /* was argstr, dobjstr, iobjstr, prepstr */
 
-    a->verb = dbio_read_string_intern();
-    a->verbname = dbio_read_string_intern();
-    return 1;
+    return
+	dbio_skip_lines(4, "READ_A") && /* was:  argstr, dobjstr, iobjstr, prepstr */
+        dbio_read_string_intern(&a->verb) &&
+	dbio_read_string_intern(&a->verbname);
 }
 
 void
@@ -2806,10 +2812,11 @@ read_rt_env(const char ***old_names, Var ** rt_env, unsigned *old_size)
 					  M_NAMES);
     *rt_env = new_rt_env(*old_size);
 
-    for (i = 0; i < *old_size; i++) {
-	(*old_names)[i] = dbio_read_string_intern();
-	(*rt_env)[i] = dbio_read_var();
-    }
+    for (i = 0; i < *old_size; i++)
+	if (!(dbio_read_string_intern(&(*old_names)[i]) &&
+	      dbio_read_var(&(*rt_env)[i])))
+	    return 0;
+
     return 1;
 }
 
@@ -2931,13 +2938,15 @@ read_activ(activation * a, int which_vector)
     }
     a->top_rt_stack = a->base_rt_stack;
     for (i = 0; i < stack_in_use; i++)
-	*(a->top_rt_stack++) = dbio_read_var();
+	if (!dbio_read_var(a->top_rt_stack++))
+	    return 0;
 
     if (!read_activ_as_pi(a)) {
 	errlog("READ_ACTIV: Bad activ.  stack_in_use = %u\n", stack_in_use);
 	return 0;
     }
-    a->temp = dbio_read_var();
+    if (!dbio_read_var(&a->temp))
+	return 0;
 
     if (dbio_scanf("%u %u%c", &a->pc, &i, &c) != 3) {
 	errlog("READ_ACTIV: bad pc, next. stack_in_use = %u\n", stack_in_use);
@@ -2956,7 +2965,8 @@ read_activ(activation * a, int which_vector)
 	return 0;
     }
     if (a->bi_func_pc != 0) {
-	func_name = dbio_read_string();
+	if (!dbio_read_string(&func_name))
+	    return 0;
 	if ((i = number_func_by_name(func_name)) == FUNC_NOT_FOUND) {
 	    errlog("READ_ACTIV: Unknown built-in function `%s'\n", func_name);
 	    return 0;

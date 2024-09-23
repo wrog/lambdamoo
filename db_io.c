@@ -65,12 +65,17 @@ dbio_peek_byte(void)
     return c;
 }
 
-void
-dbio_skip_lines(size_t n)
+int
+dbio_skip_lines(size_t n, const char *caller)
 {
     int32_t c;
     while ((EOF != (c = getc(input)))
 	   && (c != '\n' || --n));
+    if (n) {
+	errlog("%s: Unexpected end of file\n", caller);
+	dbio_last_error = "Unexpected end of file";
+    }
+    return !n;
 }
 
 /*------------------------*
@@ -122,6 +127,16 @@ dbio_read_line(const char **end)
 	*end = stream_contents(dbio_line_stream) + rlen;
     }
     return reset_stream(dbio_line_stream);
+}
+
+static inline int
+dbio_read_line_noisy(const char *caller, const char **s, const char **pend)
+{
+    if (!!(*s = dbio_read_line(pend)))
+	return 1;
+    errlog("%s: Unexpected end of file\n", caller);
+    dbio_last_error = "Unexpected end of file";
+    return 0;
 }
 
 int
@@ -209,114 +224,117 @@ dbio_string_to_integer(enum dbio_intrange range_id, const char *s, const char **
  |  reading individual values  |
  *-----------------------------*/
 
-intmax_t
-dbio_read_integer(enum dbio_intrange range_id)
+int
+dbio_read_integer(enum dbio_intrange range_id, intmax_t *ip)
 {
     const char *s, *p1, *p2;
 
-    if (!(s = dbio_read_line(&p1))) {
-	errlog("DBIO_READ_INTEGER: Unexpected end of file\n");
-	dbio_last_error = "Unexpected end of file";
+    if (!dbio_read_line_noisy("DBIO_READ_INTEGER", &s, &p1))
 	return 0;
-    }
-    intmax_t i = dbio_string_to_integer(range_id, s, &p2);
+
+    *ip = dbio_string_to_integer(range_id, s, &p2);
     if (!dbio_last_error && (isspace(*s) || p1 != p2))
 	dbio_last_error = "Did not read entire line";
 
-    if (dbio_last_error)
+    if (dbio_last_error) {
 	errlog("DBIO_READ_INTEGER: %s: \"%s\" at file pos. %ld\n",
 	       dbio_last_error, s, ftell(input));
-    return i;
+	return 0;
+    }
+    return 1;
 }
 
-double
-dbio_read_float(void)
+int
+dbio_read_float(double *dp)
 {
     const char *s, *p1, *p2;
 
-    if (!(s = dbio_read_line(&p1))) {
-	errlog("DBIO_READ_FLOAT: Unexpected end of file\n");
-	dbio_last_error = "Unexpected end of file";
-	return 0.0;
-    }
-    double d = strtod(s, (char **)&p2);
-    dbio_last_error =
-	(isspace(*s) || p1 != p2)
-	? "Did not read entire line"
-	: (!IS_REAL(d) ? "Magnitude too large or NaN" : NULL);
+    if (!dbio_read_line_noisy("DBIO_READ_FLOAT", &s, &p1))
+	return 0;
 
-    if (dbio_last_error)
+    *dp = strtod(s, (char **)&p2);
+    dbio_last_error =
+	((isspace(*s) || p1 != p2)
+	 ? "Did not read entire line"
+	 : (!IS_REAL(*dp)
+	    ? "Magnitude too large or NaN"
+	    : NULL));
+
+    if (dbio_last_error) {
 	errlog("DBIO_READ_FLOAT: %s: \"%s\" at file pos. %ld\n",
 	       dbio_last_error, s, ftell(input));
-    return d;
+	return 0;
+    }
+    return 1;
 }
 
-Objid
-dbio_read_objid(void)
+int
+dbio_read_objid(Objid *op)
 {
-    return dbio_read_num();
+    return dbio_read_num(op);
 }
 
-const char *
-dbio_read_string(void)
+int
+dbio_read_string(const char **s)
 {
-    return dbio_read_line(NULL);
+    return dbio_read_line_noisy("DBIO_READ_STRING", s, NULL);
 }
 
-const char *
-dbio_read_string_intern(void)
+int
+dbio_read_string_intern(const char **s)
 {
-    return str_intern(dbio_read_line(NULL));
+    if (!dbio_read_line_noisy("DBIO_READ_STRING_INTERN", s, NULL))
+	return 0;
+    *s = str_intern(*s);
+    return 1;
 }
 
-Var
-dbio_read_var(void)
+int
+dbio_read_var(Var *vp)
 {
-    intmax_t vtype = dbio_read_intmax();
-    if (dbio_last_error)
-	return zero;
-    return dbio_read_var_value(vtype);
+    intmax_t vtype;
+    if (!dbio_read_intmax(&vtype)) {
+	*vp = zero;
+	return 0;
+    }
+    return dbio_read_var_value(vtype, vp);
 }
 
-Var
-dbio_read_var_value(intmax_t vtype)
+int
+dbio_read_var_value(intmax_t vtype, Var *vp)
 {
-    Var r;
     if (vtype == TYPE_ANY && dbio_input_version == DBV_Prehistory)
 	vtype = TYPE_NONE;  /* Old encoding for VM's empty temp register
 			     * and any as-yet unassigned variables.
 			     */
-    r.type = (var_type) vtype;
+    vp->type = (var_type) vtype;
     switch (vtype) {
     case TYPE_CLEAR:
     case TYPE_NONE:
 	break;
     case _TYPE_STR:
-	r.v.str = dbio_read_string_intern();
-	r.type |= TYPE_COMPLEX_FLAG;
-	break;
+	vp->type |= TYPE_COMPLEX_FLAG;
+	return dbio_read_string_intern(&vp->v.str);
     case TYPE_OBJ:
     case TYPE_ERR:
     case TYPE_INT:
     case TYPE_CATCH:
     case TYPE_FINALLY:
-	r.v.num = dbio_read_num();
-	break;
+	return dbio_read_num(&vp->v.num);
     case _TYPE_FLOAT:
-	r.v.fnum = dbio_read_float();
-	break;
+	return dbio_read_float(&vp->v.fnum);
     case _TYPE_LIST: ;
-	Num len = dbio_read_num();
-	if (dbio_last_error)
-	    return zero;
-	r = new_list(len); /* overwrites r.type */
+	Num len;
+	if (!dbio_read_num(&len))
+	    return 0;
+	*vp = new_list(len); /* overwrites vp->type */
 	Num i;
 	for (i = 1; i <= len; ++i) {
-	    r.v.list[i] = dbio_read_var();
-	    if (dbio_last_error) {
-		r.v.list[0].v.num = i-1;
-		complex_free_var(r);
-		return zero;
+	    if (!dbio_read_var(&vp->v.list[i])) {
+		vp->v.list[0].v.num = i-1;
+		complex_free_var(*vp);
+		*vp = zero;
+		return 0;
 	    }
 	}
 	break;
@@ -324,10 +342,10 @@ dbio_read_var_value(intmax_t vtype)
 	dbio_last_error = "Unknown Var type";
 	errlog("DBIO_READ_VAR: Unknown type (%jd) at DB file pos. %ld\n",
 	       vtype, ftell(input));
-	r = zero;
-	break;
+	*vp = zero;
+	return 0;
     }
-    return r;
+    return 1;
 }
 
 /*---------------------*

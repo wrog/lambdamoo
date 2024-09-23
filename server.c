@@ -1217,7 +1217,10 @@ read_active_connections(void)
 	errlog("READ_ACTIVE_CONNECTIONS: Bad active connections count.\n");
 	return 0;
     } else if (c == ' ') {
-	if (strcmp(dbio_read_string(), "with listeners") != 0) {
+	const char *wls;
+	if (!dbio_read_string(&wls))
+	    return 0;
+	if (strcmp(wls, "with listeners") != 0) {
 	    errlog("READ_ACTIVE_CONNECTIONS: Bad listeners tag.\n");
 	    return 0;
 	} else
@@ -1236,10 +1239,12 @@ read_active_connections(void)
 		errlog("READ_ACTIVE_CONNECTIONS: Bad conn/listener pair.\n");
 		return 0;
 	    }
-	} else {
-	    who = dbio_read_num();
-	    listener = SYSTEM_OBJECT;
 	}
+	else if (!dbio_read_num(&who))
+	    return 0;
+	else
+	    listener = SYSTEM_OBJECT;
+
 	checkpointed_connections.v.list[i] = v = new_list(2);
 	v.v.list[1].type = v.v.list[2].type = TYPE_OBJ;
 	v.v.list[1].v.obj = who;

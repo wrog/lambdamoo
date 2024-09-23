@@ -1523,8 +1523,10 @@ read_task_queue(void)
 	    return 0;
 	}
 	t->t.suspended.start_time = start_time;
-	if (c == ' ')
-	    t->t.suspended.value = dbio_read_var();
+	if (c == ' ') {
+	    if (!dbio_read_var(&t->t.suspended.value))
+		return 0;
+	}
 	else if (c == '\n')
 	    t->t.suspended.value = zero;
 	else {
