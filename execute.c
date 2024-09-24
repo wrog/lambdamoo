@@ -2697,7 +2697,7 @@ static package
 bf_task_stack(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
     int nargs = arglist.v.list[0].v.num;
-    int id = arglist.v.list[1].v.num;
+    TaskID id = task_id_from_num(arglist.v.list[1].v.num);
     int line_numbers_too = (nargs >= 2 && is_true(arglist.v.list[2]));
     vm the_vm = find_suspended_task(id);
     Objid owner = (the_vm ? progr_of_cur_verb(the_vm) : NOTHING);

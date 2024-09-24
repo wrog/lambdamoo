@@ -55,7 +55,7 @@ typedef enum {
 } task_kind;
 
 typedef struct forked_task {
-    int id;
+    TaskID id;
     Program *program;
     activation a;
     Var *rt_env;
@@ -139,7 +139,7 @@ typedef struct tqueue {
      *   the next_itail field is ignored and may be garbage.
      */
     int total_input_length;
-    int last_input_task_id;
+    TaskID last_input_task_id;
     int input_suspended;
 
     task *first_bg, **last_bg;
@@ -169,7 +169,7 @@ typedef struct ext_queue {
 
 #define NO_USAGE	-1
 
-int current_task_id;
+TaskID current_task_id;
 static tqueue *idle_tqueues = 0, *active_tqueues = 0;
 static task *waiting_tasks = 0;	/* forked and suspended tasks */
 static ext_queue *external_queues = 0;
@@ -510,16 +510,20 @@ free_task(task * t, int strong)
     myfree(t, M_TASK);
 }
 
-static int
+static TaskID
 new_task_id(void)
 {
-    int i;
+    intmax_t i;
 
     do {
-	i = RANDOM();
+	i = RANDOM()
+#if RAND_MAX > TASK_MAX
+	    & TASK_MAX
+#endif
+	    ;
     } while (i == 0);
 
-    return i;
+    return (TaskID)i;
 }
 
 static void
@@ -1017,7 +1021,7 @@ enqueue_waiting(task * t)
 
 static void
 enqueue_ft(Program * program, activation a, Var * rt_env,
-	   int f_index, time_t start_time, int id)
+	   int f_index, time_t start_time, TaskID id)
 {
     task *t = (task *) mymalloc(sizeof(task), M_TASK);
 
@@ -1068,7 +1072,7 @@ check_user_task_limit(Objid user)
 enum error
 enqueue_forked_task2(activation a, int f_index, unsigned after_seconds, int vid)
 {
-    int id;
+    TaskID id;
     Var *rt_env;
 
     if (!check_user_task_limit(a.progr))
@@ -1081,7 +1085,7 @@ enqueue_forked_task2(activation a, int f_index, unsigned after_seconds, int vid)
     if (vid >= 0) {
 	free_var(a.rt_env[vid]);
 	a.rt_env[vid].type = TYPE_INT;
-	a.rt_env[vid].v.num = id;
+	a.rt_env[vid].v.num = num_from_task_id(id);
     }
     rt_env = copy_rt_env(a.rt_env, a.prog->num_var_names);
     enqueue_ft(a.prog, a, rt_env, f_index, time(0) + after_seconds, id);
@@ -1170,7 +1174,7 @@ make_reading_task(vm the_vm, void *data)
     }
 }
 
-int
+TaskID
 last_input_task_id(Objid player)
 {
     tqueue *tq = find_tqueue(player, 0);
@@ -1328,7 +1332,7 @@ run_server_task(Objid player, Objid what, const char *verb, Var args,
 enum outcome
 run_server_task_setting_id(Objid player, Objid what, const char *verb,
 			   Var args, const char *argstr, Var * result,
-			   int *task_id)
+			   TaskID *task_id)
 {
     db_verb_handle h;
 
@@ -1377,7 +1381,7 @@ write_forked_task(forked_task ft)
 {
     unsigned lineno = find_line_number(ft.program, ft.f_index, 0);
 
-    dbio_printf("0 %u %ld %d\n", lineno, (long)ft.start_time, ft.id);
+    dbio_printf("0 %u %jd %"PRIdT"\n", lineno, (intmax_t)ft.start_time, ft.id);
     write_activ_as_pi(ft.a);
     write_rt_env(ft.program->var_names, ft.rt_env, ft.program->num_var_names);
     dbio_write_forked_program(ft.program, ft.f_index);
@@ -1386,7 +1390,7 @@ write_forked_task(forked_task ft)
 static void
 write_suspended_task(suspended_task st)
 {
-    dbio_printf("%ld %d ", (long)st.start_time, st.the_vm->task_id);
+    dbio_printf("%jd %"PRIdT" ", (intmax_t)st.start_time, st.the_vm->task_id);
     dbio_write_var(st.value);
     write_vm(st.the_vm);
 }
@@ -1460,7 +1464,6 @@ read_task_queue(void)
     }
     for (; count > 0; count--) {
 	unsigned first_lineno;
-	int id;
 	unsigned old_size;
 	intmax_t st;
 	time_t start_time;
@@ -1469,10 +1472,12 @@ read_task_queue(void)
 	const char **old_names;
 	activation a;
 
-	if (!dbio_scxnf("%*d %u %jd %d", &first_lineno, &st, &id)) {
+	TaskID task_id;
+	if (!dbio_scxnf("%*d %u %jd %"SCNdT, &first_lineno, &st, &task_id)) {
 	    errlog("READ_TASK_QUEUE: Bad numbers, count = %d.\n", count);
 	    return 0;
 	}
+
 	start_time = st;
 	if (!read_activ_as_pi(&a)) {
 	    errlog("READ_TASK_QUEUE: Bad activation, count = %d.\n", count);
@@ -1491,7 +1496,7 @@ read_task_queue(void)
 	rt_env = reorder_rt_env(old_rt_env, old_names, old_size, program);
 	program->first_lineno = first_lineno;
 
-	enqueue_ft(program, a, rt_env, MAIN_VECTOR, start_time, id);
+	enqueue_ft(program, a, rt_env, MAIN_VECTOR, start_time, task_id);
     }
 
     int suspended_count;
@@ -1505,16 +1510,17 @@ read_task_queue(void)
 
     for (; suspended_count > 0; suspended_count--) {
 	task *t = (task *) mymalloc(sizeof(task), M_TASK);
-	int task_id;
-	intmax_t start_time, vtype;
-
 	t->kind = TASK_SUSPENDED;
-	int thscan = dbio_scxnf("%jd %d\v %jd", &start_time, &task_id, &vtype);
+
+	intmax_t start_time, vtype;
+	TaskID task_id;
+	int thscan = dbio_scxnf("%jd %"SCNdT"\v %jd", &start_time, &task_id, &vtype);
 	if (!thscan) {
 	    errlog("READ_TASK_QUEUE: Bad suspended task header, count = %d\n",
 		   suspended_count);
 	    return 0;
 	}
+
 	t->t.suspended.start_time = start_time;
 	if (thscan < 2)
 	    t->t.suspended.value = zero;
@@ -1642,7 +1648,7 @@ bf_task_id(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUS
 {
     Var r;
     r.type = TYPE_INT;
-    r.v.num = current_task_id;
+    r.v.num = num_from_task_id(current_task_id);
     free_var(arglist);
     return make_var_pack(r);
 }
@@ -1691,7 +1697,7 @@ list_for_forked_task(forked_task ft)
 
     list = new_list(10);
     list.v.list[1].type = TYPE_INT;
-    list.v.list[1].v.num = ft.id;
+    list.v.list[1].v.num = num_from_task_id(ft.id);
     list.v.list[2].type = TYPE_INT;
     list.v.list[2].v.num = ft.start_time;
     list.v.list[3].type = TYPE_INT;
@@ -1734,7 +1740,7 @@ list_for_vm(vm the_vm)
     list = new_list(10);
 
     list.v.list[1].type = TYPE_INT;
-    list.v.list[1].v.num = the_vm->task_id;
+    list.v.list[1].v.num = num_from_task_id(the_vm->task_id);
 
     list.v.list[3].type = TYPE_INT;
     list.v.list[3].v.num = 0;	/* OBSOLETE: was clock ID */
@@ -1901,7 +1907,7 @@ bf_queued_tasks(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
 }
 
 struct fcl_data {
-    int id;
+    TaskID id;
     vm the_vm;
 };
 
@@ -1918,7 +1924,7 @@ finding_closure(vm the_vm, const char *status UNUSED_, void *data)
 }
 
 vm
-find_suspended_task(int id)
+find_suspended_task(TaskID id)
 {
     tqueue *tq;
     task *t;
@@ -1960,7 +1966,7 @@ find_suspended_task(int id)
 }
 
 struct kcl_data {
-    int id;
+    TaskID id;
     Objid owner;
 };
 
@@ -1981,7 +1987,7 @@ killing_closure(vm the_vm, const char *status UNUSED_, void *data)
 }
 
 static enum error
-kill_task(int id, Objid owner)
+kill_task(TaskID id, Objid owner)
 {
     task **tt;
     tqueue *tq;
@@ -2072,7 +2078,7 @@ kill_task(int id, Objid owner)
 static package
 bf_kill_task(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {
-    int id = arglist.v.list[1].v.num;
+    TaskID id = task_id_from_num(arglist.v.list[1].v.num);
     enum error e = kill_task(id, progr);
 
     free_var(arglist);
@@ -2085,7 +2091,7 @@ bf_kill_task(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 }
 
 static enum error
-do_resume(int id, Var value, Objid progr)
+do_resume(TaskID id, Var value, Objid progr)
 {
     task **tt;
     tqueue *tq;
@@ -2138,7 +2144,7 @@ bf_resume(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
     enum error e;
 
     value = (nargs >= 2 ? var_ref(arglist.v.list[2]) : zero);
-    e = do_resume(arglist.v.list[1].v.num, value, progr);
+    e = do_resume(task_id_from_num(arglist.v.list[1].v.num), value, progr);
     free_var(arglist);
     if (e != E_NONE) {
 	free_var(value);

@@ -126,6 +126,51 @@ enum error {
 };
 
 
+/***********
+ * Task IDs
+ *
+ * Note that this datatype must be either Num or a subrange.
+ */
+
+#define TASK_MIN 0
+
+#if INT32_MAX < NUM_MAX
+
+/* Admittedly, the extra space taken up by int64_t task ids
+ * would not kill us, but are we ever really going to get
+ * to a billion+ tasks in a single server run?
+ * Survey sez NO.
+ */
+typedef  int32_t    TaskID;
+#  define PRIdT	    PRId32
+#  define SCNdT_    SCNd32
+#  define TASK_MAX  INT32_MAX
+
+/* This is only used for searching */
+inline TaskID task_id_from_num(Num n) {
+    return (TaskID)(n < 0 || n > INT32_MAX ? 0 : n);
+}
+
+#else
+typedef   Num       TaskID;
+#  define PRIdT	    PRIdN
+#  define SCNdT_    SCNdN_
+#  define TASK_MAX  NUM_MAX
+
+inline TaskID task_id_from_num(Num n) {
+    return n < 0 ? 0 : n;
+}
+#endif
+
+#define SCNdT  SCNdT_"\b"
+
+inline Num num_from_task_id(TaskID t) { return t; }
+
+/* typedef struct task_id_ *TaskID;
+inline TaskID task_id_from_num(Num n) { return (TaskID)(void *)(uintmax_t)n; }
+inline Num num_from_task_id(TaskID t) { return (Num)(uintmax_t)(void *)t; }
+ */
+
 /****************
  * General Types
  */

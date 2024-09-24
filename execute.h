@@ -58,7 +58,7 @@ typedef struct {
 extern void free_activation(activation *, char data_too);
 
 typedef struct {
-    int task_id;
+    TaskID task_id;
     activation *activ_stack;
     unsigned max_stack_size;
     unsigned top_activ_stack;

@@ -29,7 +29,7 @@
 /**** external functions ****/
 
 vm
-new_vm(int task_id, int stack_size)
+new_vm(TaskID task_id, int stack_size)
 {
     vm the_vm = mymalloc(sizeof(vmstruct), M_VM);
 
@@ -91,7 +91,7 @@ write_vm(vm the_vm)
 }
 
 vm
-read_vm(int task_id)
+read_vm(TaskID task_id)
 {
     unsigned i, top, func_id, max;
     int vector;

@@ -146,6 +146,7 @@ dbio_read_line_noisy(const char *caller, const char **s, const char **pend)
 #define  DBIO_INT16_INIT  { INT16_MIN,  INT16_MAX, 0 }
 #define DBIO_UINT16_INIT  {         0, UINT16_MAX, 0 }
 #define DBIO_INTMAX_INIT  { .skip=1 }
+#define   DBIO_TASK_INIT  {  TASK_MIN,   TASK_MAX, 0 }
 
 #if NUM_MAX == INTMAX_MAX
 #  define  DBIO_NUM_INIT  DBIO_INTMAX_INIT

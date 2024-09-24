@@ -55,11 +55,12 @@ extern int dbio_skip_lines(size_t n, const char *caller);
  *    in the actual format string and vice versa, e.g.,
  *    use '%jd' for intmax_t, but '%"SCNdN"' for Num).
  *
- *  (Due to how SCNdN is defined and searched for,
- *   NUM *must* be at the beginning of this list.)
+ *  (Due to how SCNdN and SCNdT are defined and searched for,
+ *   NUM and TASK *must* be at the beginning of this list.)
  */
 #define DBIO_RANGE_SPEC_LIST(DEF)		\
     DEF(NUM,         Num, num,      SCNdN)	\
+    DEF(TASK,     TaskID, taskid,   SCNdT)	\
     DEF(INTMAX, intmax_t, intmax,    "jd")	\
     DEF(INT16,   int16_t, int16,   SCNd16)	\
     DEF(UINT16, uint16_t, uint16,  SCNu16)	\
@@ -250,6 +251,7 @@ extern int dbio_scxnf(const char *format,...) FORMAT(scanf,1,2);
  *        and skip over it.  No range checking is performed.
  *
  *   %"SCNdN"  - Num *
+ *   %"SCNdT"  - TaskID *
  *   %"SCNu16" - uint16_t *
  *   %"SCNd16" - int16_t *
  *   %jd       - intmax_t *
