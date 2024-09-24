@@ -842,8 +842,17 @@ emergency_mode(void)
 	    } else if (!mystrcasecmp(command, "debug") && nargs == 0) {
 		debug = !debug;
 	    } else if (!mystrcasecmp(command, "wizard") && nargs == 1
-		       && sscanf(words.v.list[2].v.str, "#%d", &wizard) == 1) {
-		printf("** Switching to wizard #%d...\n", wizard);
+		       && words.v.list[2].v.str[0] == '#') {
+		const char *w = words.v.list[2].v.str+1;
+		char *w2 = (char *)w;
+		intmax_t wix = strtoimax(w, &w2, 10);
+		if (w == w2)
+		    printf("** Object number expected after 'wizard'\n");
+		else {
+		    wizard = wix;
+		    printf("** Attempting to switch to wizard #%d...\n",
+			   wizard);
+		}
 	    } else {
 		if (mystrcasecmp(command, "help")
 		    && mystrcasecmp(command, "?"))
