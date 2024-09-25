@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include "my-string.h"
+#include "exceptions.h"
 
 typedef struct {
     char *buffer;
@@ -29,19 +30,70 @@ typedef struct {
 } Stream;
 
 extern Stream *new_stream(size_t size);
-extern void stream_add_char(Stream *, char);
+extern void free_stream(Stream *);
+
+extern char *reset_stream(Stream *);
+extern char *stream_contents(Stream *);
+extern size_t stream_length(Stream *);
+
 extern void stream_delete_char(Stream *);
+
+/*
+ * If stream exceptions are enabled,
+ * all of the following may RAISE(stream_too_big)
+ */
+extern void stream_add_char(Stream *, char);
 extern void stream_add_bytes(Stream *, const char *, size_t);
 inline void stream_add_string(Stream * s, const char *string)
 { stream_add_bytes(s, string, strlen(string)); }
 extern void stream_printf(Stream *, const char *,...) FORMAT(printf,2,3);
-extern void free_stream(Stream *);
-extern char *stream_contents(Stream *);
-extern char *reset_stream(Stream *);
-extern size_t stream_length(Stream *);
 
-#include "exceptions.h"
+/*
+ * Helper for catching overly large allocations:
+ *
+ *   TRY_STREAM
+ *     ...stuff that may allocate too much
+ *   EXCEPT_STREAM
+ *     ...recover from too much allocation
+ *   ENDTRY_STREAM
+ */
+#define TRY_STREAM				\
+{						\
+    enable_stream_exceptions();			\
+    if (ES_exceptionStack)			\
+	panic("TRY_STREAM not outermost");	\
+    TRY
 
+#define EXCEPT_STREAM				\
+    EXCEPT(stream_too_big)
+
+#define ENDTRY_STREAM				\
+    ENDTRY					\
+    disable_stream_exceptions();		\
+}
+/*
+ * (1) TRY_STREAM, if used, *must* be the outermost TRY.
+ *     Otherwise, you would have to do
+ *
+ *       TRY
+ *          enable_stream_exceptions();
+ *          TRY
+ *             ...something that may fail in additional ways
+ *          EXCEPT(stream_too_big)
+ *             ...recover from stream_too_big
+ *          ENDTRY
+ *       FINALLY
+ *          disable_stream_exceptions();
+ *	    ... other mandatory cleanups??
+ *       ENDTRY;
+ *
+ *    ((XXX -- provide better TRY_STREAM if this ever comes up?..))
+ *
+ * see also notes in exceptions.h
+ */
+
+/* low level machinery for catching large allocations:
+ */
 extern void enable_stream_exceptions(void);
 extern void disable_stream_exceptions(void);
 extern size_t stream_alloc_maximum;

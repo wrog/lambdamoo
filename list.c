@@ -386,45 +386,6 @@ strget(Var str, Var i)
     return r;
 }
 
-/**** helpers for catching overly large allocations ****/
-
-#define TRY_STREAM     { enable_stream_exceptions(); TRY
-#define ENDTRY_STREAM  ENDTRY  disable_stream_exceptions(); }
-/*
- * Expected usage:
- *
- *   TRY_STREAM
- *     <...do stuff...>
- *   EXCEPT (stream_too_big)
- *     <...handle memory-go-boom case...>
- *   ENDTRY_STREAM
- *
- * Since TRY uses setjmp/longjmp, variables modified in the course of
- * <...do stuff...> should not be assumed to have retained any useful
- * values into the EXCEPT handler or afterwards in event that the
- * stream_too_big exception is raised.
- *
- * Implementation note:
- *
- * If we wanted to be uber-paranoid, or if there were any real
- * possibility of nested code throwing other kinds of exceptions
- * that get caught further out, then we'd want to enclose the
- * disable_stream_exceptions() call in a FINALLY clause.  However,
- *
- * (1) said clause will also certainly want to include other kinds of
- * cleanup (e.g., freeing of streams) so this is not simply a case of
- * rolling it into ENDTRY_STREAM, and
- *
- * (2) the current exception implementation cannot have EXCEPT and
- * FINALLY in the same TRY, so we then have to worry about which
- * should be on the inside, and then the additional costs of pushing a
- * second exception context and possibly having to do two longjmps
- * in the course of handle an exception, at which point we may be
- * wanting to rewrite the exception implementation anyway...,
- *
- * --wrog
- */
-
 /**** built in functions ****/
 
 static package
