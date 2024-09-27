@@ -23,6 +23,7 @@
 
 #include "my-string.h"
 #include "exceptions.h"
+#include "structures.h"
 
 typedef struct {
     char *buffer;
@@ -57,7 +58,7 @@ inline int  stream_add_utf(Stream *s, uint32_t c)
 #else
 extern int  stream_add_utf(Stream *, uint32_t);
 #endif
-extern void stream_add_float(Stream *s, double n, int prec);
+extern void stream_add_float(Stream *s, FlNum n, int prec);
 extern void stream_add_bytes(Stream *, const char *, size_t);
 inline void stream_add_string(Stream * s, const char *string)
 { stream_add_bytes(s, string, strlen(string)); }

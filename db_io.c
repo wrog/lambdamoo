@@ -232,26 +232,29 @@ dbio_read_integer(enum dbio_intrange range_id, intmax_t *ip)
 }
 
 int
-dbio_read_float(double *dp)
+dbio_read_float(Var *vp)
 {
     const char *s, *p1, *p2;
 
     if (!dbio_read_line_noisy("DBIO_READ_FLOAT", &s, &p1))
 	return 0;
 
-    *dp = strtod(s, (char **)&p2);
+    FlNum d = strtoflnum(s, (char **)&p2);
     dbio_last_error =
 	((isspace(*s) || p1 != p2)
 	 ? "Did not read entire line"
-	 : (!IS_REAL(*dp)
+	 : (!IS_REAL(d)
 	    ? "Magnitude too large or NaN"
 	    : NULL));
 
     if (dbio_last_error) {
 	errlog("DBIO_READ_FLOAT: %s: \"%s\" at file pos. %ld\n",
 	       dbio_last_error, s, ftell(input));
+	*vp = zero;
 	return 0;
     }
+    vp->type = TYPE_FLOAT;
+    vp->v.fnum = box_fl(d);
     return 1;
 }
 
@@ -303,7 +306,7 @@ dbio_read_var_value(intmax_t vtype, Var *vp)
     case TYPE_FINALLY:
 	return dbio_read_num(&vp->v.num);
     case _TYPE_FLOAT:
-	return dbio_read_float(&vp->v.fnum);
+	return dbio_read_float(vp);
     case _TYPE_LIST: ;
 	Num len;
 	if (!dbio_read_num(&len))
@@ -609,13 +612,13 @@ dbio_write_intmax(intmax_t n)
 }
 
 void
-dbio_write_float(double d)
+dbio_write_float(FlNum d)
 {
     static const char *fmt = 0;
     static char buffer[10];
 
     if (!fmt) {
-	sprintf(buffer, "%%.%dg\n", DBL_DIG + 4);
+	sprintf(buffer, "%%.%d"PRIgR"\n", FLOAT_DIGITS + 2);
 	fmt = buffer;
     }
     dbio_printf(fmt, d);
@@ -654,7 +657,7 @@ dbio_write_var(Var v)
 	dbio_write_intmax(v.v.num);
 	break;
     case TYPE_FLOAT:
-	dbio_write_float(v.v.fnum);
+	dbio_write_float(fl_unbox(v.v.fnum));
 	break;
     case TYPE_LIST:
 	dbio_write_intmax(v.v.list[0].v.num);

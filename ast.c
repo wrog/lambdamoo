@@ -58,7 +58,7 @@ end_code_allocation(int aborted)
 }
 
 static void *
-allocate(int size, Memory_Type type)
+astpool_ref(void *ptr, Memory_Type type)
 {
     if (next_pool_slot >= pool_size) {	/* enlarge the pool */
 	struct entry *new_pool;
@@ -73,7 +73,13 @@ allocate(int size, Memory_Type type)
 	pool = new_pool;
     }
     pool[next_pool_slot].type = type;
-    return pool[next_pool_slot++].ptr = mymalloc(size, type);
+    return pool[next_pool_slot++].ptr = ptr;
+}
+
+static inline void *
+allocate(int size, Memory_Type type)
+{
+    return astpool_ref(mymalloc(size, type), type);
 }
 
 static void
@@ -107,14 +113,29 @@ dealloc_string(char *str)
     deallocate(str);
 }
 
-double *
-alloc_float(double value)
-{
-    double *d = allocate(sizeof(double), M_FLOAT);
+#if FLOATS_ARE_BOXED
 
-    *d = value;
-    return d;
+FlBox
+astpool_recv_float(FlBox fnump)
+{
+    return astpool_ref(fnump, M_FLOAT);
 }
+
+/*
+ *  Theoretically, we could also use the rigorously correct version of
+ *
+    void flbox_negate_in_place(FlBox *fp)
+    {
+	FlBox fpnew = allocate(sizeof(FlNum), M_FLOAT);
+	*fpnew = -fl_unbox(*fp);
+	deallocate(*fp);
+	*fp = fpnew;
+    }
+ *  except this is unbelievably painful behind the scenes and would
+ *  *still* fail if floats were interned because end_code_allocation()
+ *  does not check reference counts in the 'aborted' case.
+ */
+#endif	/* FLOATS_ARE_BOXED */
 
 void
 dealloc_node(void *node)

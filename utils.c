@@ -224,7 +224,7 @@ int
 is_true(Var v)
 {
     return ((v.type == TYPE_INT && v.v.num != 0)
-	    || (v.type == TYPE_FLOAT && v.v.fnum != 0.0)
+	    || (v.type == TYPE_FLOAT && fl_unbox(v.v.fnum) != 0.0)
 	    || (v.type == TYPE_STR && v.v.str && *v.v.str != '\0')
 	    || (v.type == TYPE_LIST && v.v.list[0].v.num != 0));
 }
@@ -362,7 +362,9 @@ value_bytes(Var v)
 	size += memo_strlen(v.v.str) + 1;
 	break;
     case TYPE_FLOAT:
-	size += sizeof(double);
+#if FLOATS_ARE_BOXED
+	size += sizeof(FlNum);
+#endif
 	break;
     case TYPE_LIST:
 	len = v.v.list[0].v.num;

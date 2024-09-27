@@ -19,13 +19,14 @@
 #define Structures_H 1
 
 #include "my-stdio.h"
+#include "my-math.h"
 
 #include "config.h"
 #include "options.h"
 
 
 /***********
- * Numbers
+ * Integers
  */
 
 #if INT_TYPE_BITSIZE == 64
@@ -109,6 +110,78 @@ typedef Num     Objid;
 #define NOTHING		-1
 #define AMBIGUOUS	-2
 #define FAILED_MATCH	-3
+
+
+/***************
+ * Floats
+ */
+
+#if FLOATING_TYPE == FT_QUAD
+
+typedef  __float128  FlNum;
+#  define FLOAT_FN(name)  name##q
+#  define FLOAT_DEF(name) name##Q
+#  define FLOAT_DIGITS    FLT128_DIG
+#  define strtoflnum      strtoflt128
+#  define PRIeR "Qe"
+#  define PRIfR "Qf"
+#  define PRIgR "Qg"
+
+#elif FLOATING_TYPE == FT_LONG
+
+typedef  long double  FlNum;
+#  define FLOAT_FN(name)  name##l
+#  define FLOAT_DEF(name) name##L
+#  define FLOAT_DIGITS    LDBL_DIG
+#  define strtoflnum      strtold
+#  define PRIeR "Le"
+#  define PRIfR "Lf"
+#  define PRIgR "Lg"
+
+#else  /* FLOATING_TYPE not in (FT_QUAD, FT_LONG) */
+
+/* Elements common to FT_DOUBLE and FT_FLOAT
+ * (thanks, default argument promotions).
+ */
+#  define PRIeR "e"
+#  define PRIfR "f"
+#  define PRIgR "g"
+
+#  if FLOATING_TYPE == FT_FLOAT
+
+typedef  float  FlNum;
+#    define FLOAT_FN(name)  name##f
+#    define FLOAT_DEF(name) name##F
+#    define FLOAT_DIGITS    FLT_DIG
+#    define strtoflnum      strtof
+
+#  elif FLOATING_TYPE  == FT_DOUBLE
+
+typedef  double  FlNum;
+#    define FLOAT_FN(name)  name
+#    define FLOAT_DEF(name) name
+#    define FLOAT_DIGITS    DBL_DIG
+#    define strtoflnum      strtod
+
+#  else
+#    error "options_epilog.h was supposed to catch this."
+#  endif
+
+#endif	/* FLOATING_TYPE not in (FT_QUAD, FT_LONG) */
+
+#if !FLOATS_ARE_BOXED
+
+typedef FlNum  FlBox;
+inline  FlNum  fl_unbox(FlBox p) { return p; }
+inline  FlBox  box_fl(  FlNum f) { return f; }
+
+#else   /* FLOATS_ARE_BOXED */
+
+typedef FlNum *FlBox;
+inline  FlNum  fl_unbox(FlBox p) { return *p; }
+extern  FlBox  box_fl(  FlNum f);
+
+#endif	/* FLOATS_ARE_BOXED */
 
 
 /***********
@@ -201,7 +274,11 @@ typedef enum {
 
     TYPE_STR   = (_TYPE_STR   | TYPE_COMPLEX_FLAG),
     TYPE_LIST  = (_TYPE_LIST  | TYPE_COMPLEX_FLAG),
-    TYPE_FLOAT = (_TYPE_FLOAT),
+    TYPE_FLOAT = (_TYPE_FLOAT
+#if FLOATS_ARE_BOXED
+		  | TYPE_COMPLEX_FLAG
+#endif
+		  ),
 
     TYPE_ANY     = -1,	/* wildcard for use in declaring built-ins */
     TYPE_NUMERIC = -2	/* wildcard for (integer or float) */
@@ -237,7 +314,7 @@ struct Var {
 	Objid obj;		/* OBJ */
 	enum error err;		/* ERR */
 	Var *list;		/* LIST */
-	double fnum;		/* FLOAT */
+	FlBox fnum;		/* FLOAT */
     } v;
     var_type type;
 };

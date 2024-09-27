@@ -1314,7 +1314,7 @@ do {								\
 		    ans.v.num = -arg.v.num;
 		} else if (arg.type == TYPE_FLOAT) {
 		    ans.type = TYPE_FLOAT;
-		    ans.v.fnum = -arg.v.fnum;
+		    ans.v.fnum = box_fl(-fl_unbox(arg.v.fnum));
 		} else {
 		    free_var(arg);
 		    PUSH_ERROR(E_TYPE);

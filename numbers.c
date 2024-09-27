@@ -39,10 +39,10 @@
 #include "bf_register.h"
 
 inline int
-inrange_for_float_to_int(double d)
+inrange_for_float_to_int(FlNum d)
 {
-    return (((((double)NUM_MIN)-1.0) < d || (((double)NUM_MIN) <= d))
-	    && d < (-(double)NUM_MIN));
+    return (((((FlNum)NUM_MIN)-1.0) < d || (((FlNum)NUM_MIN) <= d))
+	    && d < (-(FlNum)NUM_MIN));
 }
 
 
@@ -217,9 +217,9 @@ parse_number(unsigned flags, int32_t c_first,
 	ret.v.num = ((flags & PN_NONNEG) ? -i : i);
     }
     else {
-	double d = strtod(stream_contents(ns)
-			  /* Extra negation is not needed here. */
-			  + ((flags & PN_NONNEG) ? 1 : 0), &p);
+	FlNum d = strtoflnum(stream_contents(ns)
+			     /* Extra negation is not needed here. */
+			     + ((flags & PN_NONNEG) ? 1 : 0), &p);
 	if (p != p0)
 	    goto parse_error;
 	if (!IS_REAL(d))
@@ -232,7 +232,7 @@ parse_number(unsigned flags, int32_t c_first,
 	}
 	else {
 	    ret.type = TYPE_FLOAT;
-	    ret.v.fnum = d;
+	    ret.v.fnum = box_fl(d);
 	}
     }
  return_value:
@@ -336,9 +336,15 @@ become_integer(Var in, Num *ret, int called_from_tonum)
 	      PN_SPACE|PN_REQ_INT|
 	      (called_from_tonum
 	       ? PN_FLOAT_OK : PN_OCTOTHORPE));
-	if (r.type == TYPE_ERR)
+	if (r.type == TYPE_ERR) {
+	    if (r.v.err == E_NONE)
+		/* cannot happen but current gcc is
+		   not smart enough to know that. */
+		*ret = 12345;
 	    return r.v.err;
+	}
 	*ret = r.v.num;
+	free_var(r);  /* gratuitous */
 	break;
     }
     case TYPE_OBJ:
@@ -348,72 +354,73 @@ become_integer(Var in, Num *ret, int called_from_tonum)
 	*ret = in.v.err;
 	break;
     case TYPE_FLOAT:
-        if (!IS_REAL(in.v.fnum))
+        if (!IS_REAL(fl_unbox(in.v.fnum)))
 	    return E_FLOAT;
-	if (!inrange_for_float_to_int(in.v.fnum))
+	FlNum d = fl_unbox(in.v.fnum);
+	if (!inrange_for_float_to_int(d))
 	    return E_RANGE;
-	*ret = (Num) in.v.fnum;
+	*ret = (Num)d;
 	break;
     case TYPE_LIST:
 	return E_TYPE;
     default:
-	errlog("BECOME_INTEGER: Impossible var type: %d\n", (int) in.type);
+	panic("BECOME_INTEGER: Impossible Var .type");
     }
     return E_NONE;
 }
 
 
 static enum error
-become_float(Var in, double *ret)
+become_float(Var in, FlNum *ret)
 {
     switch (in.type) {
     case TYPE_INT:
-	*ret = (double) in.v.num;
+	*ret = (FlNum)in.v.num;
 	break;
     case TYPE_STR: {
 	Var r = parse_number_from_string(
 	     in.v.str,
 	     PN_SPACE|PN_FLOAT_OK|PN_REQ_FLOAT);
-	if (r.type == TYPE_ERR)
+	if (r.type == TYPE_ERR) {
+	    if (r.v.err == E_NONE)
+		/* cannot happen but current gcc is
+		   not smart enough to know that. */
+		*ret = 12345.0;
 	    return r.v.err;
-	*ret = r.v.fnum;
+	}
+	*ret = fl_unbox(r.v.fnum);
+	free_var(r);  /* not gratuitous if FLOATS_ARE_BOXED */
 	break;
     }
     case TYPE_OBJ:
-	*ret = (double) in.v.obj;
+	*ret = (FlNum)in.v.obj;
 	break;
     case TYPE_ERR:
-	*ret = (double) in.v.err;
+	*ret = (FlNum)in.v.err;
 	break;
     case TYPE_FLOAT:
-	*ret = in.v.fnum;
+	*ret = fl_unbox(in.v.fnum);
 	break;
     case TYPE_LIST:
 	return E_TYPE;
     default:
-	errlog("BECOME_FLOAT: Impossible var type: %d\n", (int) in.type);
+	panic("BECOME_FLOAT: Impossible Var .type");
     }
     return E_NONE;
 }
 
-#if COERCION_IS_EVER_IMPLEMENTED_AND_DESIRED
-static int
-to_float(Var v, double *dp)
-{
-    switch (v.type) {
-    case TYPE_INT:
-	*dp = (double) v.v.num;
-	break;
-    case TYPE_FLOAT:
-	*dp = *v.v.fnum;
-	break;
-    default:
-	return 0;
-    }
+#if FLOATS_ARE_BOXED
 
-    return 1;
+FlBox
+box_fl(FlNum f) {
+    FlBox p = mymalloc(sizeof(FlNum), M_FLOAT);
+    *p = f;
+    return p;
 }
+/* unboxed version is in structures.h */
+
 #endif
+
 
 #if defined(HAVE_MATHERR) && defined(DOMAIN) && defined(SING) && defined(OVERFLOW) && defined(UNDERFLOW)
 /* Required in order to properly handle FP exceptions on SVID3 systems */
@@ -453,7 +460,7 @@ do_equals(Var lhs, Var rhs)
     if (lhs.type != rhs.type)
 	return 0;
     else
-	return lhs.v.fnum == rhs.v.fnum;
+	return fl_unbox(lhs.v.fnum) == fl_unbox(rhs.v.fnum);
 }
 
 int
@@ -485,9 +492,9 @@ compare_numbers(Var a, Var b)
 	    ans.v.num = 0;
     } else {
 	ans.type = TYPE_INT;
-	if (a.v.fnum < b.v.fnum)
+	if (fl_unbox(a.v.fnum) < fl_unbox(b.v.fnum))
 	    ans.v.num = -1;
-	else if (a.v.fnum > b.v.fnum)
+	else if (fl_unbox(a.v.fnum) > fl_unbox(b.v.fnum))
 	    ans.v.num = 1;
 	else
 	    ans.v.num = 0;
@@ -509,14 +516,16 @@ compare_numbers(Var a, Var b)
 			ans.type = TYPE_INT;			\
 			ans.v.num = a.v.num op b.v.num;		\
 		    } else {					\
-			double d = a.v.fnum op b.v.fnum;	\
+			FlNum d =				\
+			    fl_unbox(a.v.fnum)			\
+			      op fl_unbox(b.v.fnum);		\
 								\
 			if (!IS_REAL(d)) {			\
 			    ans.type = TYPE_ERR;		\
 			    ans.v.err = E_FLOAT;		\
 			} else {				\
 			    ans.type = TYPE_FLOAT;		\
-			    ans.v.fnum = d;			\
+			    ans.v.fnum = box_fl(d);		\
 			}					\
 		    }						\
 								\
@@ -540,15 +549,15 @@ SIMPLE_BINARY(multiply, *)
 			ans.type = TYPE_INT;			\
 			ans.v.num = a.v.num iop b.v.num;	\
 		    } else if (a.type == TYPE_FLOAT		\
-			       && b.v.fnum != 0.0) {		\
-			double d = fexpr;			\
+			       && fl_unbox(b.v.fnum) != 0.0) {	\
+			FlNum d = fexpr;			\
 								\
 			if (!IS_REAL(d)) {			\
 			    ans.type = TYPE_ERR;		\
 			    ans.v.err = E_FLOAT;		\
 			} else {				\
 			    ans.type = TYPE_FLOAT;		\
-			    ans.v.fnum = d;			\
+			    ans.v.fnum = box_fl(d);		\
 		        }					\
 		    } else {					\
 		        ans.type = TYPE_ERR;			\
@@ -558,8 +567,8 @@ SIMPLE_BINARY(multiply, *)
 		    return ans;					\
 		}
 
-DIVISION_OP(divide, /, a.v.fnum / b.v.fnum)
-DIVISION_OP(modulus, %, fmod(a.v.fnum, b.v.fnum))
+DIVISION_OP(divide, /, fl_unbox(a.v.fnum) / fl_unbox(b.v.fnum))
+DIVISION_OP(modulus, %, fmod(fl_unbox(a.v.fnum), fl_unbox(b.v.fnum)))
 Var
 do_power(Var lhs, Var rhs)
 {				/* LHS ^ RHS */
@@ -600,26 +609,26 @@ do_power(Var lhs, Var rhs)
 	    ans.v.num = r;
 	}
     } else if (lhs.type == TYPE_FLOAT) {	/* floating-point exponentiation */
-	double d;
+	FlNum d;
 
 	switch (rhs.type) {
 	case TYPE_INT:
-	    d = (double) rhs.v.num;
+	    d = (FlNum)rhs.v.num;
 	    break;
 	case TYPE_FLOAT:
-	    d = rhs.v.fnum;
+	    d = fl_unbox(rhs.v.fnum);
 	    break;
 	default:
 	    goto type_error;
 	}
 	errno = 0;
-	d = pow(lhs.v.fnum, d);
+	d = FLOAT_FN(pow)(fl_unbox(lhs.v.fnum), d);
 	if (errno != 0 || !IS_REAL(d)) {
 	    ans.type = TYPE_ERR;
 	    ans.v.err = E_FLOAT;
 	} else {
 	    ans.type = TYPE_FLOAT;
-	    ans.v.fnum = d;
+	    ans.v.fnum = box_fl(d);
 	}
     } else
 	goto type_error;
@@ -637,33 +646,31 @@ do_power(Var lhs, Var rhs)
 static package
 bf_toint(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r;
     enum error e;
 
-    r.type = TYPE_INT;
-    e = become_integer(arglist.v.list[1], &(r.v.num), 1);
+    Num n;
+    e = become_integer(arglist.v.list[1], &n, 1);
 
     free_var(arglist);
     if (e != E_NONE)
 	return make_error_pack(e);
 
-    return make_var_pack(r);
+    return make_int_pack(n);
 }
 
 static package
 bf_tofloat(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r;
     enum error e;
 
-    r.type = TYPE_FLOAT;
-    e = become_float(arglist.v.list[1], &r.v.fnum);
+    FlNum d;
+    e = become_float(arglist.v.list[1], &d);
 
     free_var(arglist);
     if (e != E_NONE)
 	return make_error_pack(e);
 
-    return make_var_pack(r);
+    return make_float_pack(d);
 }
 
 static package
@@ -729,71 +736,70 @@ bf_max(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 static package
 bf_abs(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r;
+    Var r = arglist.v.list[1];
+    package p;
 
-    r = var_dup(arglist.v.list[1]);
-    if (r.type == TYPE_INT) {
-	if (r.v.num < 0)
-	    r.v.num = -r.v.num;
-    } else
-	r.v.fnum = fabs(r.v.fnum);
+    if (r.type == TYPE_INT)
+	p = make_int_pack(r.v.num < 0 ? - r.v.num : r.v.num);
+    else
+	p = make_float_pack(FLOAT_FN(fabs)(fl_unbox(r.v.fnum)));
 
     free_var(arglist);
-    return make_var_pack(r);
+    return p;
 }
 
-#define MATH_FUNC(name)							      \
-		static package						      \
-		bf_ ## name(Var arglist, Byte next UNUSED_,		      \
-			    void *vdata UNUSED_, Objid progr UNUSED_)	      \
-		{							      \
-		    double d;						      \
-									      \
-		    errno = 0;						      \
-		    d = name (arglist.v.list[1].v.fnum);		      \
-		    free_var(arglist);					      \
-		    if (errno == EDOM)					      \
-		        return make_error_pack(E_INVARG);		      \
-		    else if (errno != 0 || !IS_REAL(d))			      \
-			return make_error_pack(E_FLOAT);		      \
-		    else						      \
-			return make_float_pack(d);			      \
-		}
+#define MATH_FUNC(name)						\
+    static package						\
+    bf_ ## name(Var arglist, Byte next UNUSED_,			\
+		void *vdata UNUSED_, Objid progr UNUSED_)	\
+    {								\
+	FlNum d;						\
+								\
+	errno = 0;						\
+	d = FLOAT_FN(name)(fl_unbox(arglist.v.list[1].v.fnum));	\
+	free_var(arglist);					\
+	if (errno == EDOM)					\
+	    return make_error_pack(E_INVARG);			\
+	else if (errno != 0 || !IS_REAL(d))			\
+	    return make_error_pack(E_FLOAT);			\
+	else							\
+	    return make_float_pack(d);				\
+    }
 
 MATH_FUNC(sqrt)
-MATH_FUNC(sin)
-MATH_FUNC(cos)
-MATH_FUNC(tan)
-MATH_FUNC(asin)
-MATH_FUNC(acos)
-MATH_FUNC(sinh)
-MATH_FUNC(cosh)
-MATH_FUNC(tanh)
-MATH_FUNC(asinh)
-MATH_FUNC(acosh)
-MATH_FUNC(atanh)
-MATH_FUNC(exp)
-MATH_FUNC(log)
-MATH_FUNC(log10)
-MATH_FUNC(ceil)
-MATH_FUNC(floor)
-MATH_FUNC(expm1)
-MATH_FUNC(log1p)
-MATH_FUNC(erf)
-MATH_FUNC(erfc)
-MATH_FUNC(lgamma)
+     MATH_FUNC(sin)
+     MATH_FUNC(cos)
+     MATH_FUNC(tan)
+     MATH_FUNC(asin)
+     MATH_FUNC(acos)
+     MATH_FUNC(sinh)
+     MATH_FUNC(cosh)
+     MATH_FUNC(tanh)
+     MATH_FUNC(asinh)
+     MATH_FUNC(acosh)
+     MATH_FUNC(atanh)
+     MATH_FUNC(exp)
+     MATH_FUNC(log)
+     MATH_FUNC(log10)
+     MATH_FUNC(ceil)
+     MATH_FUNC(floor)
+     MATH_FUNC(expm1)
+     MATH_FUNC(log1p)
+     MATH_FUNC(erf)
+     MATH_FUNC(erfc)
+     MATH_FUNC(lgamma)
 
-static package
-bf_trunc(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
+     static package
+     bf_trunc(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    double d;
+    FlNum d;
 
-    d = arglist.v.list[1].v.fnum;
+    d = fl_unbox(arglist.v.list[1].v.fnum);
     errno = 0;
     if (d < 0.0)
-	d = ceil(d);
+	d = FLOAT_FN(ceil)(d);
     else
-	d = floor(d);
+	d = FLOAT_FN(floor)(d);
     free_var(arglist);
     if (errno == EDOM)
 	return make_error_pack(E_INVARG);
@@ -806,14 +812,15 @@ bf_trunc(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
 static package
 bf_atan(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    double d, dd;
+    FlNum d, dd;
 
-    d = arglist.v.list[1].v.fnum;
+    d = fl_unbox(arglist.v.list[1].v.fnum);
     errno = 0;
     if (arglist.v.list[0].v.num >= 2) {
-	dd = arglist.v.list[2].v.fnum;
+	dd = fl_unbox(arglist.v.list[2].v.fnum);
 	d = atan2(d, dd);
-    } else
+    }
+    else
 	d = atan(d);
     free_var(arglist);
     if (errno == EDOM)
@@ -827,9 +834,9 @@ bf_atan(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_
 static package
 bf_j(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    double d;
+    FlNum d;
 
-    d = arglist.v.list[2].v.fnum;
+    d = fl_unbox(arglist.v.list[2].v.fnum);
     errno = 0;
     switch ( arglist.v.list[1].v.num ) {
     case 0:
@@ -854,9 +861,9 @@ bf_j(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 static package
 bf_y(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    double d;
+    FlNum d;
 
-    d = arglist.v.list[2].v.fnum;
+    d = fl_unbox(arglist.v.list[2].v.fnum);
     errno = 0;
     switch ( arglist.v.list[1].v.num ) {
     case 0:
@@ -866,7 +873,7 @@ bf_y(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 	d = y1(d);
 	break;
     default:
-	d = jn(d, arglist.v.list[1].v.num);
+	d = yn(d, arglist.v.list[1].v.num);
 	break;
     }
     free_var(arglist);
@@ -888,7 +895,7 @@ bf_time(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_
 static package
 bf_ftime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    double t;
+    FlNum t;
     struct timeval tv;
 
     free_var(arglist);
@@ -896,7 +903,7 @@ bf_ftime(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED
     gettimeofday(&tv, NULL);
 
     /* Use division since 1.0e-6 isn't representable in exact binary */
-    t = (double)tv.tv_sec + (double)tv.tv_usec/1.0e+6;
+    t = (FlNum)tv.tv_sec + (FlNum)tv.tv_usec/1.0e+6;
 
     return make_float_pack(t);
 }
@@ -1172,7 +1179,7 @@ bf_random(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 static package
 bf_floatstr(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {				/* (float, precision [, sci-notation]) */
-    double d = arglist.v.list[1].v.fnum;
+    FlNum d = fl_unbox(arglist.v.list[1].v.fnum);
     Num prec = arglist.v.list[2].v.num;
     int use_sci = (arglist.v.list[0].v.num >= 3
 		   && is_true(arglist.v.list[3]));
@@ -1180,11 +1187,11 @@ bf_floatstr(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNU
     Var r;
 
     free_var(arglist);
-    if (prec > DECIMAL_DIG)
-	prec = DECIMAL_DIG;
+    if (prec > FLOAT_DIGITS+4)
+	prec = FLOAT_DIGITS+4;
     else if (prec < 0)
 	return make_error_pack(E_INVARG);
-    sprintf(fmt, "%%.%"PRIdN"%c", prec, use_sci ? 'e' : 'f');
+    sprintf(fmt, "%%.%"PRIdN"%s", prec, use_sci ? PRIeR : PRIfR);
     sprintf(output, fmt, d);
 
     r.type = TYPE_STR;

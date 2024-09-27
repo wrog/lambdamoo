@@ -194,4 +194,39 @@
 #  endif
 #endif
 
+
+#define FT_FLOAT  2
+#define FT_DOUBLE 3
+#define FT_LONG   4
+#define FT_QUAD   5
+
+#define FL_UNBOXED  0
+#define FL_BOXED    1
+
+#ifndef FLOATING_TYPE
+#  define FLOATING_TYPE  FT_DOUBLE
+#elif FLOATING_TYPE==1
+#  undef FLOATING_TYPE
+#  define FLOATING_TYPE  FT_DOUBLE
+#elif FLOATING_TYPE <= 0 || 5 < FLOATING_TYPE
+#  error "unknown FLOATING_TYPE"
+#endif
+
+#ifndef FLOAT_BOXING
+#  if FLOATING_TYPE <= FT_DOUBLE
+#    define FLOAT_BOXING FL_UNBOXED
+#  else
+#    define FLOAT_BOXING FL_BOXED
+#  endif
+#elif FLOAT_BOXING != FL_BOXED && FLOAT_BOXING != FL_UNBOXED
+#  error "unknown FLOAT_BOXING setting"
+#endif
+
+/* Only FLOATS_ARE_BOXED should be referenced from here on. */
+#if FLOAT_BOXING == FL_BOXED
+#  define FLOATS_ARE_BOXED 1
+#elif defined(FLOATS_ARE_BOXED)
+#  error "do not do that."
+#endif
+
 #endif		/* !Options_Epilog_H */

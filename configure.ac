@@ -124,6 +124,11 @@ AC_CHECK_TYPES([int32_t])
 AC_CHECK_TYPES([int64_t])
 AC_CHECK_TYPES([int128_t])
 AC_CHECK_TYPES([__int128])
+AS_VAR_IF([enable_def_FLOATING_TYPE],[FT_QUAD],
+[AC_CHECK_HEADERS([quadmath.h])
+AC_CHECK_TYPES([__float128])
+MOO_HAVE_FUNC_LIBS([strtoflt128],[quadmath])])
+
 AC_CHECK_TYPE([in_addr_t], [], [AC_DEFINE([NDECL_IN_ADDR_T])],
   [[@%:@include <netinet/in.h>]])
 MOO_NDECL_FUNCS([sys/ioctl.h], [ioctl])

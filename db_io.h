@@ -282,7 +282,7 @@ extern void dbio_printf(const char *format,...) FORMAT(printf,1,2);
 
 extern void dbio_write_intmax(intmax_t);
 extern void dbio_write_objid(Objid);
-extern void dbio_write_float(double);
+extern void dbio_write_float(FlNum);
 
 extern void dbio_write_string(const char *);
 				/* The given string should not contain any

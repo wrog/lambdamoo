@@ -466,6 +466,69 @@ should now be completely unnecessary given that
 #undef INT_TYPE_BITSIZE
 
 /******************************************************************************
+ * The next two options govern the implementation of the floating
+ * point datatype  (typeof(n) == FLOAT in MOO code).
+ * --------------------------------------------------------
+ * FLOATING_TYPE specifies the underlying C type to be used.
+ * Note that C standards (at least as of C99) give platforms flexibility
+ * in the exact definitions of the floating types they use (e.g., mantissa
+ * sizes and exponent ranges may be different from what you expect).
+ *
+ * Settings currently allowed are:
+ *
+ *    FT_DOUBLE => 'double',
+ *       typically this will be IEEE 754 double-precision (64 bits)
+ *       (This is the default.)
+ *
+ *    FT_LONG => 'long double',
+ *       this is often an 80-bit floating type
+ *
+ *    FT_QUAD => '__float128',
+ *       this is IEEE 754 quad-precision (128 bits) as implemented
+ *       via GCC's libquadmath.
+ *
+ *    FT_FLOAT  => 'float',
+ *       typically this will be IEEE 754 single-precision (32 bits),
+ *       (included for completeness but not highly recommended)
+ *
+ * !! WARNING:  Loading a database previously written by a server
+ * !!   with a larger floating type size will fail if there are
+ * !!   out-of-range values AND will result in SILENT LOSS OF
+ * !!   PRECISION for other values.
+ */
+
+#undef FLOATING_TYPE
+
+/* --------------------------------------------------------
+ * FLOAT_BOXING is a detail you should probably leave up to
+ * options_epilog.h.  But if, for whatever reason, you want or need
+ * to force it one way or the other, the choices are:
+ *
+ *    FL_UNBOXED = floating values are passed directly to functions or
+ *       included directly in larger structures in exactly the same
+ *       way that integers are.
+ *       This is the default for FT_FLOAT and FT_DOUBLE.
+ *
+ *    FL_BOXED = floating values are stored separately and pointers
+ *       are used everywhere they need to be referenced.
+ *       This is the default for FT_LONG and FT_QUAD.
+ *
+ * Unboxed is conceptually simpler but, for compiler authors, gets
+ * hairy for the longer floating types.  Evidently, using 'long
+ * double' in unions (like Var) that are passed on the stack creates
+ * Issues (read:  More likely to trigger obscure compiler bugs).
+ *
+ * Boxed avoids these problems but will be ever-so-slightly slower and
+ * will introduce more opportunities for memory management screwups.
+ * It does however have the advantage, at least in the long double and
+ * quad cases, of reducing overall memory usage (assuming floats do
+ * not comprise an abnormally large percentage [e.g., 50% or more] of
+ * the values in your DB).
+ */
+
+#undef FLOAT_BOXING
+
+/******************************************************************************
  * DEFAULT_MAX_LIST_CONCAT,   if set to a postive value, is the length
  *                            of the largest constructible list.
  * DEFAULT_MAX_STRING_CONCAT, if set to a postive value, is the length

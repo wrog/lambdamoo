@@ -267,6 +267,12 @@
 #undef HAVE___INT128
 
 /*
+ * __float128 is a GNU extension
+ */
+#undef HAVE___FLOAT128
+#undef HAVE_QUADMATH_H
+
+/*
  * need endianness for iconv
  */
 #undef WORDS_BIGENDIAN

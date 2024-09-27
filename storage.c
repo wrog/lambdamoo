@@ -39,7 +39,7 @@ refcount_overhead(Memory_Type type)
     switch (type) {
     case M_FLOAT:
 	/* for systems with picky double alignment */
-	return MAX(sizeof(int), sizeof(double));
+	return MAX(sizeof(int), sizeof(FlNum));
     case M_STRING:
 #ifdef MEMO_STRLEN
 	return sizeof(int) + sizeof(int);

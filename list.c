@@ -249,7 +249,7 @@ stream_add_tostr(Stream * s, Var v)
 	stream_add_string(s, unparse_error(v.v.err));
 	break;
     case TYPE_FLOAT:
-	stream_add_float(s, v.v.fnum, DBL_DIG);
+	stream_add_float(s, fl_unbox(v.v.fnum), FLOAT_DIGITS);
 	break;
     case TYPE_LIST:
 	stream_add_string(s, "{list}");
@@ -290,7 +290,7 @@ unparse_value(Stream * s, Var v)
 	stream_add_string(s, error_name(v.v.err));
 	break;
     case TYPE_FLOAT:
-	stream_add_float(s, v.v.fnum, DBL_DIG);
+	stream_add_float(s, fl_unbox(v.v.fnum), FLOAT_DIGITS+2);
 	break;
     case TYPE_STR:
 	{

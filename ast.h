@@ -205,11 +205,28 @@ extern Arg_List *alloc_arg_list(enum Arg_Kind, Expr *);
 extern Except_Arm *alloc_except(int, Arg_List *, Stmt *);
 extern Scatter *alloc_scatter(enum Scatter_Kind, int, Expr *);
 extern char *alloc_string(const char *);
-extern double *alloc_float(double);
 
 extern void dealloc_node(void *);
 extern void dealloc_string(char *);
 extern void free_stmt(Stmt *);
+
+#if FLOATS_ARE_BOXED
+/* Both of the following depend on the boxed floats returned by
+ * parse_number() and thence yylex() never being interned together:
+ */
+
+/* Assign responsibility for freeing to the AST pool. */
+extern FlBox astpool_recv_float(FlBox);
+
+/* Shortcut negation constant-folding. */
+inline void flbox_negate_in_place(FlBox *fp) { **fp = -**fp; }
+
+#else /* !FLOATS_ARE_BOXED */
+
+inline FlBox astpool_recv_float(FlBox fp)    { return fp;  }
+inline void flbox_negate_in_place(FlBox *fp) { *fp = -*fp; }
+
+#endif
 
 #endif		/* !AST_h */
 
