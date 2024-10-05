@@ -66,7 +66,7 @@ COMMON_HDRS = ast.h bf_register.h code_gen.h config_epilog.h \
 	parse_cmd.h parser.h pattern.h program.h quota.h random.h \
 	ref_count.h server.h storage.h streams.h structures.h \
 	str_intern.h sym_table.h tasks.h timers.h tokens.h \
-	unparse.h utf-ctype.h utils.h verbs.h version.h
+	unparse.h utf.h utf-ctype.h utils.h verbs.h version.h
 
 XT_HDRS = regexpr.h @XT_HDRS@
 ALL_XT_HDRS = regexpr.h @ALL_XT_HDRS@

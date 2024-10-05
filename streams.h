@@ -31,6 +31,10 @@ typedef struct {
 extern Stream *new_stream(size_t size);
 extern void stream_add_char(Stream *, char);
 extern void stream_delete_char(Stream *);
+inline int  stream_add_utf(Stream *s, uint32_t c)
+{ stream_add_char(s, c); return 0; }
+inline void stream_delete_utf(Stream *s)
+{ stream_delete_char(s); }
 extern void stream_add_float(Stream *s, double n, int prec);
 extern void stream_add_bytes(Stream *, const char *, size_t);
 inline void stream_add_string(Stream * s, const char *string)

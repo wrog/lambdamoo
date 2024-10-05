@@ -43,6 +43,7 @@
 #include "structures.h"
 #include "sym_table.h"
 #include "utils.h"
+#include "utf.h"
 #include "utf-ctype.h"
 #include "version.h"
 
@@ -71,6 +72,7 @@ static void	check_loop_name(const char *, enum loop_exit_kind);
 %union {
   Stmt	       *stmt;
   Expr	       *expr;
+  int		chr;		/* Used to carry non-ASCII characters */
   Num		integer;
   Objid		object;
   double        real;
@@ -90,6 +92,7 @@ static void	check_loop_name(const char *, enum loop_exit_kind);
 %type	<string> opt_id
 %type	<scatter> scatter scatter_item
 
+%token  <chr> tCHR
 %token	<integer> tINTEGER
 %token	<object> tOBJECT
 %token	<real> tFLOAT
@@ -741,7 +744,7 @@ warning(const char *s, const char *t)
 
 static int unget_buffer[5], unget_count;
 
-static int
+static int32_t
 lex_getc(void)
 {
     if (unget_count > 0)
@@ -751,7 +754,7 @@ lex_getc(void)
 }
 
 static void
-lex_ungetc(int c)
+lex_ungetc(int32_t c)
 {
     unget_buffer[unget_count++] = c;
 }
@@ -856,9 +859,9 @@ start_over:
     if (my_is_xid_start(c) || c == '_') {
 	Keyword	       *k;
 
-	stream_add_char(token_stream, c);
+	stream_add_utf(token_stream, c);
 	while (my_is_xid_cont(c = lex_getc()) || c == '_')
-	    stream_add_char(token_stream, c);
+	    stream_add_utf(token_stream, c);
 	lex_ungetc(c);
 
 	k = find_keyword(stream_contents(token_stream),
@@ -892,7 +895,7 @@ start_over:
 		yyerror("Missing quote");
 		break;
 	    }
-	    stream_add_char(token_stream, c);
+	    stream_add_utf(token_stream, c);
 	}
 	yylval.string = alloc_string(reset_stream(token_stream));
 	return tSTRING;
@@ -917,7 +920,13 @@ start_over:
     case '.':
 	return follow('.', tTO, '.');
     default:
-	return c;
+	if (c < 127) {
+	    return c;
+	} else {
+	    /* Don't confuse yacc with large Unicode values */
+	    yylval.chr = c;
+	    return tCHR;
+	}
     }
 }
 
@@ -1119,7 +1128,7 @@ parse_program(DB_Version version, Parser_Client c, void *data)
 		if (find_keyword(name, strlen(name))) { /* Got one... */
 		    stream_add_string(token_stream, name);
 		    do {
-			stream_add_char(token_stream, '_');
+			stream_add_utf(token_stream, '_');
 		    } while (find_name(local_names,
 				       stream_contents(token_stream)) >= 0);
 		    free_str(name);
@@ -1165,8 +1174,8 @@ static int
 my_getc(void *data)
 {
     struct parser_state	*state = (struct parser_state *) data;
-    Var			code;
-    char		c;
+    Var      code;
+    uint8_t  c;
 
     code = state->code;
     if (task_timed_out  ||  state->cur_string > code.v.list[0].v.num)

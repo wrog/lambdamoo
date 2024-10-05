@@ -32,6 +32,7 @@
 #include "storage.h"
 #include "streams.h"
 #include "structures.h"
+#include "utf.h"
 #include "utils.h"
 
 /*
@@ -288,11 +289,12 @@ strindex(const char *source, const char *what, int case_counts)
 {
     const char *s, *e;
     int lwhat = strlen(what);
+    int ind = 0;
 
-    for (s = source, e = source + strlen(source) - lwhat; s <= e; s++) {
+    for (s = source, e = source + strlen(source) - lwhat; s <= e; get_utf(&s), ind++) {
 	if (!(case_counts ? strncmp(s, what, lwhat)
 	      : mystrncasecmp(s, what, lwhat))) {
-	    return s - source + 1;
+	    return ind + 1;
 	}
     }
     return 0;
@@ -302,12 +304,14 @@ int
 strrindex(const char *source, const char *what, int case_counts)
 {
     const char *s;
-    int lwhat = strlen(what);
+    int lwhat = memo_strlen(what);
 
-    for (s = source + strlen(source) - lwhat; s >= source; s--) {
+    for (s = source + memo_strlen(source) - lwhat; s >= source; s--) {
+	if (is_utf8_cont_byte(*s))
+	    continue;
 	if (!(case_counts ? strncmp(s, what, lwhat)
 	      : mystrncasecmp(s, what, lwhat))) {
-	    return s - source + 1;
+	    return utf_char_index(source, s - source + 1);
 	}
     }
     return 0;

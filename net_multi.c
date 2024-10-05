@@ -41,6 +41,8 @@
 #include "structures.h"
 #include "storage.h"
 #include "timers.h"
+#include "utf.h"
+#include "utf-ctype.h"
 #include "utils.h"
 
 static struct proto proto;
@@ -81,6 +83,8 @@ typedef struct nhandle {
     int output_length;
     int output_lines_flushed;
     int outbound, binary;
+    char excess_utf[4];
+    int excess_utf_count;
 #if NETWORK_PROTOCOL == NP_TCP
     int client_echo;
 #endif
@@ -265,26 +269,37 @@ pull_input(nhandle * h)
     char buffer[1024];
     char *ptr, *end;
 
-    if ((count = read(h->rfd, buffer, sizeof(buffer))) > 0) {
+    ptr = buffer;
+    if (h->excess_utf_count) {
+        memcpy(buffer, h->excess_utf, h->excess_utf_count);
+        ptr += h->excess_utf_count;
+    }
+
+    if ((count = read(h->rfd, ptr, sizeof(buffer) - h->excess_utf_count)) > 0) {
 	if (h->binary) {
 	    stream_add_moobinary_from_raw_bytes(s, buffer, count);
 	    server_receive_line(h->shandle, reset_stream(s));
 	    h->last_input_was_CR = 0;
+            h->excess_utf_count = 0;
 	} else {
-	    for (ptr = buffer, end = buffer + count; ptr < end; ptr++) {
-		unsigned char c = *ptr;
+	    for (ptr = buffer, end = buffer + count; ptr < end && ptr + clearance_utf(*ptr) <= end;) {
+		int c = get_utf(&ptr);
 
-		if (isgraph(c) || c == ' ' || c == '\t')
-		    stream_add_char(s, c);
+		if (my_is_printable(c))
+		    stream_add_utf(s, c);
 #ifdef INPUT_APPLY_BACKSPACE
 		else if (c == 0x08 || c == 0x7F)
-		    stream_delete_char(s);
+		    stream_delete_utf(s);
 #endif
 		else if (c == '\r' || (c == '\n' && !h->last_input_was_CR))
 		    server_receive_line(h->shandle, reset_stream(s));
 
 		h->last_input_was_CR = (c == '\r');
 	    }
+            if (ptr < end) {
+                memcpy(h->excess_utf, ptr, end - ptr);
+            }
+            h->excess_utf_count = end - ptr;
 	}
 	return 1;
     } else
@@ -325,6 +340,7 @@ new_nhandle(int rfd, int wfd, const char *local_name, const char *remote_name,
     h->output_lines_flushed = 0;
     h->outbound = outbound;
     h->binary = 0;
+    h->excess_utf_count = 0;
 #if NETWORK_PROTOCOL == NP_TCP
     h->client_echo = 1;
 #endif

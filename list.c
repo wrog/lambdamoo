@@ -34,6 +34,7 @@
 #include "storage.h"
 #include "structures.h"
 #include "unparse.h"
+#include "utf.h"
 #include "utils.h"
 
 Var
@@ -328,6 +329,7 @@ unparse_value(Stream * s, Var v)
 Var
 strrangeset(Var base, Num from, Num after, Var value)
 {
+    /* from and after are byte-indices. */
     /* base and value are free'd */
     size_t val_len  = memo_strlen(value.v.str);
     size_t base_len = memo_strlen(base.v.str);
@@ -354,6 +356,8 @@ strrangeset(Var base, Num from, Num after, Var value)
 Var
 substr(Var str, Num first, Num after)
 {
+    /* first and after are byte-indices. */
+    /* str is free'd. */
     Num len = after - first;
     char *s;
 
@@ -366,19 +370,6 @@ substr(Var str, Num first, Num after)
     }
     free_var(str);
     return (Var){ .type = TYPE_STR, .v.str = s };
-}
-
-Var
-strget(Var str, Var i)
-{
-    Var r;
-    char *s;
-
-    r.type = TYPE_STR;
-    s = str_dup(" ");
-    s[0] = str.v.str[i.v.num - 1];
-    r.v.str = s;
-    return r;
 }
 
 /**** built in functions ****/
@@ -394,7 +385,7 @@ bf_length(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 	break;
     case TYPE_STR:
 	r.type = TYPE_INT;
-	r.v.num = memo_strlen(arglist.v.list[1].v.str);
+	r.v.num = memo_strlen_utf(arglist.v.list[1].v.str);
 	break;
     default:
 	free_var(arglist);
@@ -753,16 +744,16 @@ do_match(Var arglist, int reverse)
 	    ans.v.list[1].type = TYPE_INT;
 	    ans.v.list[2].type = TYPE_INT;
 	    ans.v.list[4].type = TYPE_STR;
-	    ans.v.list[1].v.num = regs[0].start;
-	    ans.v.list[2].v.num = regs[0].end;
+	    ans.v.list[1].v.num = utf_char_index(subject, regs[0].start);
+	    ans.v.list[2].v.num = utf_char_index(subject, regs[0].end + 1) - 1;
 	    ans.v.list[3] = new_list(9);
 	    ans.v.list[4].v.str = str_ref(subject);
 	    for (i = 1; i <= 9; i++) {
 		ans.v.list[3].v.list[i] = new_list(2);
 		ans.v.list[3].v.list[i].v.list[1].type = TYPE_INT;
-		ans.v.list[3].v.list[i].v.list[1].v.num = regs[i].start;
+		ans.v.list[3].v.list[i].v.list[1].v.num = utf_char_index(subject, regs[i].start);
 		ans.v.list[3].v.list[i].v.list[2].type = TYPE_INT;
-		ans.v.list[3].v.list[i].v.list[2].v.num = regs[i].end;
+		ans.v.list[3].v.list[i].v.list[2].v.num = utf_char_index(subject, regs[i].end + 1) - 1;
 	    }
 	    break;
 	case MATCH_FAILED:
@@ -827,7 +818,7 @@ check_subs_list(Var subs)
 	|| subs.v.list[4].type != TYPE_STR)
 	return 1;
     subj = subs.v.list[4].v.str;
-    subj_length = memo_strlen(subj);
+    subj_length = memo_strlen_utf(subj);
     if (invalid_pair(subs.v.list[1].v.num, subs.v.list[2].v.num,
 		     subj_length))
 	return 1;
@@ -877,17 +868,19 @@ bf_substitute(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr U
 	    int start = 0, end = 0;
 	    if (c >= '1' && c <= '9') {
 		Var pair = subs.v.list[3].v.list[c - '0'];
-		start = pair.v.list[1].v.num - 1;
-		end = pair.v.list[2].v.num - 1;
+		start = pair.v.list[1].v.num;
+		end = pair.v.list[2].v.num;
 	    } else if (c == '0') {
-		start = subs.v.list[1].v.num - 1;
-		end = subs.v.list[2].v.num - 1;
+		start = subs.v.list[1].v.num;
+		end = subs.v.list[2].v.num;
 	    } else {
 		p = make_error_pack(E_INVARG);
 		goto oops;
 	    }
-	    while (start <= end)
-		stream_add_char(s, subject[start++]);
+	    Num bstartafter[2] = { start, end + 1 };
+	    utf_byte_range(subject, bstartafter);
+	    stream_add_bytes(s, subject + bstartafter[0] - 1,
+			     bstartafter[1] - bstartafter[0]);
 	}
     }
     ans.type = TYPE_STR;

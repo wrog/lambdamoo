@@ -32,6 +32,7 @@
 #include "random.h"
 #include "storage.h"
 #include "structures.h"
+#include "utf.h"
 #include "utils.h"
 
 #include "bf_register.h"
@@ -291,7 +292,7 @@ snp_getch(void)
 {
     if (snp_string >= snp_end)
 	return EOF;
-    return *snp_string++;
+    return get_utf(&snp_string);
 }
 
 static Var
