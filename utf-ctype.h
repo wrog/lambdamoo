@@ -8,18 +8,35 @@
 #define UTF_CType_H 1
 
 #include "config.h"
+#include "options.h"
 
 #include "my-ctype.h"
 
+#if !UNICODE_NUMBERS
 inline int my_isdigit(uint32_t c)      { return isdigit(c); }
 inline int my_digitval(uint32_t c)     { return c - '0';    }
+#else
+extern int my_isdigit(uint32_t);
+extern int my_digitval(uint32_t);
+#endif
 
+#if !UNICODE_IDENTIFIERS
 inline int my_is_xid_start(uint32_t c) { return isalpha(c); }
 inline int my_is_xid_cont(uint32_t c)  { return isalnum(c); }
+#else
+extern int my_is_xid_start(uint32_t);
+extern int my_is_xid_cont(uint32_t);
+#endif
 
+#if !UNICODE_STRINGS
 inline uint32_t my_tolower(uint32_t c) { return tolower(c); }
 inline uint32_t my_toupper(uint32_t c) { return toupper(c); }
 inline int      my_isspace(uint32_t c) { return isspace(c); }
+#else
+extern uint32_t my_tolower(uint32_t);
+extern uint32_t my_toupper(uint32_t);
+extern int      my_isspace(uint32_t);
+#endif
 
 inline int
 my_is_printable(uint32_t x)

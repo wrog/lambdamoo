@@ -743,6 +743,9 @@ warning(const char *s, const char *t)
 }
 
 static int32_t unget_buffer[5], unget_count;
+#if UNICODE_STRINGS
+static int32_t getc_state;
+#endif
 
 static int32_t
 lex_getc(void)
@@ -750,7 +753,11 @@ lex_getc(void)
     if (unget_count > 0)
 	return unget_buffer[--unget_count];
     else
+#if !UNICODE_STRINGS
 	return (*(client.getch))(client_data);
+#else
+	return get_utf_call(client.getch, client_data, &getc_state);
+#endif
 }
 
 static void
@@ -1081,6 +1088,9 @@ parse_program(DB_Version version, Parser_Client c, void *data)
     if (token_stream == 0)
 	token_stream = new_stream(1024);
     unget_count = 0;
+#if UNICODE_STRINGS
+    getc_state = -1;
+#endif
     nerrors = 0;
     must_rename_keywords = 0;
     lineno = 1;

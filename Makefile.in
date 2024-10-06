@@ -45,10 +45,10 @@ COMMON_CSRCS = \
 	net_proto.c numbers.c objects.c parse_cmd.c program.c \
 	property.c quota.c ref_count.c server.c storage.c \
 	streams.c str_intern.c sym_table.c tasks.c timers.c unparse.c \
-	utils.c verbs.c version.c
+	utf-ctype.c utils.c verbs.c version.c
 
-XT_CSRCS = pattern_ylo.c regexpr.c @XT_CSRCS@
-ALL_XT_CSRCS = pattern_ylo.c regexpr.c @ALL_XT_CSRCS@
+XT_CSRCS = utf.c pattern_ylo.c regexpr.c @XT_CSRCS@
+ALL_XT_CSRCS = utf.c pattern_ylo.c regexpr.c @ALL_XT_CSRCS@
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
