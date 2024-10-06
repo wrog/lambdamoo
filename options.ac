@@ -69,6 +69,9 @@ dnl
  [[BYTECODE_REDUCE_REF],  [bool], no,  [do bytecode refcount optimization]],
  [[STRING_INTERNING],     [bool], yes, [do interning of identical strings]],
  [[MEMO_STRLEN],          [bool], no,  [memoize string lengths]],
+ [[UNICODE_STRINGS],      [bool], yes, [allow Unicode in string constants]],
+ [[UNICODE_IDENTIFIERS],  [bool], yes, [allow Unicode in identifiers]],
+ [[UNICODE_NUMBERS],      [bool], yes, [allow Unicode in numeric constants]],
 
 dnl
 dnl Everything from here on is only used in #if/#elif or substitutions

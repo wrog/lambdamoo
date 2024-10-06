@@ -30,6 +30,13 @@
  * You shouldn't need to change anything below this point.
  **********************************************************/
 
+#if UNICODE_NUMBERS && !UNICODE_STRINGS
+#  error "UNICODE_NUMBERS requires UNICODE_STRINGS"
+#endif
+#if UNICODE_IDENTIFIERS && !UNICODE_STRINGS
+#  error "UNICODE_IDENTIFIERS requires UNICODE_STRINGS"
+#endif
+
 #define OBN_OFF		0
 #define OBN_ON		1
 

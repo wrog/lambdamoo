@@ -37,8 +37,6 @@
 
 #include "bf_register.h"
 
-#define UNICODE_NUMBERS 1   /* for now */
-
 inline int
 inrange_for_float_to_int(double d)
 {

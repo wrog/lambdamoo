@@ -125,6 +125,70 @@ should now be completely unnecessary given that
 #undef UNFORKED_CHECKPOINTS
 
 /******************************************************************************
+ * The server may be compiled to be Unicode-enabled, which then
+ *
+ * (1) provides an expanded character set for all string data values,
+ *     including verb code string literals, verb names, property
+ *     names, property values, object names, etc...
+ *
+ * (2) treats all connections that have not been set to binary mode
+ *     as UTF-8 encoded, so that command lines and notify() responses
+ *     likewise use the expanded character set.
+ *
+ * The expanded character set consists of all Unicode characters up to
+ * the maximum value of 0x10FFFFF, except for
+ *
+ * (*) the 32 (out of 33) ASCII control characters that were already
+ *     excluded from the original MOO character set, namely, all
+ *     control characters except for HORIZONTAL TAB (0x9), which is
+ *     included, and
+ * (*) the 66 "non-character" code points (0xFDD0-FDEF,0x*FFFE,0x*FFFF),
+ *     these being legal Unicode code points that are deemed "internal
+ *     use only" (and our "internal use" will be to not allow them).
+ *
+ * Note that surrogates (character values 0xd800-0xdfff) not being
+ * legal Unicode characters means they are also excluded from the
+ * expanded character set.
+ *
+ * Also note that database checkpoints/saves written by Unicode-
+ * enabled servers will not be readable by non-Unicode servers
+ * if they contain even a single string with a single non-ASCII
+ * character.
+ *
+ * - UNICODE_STRINGS is what you define if you want the basic
+ *     Unicode-enabled server.  You may then, if you wish, define
+ *     either or both of the following:
+ *
+ * - UNICODE_IDENTIFIERS expands the set of characters legal for use
+ *     in identifiers (i.e., variables and direct verb/property
+ *     references) in verb code such that anything in the 'XID_Start'
+ *     class may appear as the first character, while characters in
+ *     the other positions may be anything in the 'XID_Continue'
+ *     class.
+ *
+ * - UNICODE_NUMBERS allows non-ASCII Unicode characters that have
+ *     'NumericType=Decimal' to be recognized as decimal digits in
+ *     integer and real numeric constants occuring in verbcode,
+ *     subject to certain additional rules (e.g., all digits in
+ *     a given constant must be from the same digit family).
+ *
+ * UNICODE_IDENTIFIERS and UNICODE_NUMBERS both affect the parsing
+ * of verb code, as done by eval(), set_verb_code(), the .program
+ * command, and the database file reader.  UNICODE_NUMBERS also
+ * affects parsing of numbers from strings as done by to_num(),
+ * to_obj(), and to_float().
+ *
+ * Note that integer and real constants do not, in their internal
+ * representations, currently preserve source character information;
+ * none of verb_code(), tostr(), toliteral(), or floatstr() will
+ * produce non-ASCII digits on output.
+ */
+
+#undef UNICODE_STRINGS
+#undef UNICODE_IDENTIFIERS
+#undef UNICODE_NUMBERS
+
+/******************************************************************************
  * If OUT_OF_BAND_PREFIX is defined as a non-empty string, then any lines of
  * input from any player that begin with that prefix will bypass both normal
  * command parsing and any pending read()ing task, instead spawning a server
@@ -307,11 +371,11 @@ should now be completely unnecessary given that
 #undef DEFAULT_CONNECT_TIMEOUT
 
 /******************************************************************************
- * On connections that have not been set to binary mode, the server normally
- * discards incoming characters that are not printable ASCII, including
- * backspace (8) and delete(127).  If INPUT_APPLY_BACKSPACE is defined,
- * backspace and delete cause the preceding character (if any) to be removed
- * from the input stream.  (Comment this out to restore pre-1.8.3 behavior)
+ * On connections that have not been set to binary mode, the server
+ * normally discards incoming characters that are not in the allowed
+ * MOO character set, including backspace (8) and delete(127).
+ * If INPUT_APPLY_BACKSPACE is defined, backspace and delete cause the
+ * preceding character (if any) to be removed from the input stream.
  */
 
 #undef INPUT_APPLY_BACKSPACE
