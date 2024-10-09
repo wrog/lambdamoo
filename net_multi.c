@@ -277,7 +277,7 @@ pull_input(nhandle * h)
 
     if ((count = read(h->rfd, ptr, sizeof(buffer) - h->excess_utf_count)) > 0) {
 	if (h->binary) {
-	    stream_add_string(s, raw_bytes_to_binary(buffer, count));
+	    stream_add_string(s, raw_bytes_to_moobinary(buffer, count));
 	    server_receive_line(h->shandle, reset_stream(s));
 	    h->last_input_was_CR = 0;
             h->excess_utf_count = 0;
@@ -725,7 +725,7 @@ char rcsid_net_multi[] = "$Id$";
 /*
  * $Log$
  * Revision 1.7  2010/03/30 23:16:49  wrog
- * raw_bytes_to_binary() replaced by stream_add_raw_bytes_to_binary()
+ * raw_bytes_to_moobinary() replaced by stream_add_moobinary_from_raw_bytes()
  *
  * Revision 1.6  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)

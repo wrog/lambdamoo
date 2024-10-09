@@ -196,7 +196,7 @@ network_process_io(int timeout)
 		   && (count = read(0, buffer, sizeof(buffer))) > 0) {
 		got_some = 1;
 		if (binary) {
-		    stream_add_string(s, raw_bytes_to_binary(buffer, count));
+		    stream_add_string(s, raw_bytes_to_moobinary(buffer, count));
 		    server_receive_line(sh, reset_stream(s));
 		} else
 		    for (ptr = buffer, end = buffer + count;
@@ -232,7 +232,7 @@ char rcsid_net_single[] = "$Id$";
 /*
  * $Log$
  * Revision 1.5  2010/03/30 23:16:49  wrog
- * raw_bytes_to_binary() replaced by stream_add_raw_bytes_to_binary()
+ * raw_bytes_to_moobinary() replaced by stream_add_moobinary_from_raw_bytes()
  *
  * Revision 1.4  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)

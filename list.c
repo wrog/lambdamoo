@@ -990,7 +990,7 @@ bf_binary_hash(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr 
 {
     Var r;
     int length;
-    const char *bytes = binary_to_raw_bytes(arglist.v.list[1].v.str, &length);
+    const char *bytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str, &length);
 
     free_var(arglist);
     if (!bytes)
@@ -1028,7 +1028,7 @@ static package
 bf_decode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     int length;
-    const char *bytes = binary_to_raw_bytes(arglist.v.list[1].v.str, &length);
+    const char *bytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str, &length);
     int nargs = arglist.v.list[0].v.num;
     int fully = (nargs >= 2 && is_true(arglist.v.list[2]));
     Var r;
@@ -1136,7 +1136,7 @@ bf_encode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
     bytes = reset_stream(s);
     if (ok) {
 	r.type = TYPE_STR;
-	r.v.str = str_dup(raw_bytes_to_binary(bytes, length));
+	r.v.str = str_dup(raw_bytes_to_moobinary(bytes, length));
 	return make_var_pack(r);
     } else
 	return make_error_pack(E_INVARG);
@@ -1280,7 +1280,7 @@ bf_encode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
 	Var r;
 
 	r.type = TYPE_STR;
-	r.v.str = str_dup(raw_bytes_to_binary(bytes, length));
+	r.v.str = str_dup(raw_bytes_to_moobinary(bytes, length));
 	return make_var_pack(r);
     } else
 	return make_error_pack(E_INVARG);
@@ -1296,7 +1296,7 @@ bf_decode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
     int length, ok = 0;
     Var r;
 
-    src = binary_to_raw_bytes(binary, &length);
+    src = moobinary_to_raw_bytes(binary, &length);
     if (src) {
 	dst = recode_chars(src, &length, arglist.v.list[2].v.str, "UTF-32");
 	if (dst) {
