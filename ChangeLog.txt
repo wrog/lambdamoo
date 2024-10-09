@@ -2511,7 +2511,7 @@ Version 1.8.4, in progress
 -- Added caching regime for server options other than
    .protect_<function>
 -- List/string API changes (prep for raising stream exceptions)
-   raw_bytes_to_binary -> stream_add_raw_bytes_to_binary
+   raw_bytes_to_moobinary -> stream_add_moobinary_from_raw_bytes
    strsub -> stream_add_strsub
    value_to_literal -> unparse_value
    list2str -> stream_add_tostr

@@ -377,7 +377,8 @@ value_bytes(Var v)
 }
 
 void
-stream_add_raw_bytes_to_binary(Stream *s, const char *buffer, int buflen)
+stream_add_moobinary_from_raw_bytes(Stream *s,
+				    const char *buffer, int buflen)
 {
     int i;
 
@@ -392,7 +393,7 @@ stream_add_raw_bytes_to_binary(Stream *s, const char *buffer, int buflen)
 }
 
 const char *
-binary_to_raw_bytes(const char *binary, int *buflen)
+moobinary_to_raw_bytes(const char *binary, int *buflen)
 {
     static Stream *s = 0;
     const char *ptr = binary;
@@ -433,7 +434,7 @@ char rcsid_utils[] = "$Id$";
  * $Log$
  * Revision 1.9  2010/03/30 23:15:52  wrog
  * strsub() replaced by stream_add_strsub()
- * raw_bytes_to_binary() replaced by stream_add_raw_bytes_to_binary()
+ * raw_bytes_to_moobinary() replaced by stream_add_moobinary_from_raw_bytes()
  *
  * Revision 1.8  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
@@ -494,7 +495,7 @@ char rcsid_utils[] = "$Id$";
  * Removed special format for `~' in binary strings.  Release 1.8.0alpha6.
  *
  * Revision 2.3  1996/01/11  07:40:01  pavel
- * Added raw_bytes_to_binary() and binary_to_raw_bytes(), in support of binary
+ * Added raw_bytes_to_moobinary() and moobinary_to_raw_bytes(), in support of binary
  * I/O facilities.  Release 1.8.0alpha5.
  *
  * Revision 2.2  1995/12/28  00:38:54  pavel

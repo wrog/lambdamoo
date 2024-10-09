@@ -1583,7 +1583,7 @@ bf_notify(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 	if (h->binary) {
 	    int length;
 
-	    line = binary_to_raw_bytes(line, &length);
+	    line = moobinary_to_raw_bytes(line, &length);
 	    if (!line) {
 		free_var(arglist);
 		return make_error_pack(E_INVARG);

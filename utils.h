@@ -80,8 +80,9 @@ extern Objid get_system_object(const char *);
 
 extern int value_bytes(Var);
 
-extern void stream_add_raw_bytes_to_binary(Stream *, const char *buffer, int buflen);
-extern const char *binary_to_raw_bytes(const char *binary, int *rawlen);
+extern void stream_add_moobinary_from_raw_bytes(
+    Stream *, const char *buffer, int buflen);
+extern const char *moobinary_to_raw_bytes(const char *binary, int *rawlen);
 
 #endif		/* !Utils_H */
 
@@ -89,7 +90,7 @@ extern const char *binary_to_raw_bytes(const char *binary, int *rawlen);
  * $Log$
  * Revision 1.7  2010/03/30 23:15:52  wrog
  * strsub() replaced by stream_add_strsub()
- * raw_bytes_to_binary() replaced by stream_add_raw_bytes_to_binary()
+ * raw_bytes_to_moobinary() replaced by stream_add_moobinary_from_raw_bytes()
  *
  * Revision 1.6  1998/12/14 13:19:15  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
@@ -124,7 +125,7 @@ extern const char *binary_to_raw_bytes(const char *binary, int *rawlen);
  * for 1996.  Release 1.8.0beta1.
  *
  * Revision 2.3  1996/01/11  07:46:18  pavel
- * Added raw_bytes_to_binary() and binary_to_raw_bytes(), in support of binary
+ * Added raw_bytes_to_moobinary() and moobinary_to_raw_bytes(), in support of binary
  * I/O facilities.  Release 1.8.0alpha5.
  *
  * Revision 2.2  1995/12/28  00:39:38  pavel

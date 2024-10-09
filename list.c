@@ -1026,7 +1026,7 @@ bf_binary_hash(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr 
 {
     Var r;
     int length;
-    const char *bytes = binary_to_raw_bytes(arglist.v.list[1].v.str, &length);
+    const char *bytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str, &length);
 
     free_var(arglist);
     if (!bytes)
@@ -1075,7 +1075,7 @@ static package
 bf_decode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
     int length;
-    const char *bytes = binary_to_raw_bytes(arglist.v.list[1].v.str, &length);
+    const char *bytes = moobinary_to_raw_bytes(arglist.v.list[1].v.str, &length);
     int nargs = arglist.v.list[0].v.num;
     int fully = (nargs >= 2 && is_true(arglist.v.list[2]));
     Var r;
@@ -1181,7 +1181,7 @@ bf_encode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 
     TRY_STREAM {
 	if (encode_binary(s, arglist)) {
-	    stream_add_raw_bytes_to_binary(
+	    stream_add_moobinary_from_raw_bytes(
 		s2, stream_contents(s), stream_length(s));
 	    r.type = TYPE_STR;
 	    r.v.str = str_dup(stream_contents(s2));
