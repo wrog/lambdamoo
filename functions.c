@@ -376,6 +376,18 @@ make_float_pack(double v)
 }
 
 package
+make_string_pack(const char *s)
+{
+    package p;
+
+    p.kind = BI_RETURN;
+    p.u.ret.type = TYPE_STR;
+    p.u.ret.v.str = s;
+
+    return p;
+}
+
+package
 make_call_pack(Byte pc, void *data)
 {
     package p;
