@@ -62,6 +62,13 @@ stream_add_char(Stream * s, char c)
     s->buffer[s->current++] = c;
 }
 
+void
+stream_delete_char(Stream * s)
+{
+    if (s->current > 0)
+      s->current--;
+}
+
 int
 stream_add_utf(Stream * s, int c)
 {
@@ -78,21 +85,12 @@ stream_add_utf(Stream * s, int c)
 }
 
 void
-stream_delete_char(Stream * s)
-{
-    if (s->current > 0)
-      s->current--;
-}
-
-void
 stream_delete_utf(Stream * s)
 {
-    if (s->current > 0) {
-        s->current--;
-        while ((s->buffer[s->current] & 0xc0) == 0x80) {
-            s->current--;
-        }
-    }
+    if (s->current > 0)
+	do
+	    --s->current;
+	while (is_utf8_cont_byte(s->buffer[s->current]));
 }
 
 void

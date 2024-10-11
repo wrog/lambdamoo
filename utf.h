@@ -9,6 +9,9 @@
 
 #define INVALID_RUNE	0xfffd
 
+inline int is_utf8_cont_byte(uint8_t c)
+{ return (c & 0xc0) == 0x80; }
+
 int get_utf(const char **);
 int get_utf_call(int (*)(void *), void *, int *);
 int put_utf(char **, int);
