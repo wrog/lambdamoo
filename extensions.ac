@@ -5,6 +5,27 @@ MOO_XT_DECLARE_EXTENSIONS([
 %%extension unicode
 ##==================
 
+  --enable-unicode=KWD,..
+    %?- use original ASCII charset
+    %?  support unicode
+
+  %cdefine UNICODE_%s
+
+  %option strings
+    %alt strs
+    %alt core
+    %?  in STR values
+  %option numbers
+    %alt nums
+    %?  in numeric constants
+  %option identifiers
+    %alt ids
+    %?  in variable names
+    %implies strs
+  %option_set code = ids,nums
+  %option_set all  = code,strs
+  %option_set yes  = strs      # (annoy both Ken and wRog)
+
   XT_CSRCS = utf.c
 
   %require uclib
