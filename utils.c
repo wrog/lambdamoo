@@ -18,6 +18,8 @@
 #include "my-ctype.h"
 #include "my-stdio.h"
 #include "my-string.h"
+#include <iconv.h>
+#include <errno.h>
 
 #include "config.h"
 #include "db.h"
@@ -452,6 +454,59 @@ moobinary_to_raw_bytes(const char *binary, int *buflen)
     *buflen = stream_length(s);
     return reset_stream(s);
 }
+
+const char *
+recode_chars(const char *chars, int *length,
+	     const char *fromcode, const char *tocode)
+{
+    iconv_t cd;
+    char *inbuf, *outbuf;
+    size_t inbytesleft, outbytesleft;
+    char buffer[512];
+    static Stream *s = 0;
+
+    cd = iconv_open(tocode, fromcode);
+    if (cd == (iconv_t) -1)
+	return 0;
+
+    inbuf = (char *) chars;
+    inbytesleft = *length;
+
+    outbuf = buffer;
+    outbytesleft = sizeof(buffer);
+
+    if (!s)
+	s = new_stream(inbytesleft);
+
+    while (iconv(cd, &inbuf, &inbytesleft,
+		 &outbuf, &outbytesleft) == (size_t) -1) {
+	switch (errno) {
+	case E2BIG:
+	    /* output buffer has no more room */
+	    stream_add_bytes(s, buffer, outbuf - buffer);
+	    outbuf = buffer;
+	    outbytesleft = sizeof(buffer);
+	    break;
+
+	case EILSEQ:
+	    /* invalid multibyte sequence in input */
+	case EINVAL:
+	    /* incomplete multibyte sequence in input */
+	default:
+	    iconv_close(cd);
+	    reset_stream(s);
+	    return 0;
+	}
+    }
+
+    stream_add_bytes(s, buffer, outbuf - buffer);
+
+    iconv_close(cd);
+
+    *length = stream_length(s);
+    return reset_stream(s);
+}
+
 
 char rcsid_utils[] = "$Id$";
 
