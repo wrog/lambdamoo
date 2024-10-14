@@ -9,6 +9,8 @@
 
 #include "config.h"
 
+#include "structures.h"
+
 #define INVALID_RUNE	0xfffd
 
 inline int is_utf8_cont_byte(uint8_t c)
@@ -17,6 +19,10 @@ inline int is_utf8_cont_byte(uint8_t c)
 extern uint32_t get_utf(const char **);
 extern int put_utf(char **, uint32_t);      /* -> true if failed */
 extern size_t skip_utf(const char *, int);
+extern Num  utf_byte_index(const char *, Num);
+extern void utf_byte_range(const char *, Num [2]);
+extern Num  utf_char_index(const char *, Num);
+
 extern size_t strlen_utf(const char *);
 extern size_t clearance_utf(const uint8_t);
 
