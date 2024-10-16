@@ -187,15 +187,19 @@ listconcat(Var first, Var second)
 Var
 listrangeset(Var base, Num from, Num after, Var value)
 {
-    /* base and value are free'd */
+    /* from and after are 1-based byte-indices
+     * base and value are to be free'd
+     * range checking has already been done so we know
+     *   1 <= after && from <= base_len + 1
+     */
     size_t val_len = value.v.list[0].v.num;
     size_t base_len = base.v.list[0].v.num;
     size_t lenleft = (from > 1) ? from - 1 : 0;
-    size_t lenright = (base_len >= after) ? base_len - after + 1 : 0;
+    size_t lenright = (base_len >= (UNum)after) ? base_len - after + 1 : 0;
     size_t newsize = lenleft + val_len + lenright;
 
     /* be kind to your memory manager */
-    int index;
+    size_t index;
     for (index = after; index <= base_len; index++)
 	(void)var_ref(base.v.list[index]);
     for (index = 1; index <= lenleft; index++)
@@ -334,12 +338,15 @@ unparse_value(Stream * s, Var v)
 Var
 strrangeset(Var base, Num from, Num after, Var value)
 {
-    /* from and after are byte-indices. */
-    /* base and value are free'd */
+    /* from and after are 1-based byte-indices
+     * base and value are to be free'd
+     * range checking has already been done so we know
+     *   1 <= after && from <= base_len + 1
+     */
     size_t val_len  = memo_strlen(value.v.str);
     size_t base_len = memo_strlen(base.v.str);
     size_t lenleft  = (from > 1) ? from - 1 : 0;
-    size_t lenright = (base_len >= after) ? base_len - after + 1 : 0;
+    size_t lenright = (base_len >= (UNum)after) ? base_len - after + 1 : 0;
     size_t newlen   = lenleft + val_len + lenright;
 
     char *s = mymalloc(sizeof(char) * (newlen + 1), M_STRING);

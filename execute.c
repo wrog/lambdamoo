@@ -1044,7 +1044,7 @@ do {								\
 		    utf_byte_range(list.v.str, bfromafter);
 		    if (value.type != TYPE_STR)
 			e = E_TYPE;
-		    else if (bfromafter[0] > memo_strlen(list.v.str))
+		    else if ((UNum)bfromafter[0] > memo_strlen(list.v.str))
 			e = E_RANGE;
 		    else if (memo_strlen(value.v.str) != clearance_utf(value.v.str[0]))
 			e = E_INVARG;  /* not a single character */
@@ -1347,7 +1347,7 @@ do {								\
 		}
 		else {  /* list.type == TYPE_STR */
 		    Num bindex = utf_byte_index(list.v.str, index.v.num);
-		    if (bindex > memo_strlen(list.v.str))
+		    if ((UNum)bindex > memo_strlen(list.v.str))
 			e = E_RANGE;
 		    else
 			/* substr frees list */
