@@ -739,8 +739,6 @@ get_pattern(const char *string, int case_matters)
     return entry->pattern;
 }
 
-#define match_rebase(x) (x == 0 ? 0 : (subject_len - strlen_utf(subject + (x) - 1) + 1))
-
 static Var
 do_match(Var arglist, int reverse)
 {
@@ -749,7 +747,6 @@ do_match(Var arglist, int reverse)
     Pattern pat;
     Var ans;
     Match_Indices regs[10];
-    int subject_len;
 
     subject = arglist.v.list[1].v.str;
     pattern = arglist.v.list[2].v.str;
@@ -765,21 +762,20 @@ do_match(Var arglist, int reverse)
 	    panic("do_match:  match_pattern returned unfortunate value.\n");
 
 	case MATCH_SUCCEEDED:
-            subject_len = strlen_utf(subject);
 	    ans = new_list(4);
 	    ans.v.list[1].type = TYPE_INT;
 	    ans.v.list[2].type = TYPE_INT;
 	    ans.v.list[4].type = TYPE_STR;
-	    ans.v.list[1].v.num = match_rebase(regs[0].start);
-	    ans.v.list[2].v.num = match_rebase(regs[0].end + 1) - 1;
+	    ans.v.list[1].v.num = utf_char_index(subject, regs[0].start);
+	    ans.v.list[2].v.num = utf_char_index(subject, regs[0].end + 1) - 1;
 	    ans.v.list[3] = new_list(9);
 	    ans.v.list[4].v.str = str_ref(subject);
 	    for (i = 1; i <= 9; i++) {
 		ans.v.list[3].v.list[i] = new_list(2);
 		ans.v.list[3].v.list[i].v.list[1].type = TYPE_INT;
-		ans.v.list[3].v.list[i].v.list[1].v.num = match_rebase(regs[i].start);
+		ans.v.list[3].v.list[i].v.list[1].v.num = utf_char_index(subject, regs[i].start);
 		ans.v.list[3].v.list[i].v.list[2].type = TYPE_INT;
-		ans.v.list[3].v.list[i].v.list[2].v.num = match_rebase(regs[i].end + 1) - 1;
+		ans.v.list[3].v.list[i].v.list[2].v.num = utf_char_index(subject, regs[i].end + 1) - 1;
 	    }
 	    break;
 	case MATCH_FAILED:
@@ -894,18 +890,19 @@ bf_substitute(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr U
 	    int start = 0, end = 0;
 	    if (c >= '1' && c <= '9') {
 		Var pair = subs.v.list[3].v.list[c - '0'];
-		start = pair.v.list[1].v.num - 1;
-		end = pair.v.list[2].v.num - 1;
+		start = pair.v.list[1].v.num;
+		end = pair.v.list[2].v.num;
 	    } else if (c == '0') {
-		start = subs.v.list[1].v.num - 1;
-		end = subs.v.list[2].v.num - 1;
+		start = subs.v.list[1].v.num;
+		end = subs.v.list[2].v.num;
 	    } else {
 		p = make_error_pack(E_INVARG);
 		goto oops;
 	    }
-	    int bstart = skip_utf(subject, start);
-	    int bafter = bstart + skip_utf(subject + bstart, end - start + 1);
-	    stream_add_bytes(s, subject + bstart, bafter - bstart);
+	    Num bstartafter[2] = { start, end + 1 };
+	    utf_byte_range(subject, bstartafter);
+	    stream_add_bytes(s, subject + bstartafter[0] - 1,
+			     bstartafter[1] - bstartafter[0]);
 	}
     }
     ans.type = TYPE_STR;
@@ -1106,77 +1103,78 @@ bf_encode_binary(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid prog
 static package
 bf_tochar(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    static Stream *s = 0;
-    int ucs = 0;
-    Var ans;
+    enum error e = E_NONE;
     Var v = arglist.v.list[1];
+    int ucs;
 
-    if (!s)
-	s = new_stream(5);
     switch (v.type) {
     case TYPE_INT:
-	if (v.v.num > 0 && v.v.num <= 0x10ffff)
-	    ucs = v.v.num;
+	ucs = (v.v.num <= 0x10ffff ? v.v.num : 0);
 	break;
     case TYPE_STR:
 	ucs = my_char_lookup(v.v.str);
 	break;
     default:
-        free_var(arglist);
-        return make_error_pack(E_TYPE);
+	e = E_TYPE;
     }
     free_var(arglist);
-    if (!my_is_printable(ucs))
-        ucs = 0;
-    if (ucs) {
-        stream_add_utf(s, ucs);
-        ans.type = TYPE_STR;
-	ans.v.str = str_dup(reset_stream(s));
-    }
-    if (!ucs)
-	return make_error_pack(E_INVARG);
-    else
-	return make_var_pack(ans);
+
+    if (e == E_NONE && !(my_is_printable(ucs)))
+	e = E_INVARG;
+
+    if (e != E_NONE)
+	return make_error_pack(e);
+
+    Stream *s = new_stream(0);
+    stream_add_utf(s, ucs);
+    const char *charstr = str_dup(reset_stream(s));
+    free_stream(s);
+    return make_string_pack(charstr);
+}
+
+static inline uint32_t
+single_char_first_argument(Var arglist)
+{
+    const char *s = arglist.v.list[1].v.str;
+    uint32_t ucs = get_utf(&s);
+    return *s ? 0 : ucs;
 }
 
 static package
 bf_charname(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r = arglist.v.list[1];
-    const char *s = r.v.str;
-    int ucs = get_utf(&s);
-
-    if ((ucs == 0) || (*s != 0)) {
-        free_var(arglist);
-        return make_error_pack(E_INVARG);
-    }
+    uint32_t ucs = single_char_first_argument(arglist);
     free_var(arglist);
+    if (!ucs)
+        return make_error_pack(E_INVARG);
 
-    Var ans;
-    ans.v.str = my_char_name(ucs);
-    if (!ans.v.str)
+    const char *name = my_char_name(ucs);
+    if (!name)
 	return make_error_pack(E_INVARG);
-    ans.type = TYPE_STR;
-    return make_var_pack(ans);
+
+    return make_string_pack(name);
 }
 
 static package
 bf_ord(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 {
-    Var r = arglist.v.list[1];
-    const char *s = r.v.str;
-    int ucs = get_utf(&s);
-    Var ans;
-
-    if ((ucs == 0) || (*s != 0)) {
-        free_var(arglist);
-        return make_error_pack(E_INVARG);
-    }
+    uint32_t ucs = single_char_first_argument(arglist);
     free_var(arglist);
-    ans.type = TYPE_INT;
-    ans.v.num = ucs;
-    return make_var_pack(ans);
+    if (!ucs)
+        return make_error_pack(E_INVARG);
+
+    return make_int_pack(ucs);
 }
+
+static inline int
+stream_add_char_for_ec(Stream *s, uint32_t ch)
+{ return stream_add_utf(s, ch); }
+
+static inline void
+stream_add_string_for_ec(Stream *s, const char *str)
+{ return stream_add_string(s, str); }
+
+#define BF_ENCODE_ENCODING "UTF-8"
 
 static int
 encode_chars(Stream *s, Var v)
@@ -1185,12 +1183,12 @@ encode_chars(Stream *s, Var v)
 
     switch (v.type) {
     case TYPE_INT:
-	if (stream_add_utf(s, v.v.num) == -1)
+	if (stream_add_char_for_ec(s, v.v.num) == -1)
 	    return 0;
 	break;
 
     case TYPE_STR:
-	stream_add_string(s, v.v.str);
+	stream_add_string_for_ec(s, v.v.str);
 	break;
 
     case TYPE_LIST:
@@ -1217,7 +1215,7 @@ bf_encode_chars(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr
     if (!(encode_chars(s, arglist.v.list[1]) &&
 	  (length = stream_length(s),
 	   stream_add_recoded_chars(s2, reset_stream(s), length,
-				    "UTF-8", arglist.v.list[2].v.str))))
+				    BF_ENCODE_ENCODING, arglist.v.list[2].v.str))))
 	p = make_error_pack(E_INVARG);
     else {
 	Var r;

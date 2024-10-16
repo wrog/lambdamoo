@@ -306,26 +306,15 @@ int
 strrindex(const char *source, const char *what, int case_counts)
 {
     const char *s;
-    int lwhat = strlen(what);
-    int ind = 0;
-    s = source + strlen(source) - lwhat;
-    if (s < source)
-        return 0;
-    while ((*s & 0xc0) == 0x80) {
-        /* UTF8 continuation -- nothing can start here */
-        s--;
-    }
-    ind = strlen_utf(source) - strlen_utf(s);
+    int lwhat = memo_strlen(what);
 
-    for (; s >= source; s--, ind--) {
+    for (s = source + memo_strlen(source) - lwhat; s >= source; s--) {
+	if (is_utf8_cont_byte(*s))
+	    continue;
 	if (!(case_counts ? strncmp(s, what, lwhat)
 	      : mystrncasecmp(s, what, lwhat))) {
-	    return ind + 1;
+	    return utf_char_index(source, s - source + 1);
 	}
-        while ((*s & 0xc0) == 0x80) {
-            /* UTF8 continuation */
-            s--;
-        }
     }
     return 0;
 }
