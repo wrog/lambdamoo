@@ -19,6 +19,7 @@
 #define Streams_H 1
 
 #include "config.h"
+#include "options.h"
 
 #include "my-string.h"
 
@@ -32,8 +33,15 @@ extern Stream *new_stream(size_t size);
 extern void stream_add_char(Stream *, char);
 extern void stream_delete_char(Stream *);
 
+#if !UNICODE_STRINGS
+inline int  stream_add_utf(Stream *s, uint32_t c)
+{ stream_add_char(s, c); return 0; }
+inline void stream_delete_utf(Stream *s)
+{ stream_delete_char(s); }
+#else
 extern int  stream_add_utf(Stream *, uint32_t);
 extern void stream_delete_utf(Stream *);
+#endif
 
 extern void stream_add_float(Stream *s, double n, int prec);
 extern void stream_add_bytes(Stream *, const char *, size_t);

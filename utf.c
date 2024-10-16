@@ -11,6 +11,8 @@
 
 #include "exceptions.h"
 
+#if UNICODE_STRINGS
+
 /*
  * get_utf():
  *
@@ -280,3 +282,5 @@ clearance_utf(const uint8_t c)
         return 4;
     return 1;
 }
+
+#endif /* UNICODE_STRINGS */

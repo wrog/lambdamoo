@@ -87,6 +87,8 @@ stream_delete_char(Stream * s)
       s->current--;
 }
 
+#if UNICODE_STRINGS
+
 int
 stream_add_utf(Stream * s, uint32_t c)
 {
@@ -107,6 +109,8 @@ stream_delete_utf(Stream * s)
 	    --s->current;
 	while (is_utf8_cont_byte(s->buffer[s->current]));
 }
+
+#endif /* UNICODE_STRINGS */
 
 void
 stream_add_float(Stream *s, double n, int prec)
