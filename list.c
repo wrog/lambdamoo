@@ -386,7 +386,7 @@ bf_length(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSE
 	break;
     case TYPE_STR:
 	r.type = TYPE_INT;
-	r.v.num = strlen_utf(arglist.v.list[1].v.str);
+	r.v.num = memo_strlen_utf(arglist.v.list[1].v.str);
 	break;
     default:
 	free_var(arglist);
@@ -819,7 +819,7 @@ check_subs_list(Var subs)
 	|| subs.v.list[4].type != TYPE_STR)
 	return 1;
     subj = subs.v.list[4].v.str;
-    subj_length = strlen_utf(subj);
+    subj_length = memo_strlen_utf(subj);
     if (invalid_pair(subs.v.list[1].v.num, subs.v.list[2].v.num,
 		     subj_length))
 	return 1;

@@ -256,19 +256,7 @@ utf_char_index(const char *s0, Num bi)
 }
 
 size_t
-skip_utf(const char *s0, int i)
-{
-    const char *s = s0;
-
-    while (*s && i) {
-        get_utf(&s);
-        i--;
-    }
-    return s - s0;
-}
-
-size_t
-strlen_utf(const char *s)
+memo_strlen_utf(const char *s)
 {
     size_t i = 0;
     while (get_utf(&s)) {
