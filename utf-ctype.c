@@ -89,6 +89,7 @@ my_digitval(uint32_t x)
  |   identifier characters   |
  *---------------------------*/
 
+#if UNICODE_IDENTIFIERS
 /*
  * The XID categories are the best thing in Unicode to what
  * characters should allow to begin and continue identifiers,
@@ -97,32 +98,34 @@ my_digitval(uint32_t x)
 int
 my_is_xid_start(uint32_t x)
 {
-#if   UNICODE_DATA == UD_GNU
+#  if   UNICODE_DATA == UD_GNU
     return uc_is_property_xid_start(x);
 
-#elif UNICODE_DATA == UD_ICU
+#  elif UNICODE_DATA == UD_ICU
     return u_hasBinaryProperty(x,UCHAR_XID_START);
 
-#elif UNICODE_DATA == UD_UCD
+#  elif UNICODE_DATA == UD_UCD
     RETURN_UCD(x, ucd, int, 0, !!(ucd->fl & UC_FL_XID_START));
 
-#endif
+#  endif
 }
 
 int
 my_is_xid_cont(uint32_t x)
 {
-#if   UNICODE_DATA == UD_GNU
+#  if   UNICODE_DATA == UD_GNU
     return uc_is_property_xid_continue(x);
 
-#elif UNICODE_DATA == UD_ICU
+#  elif UNICODE_DATA == UD_ICU
     return u_hasBinaryProperty(x,UCHAR_XID_CONTINUE);
 
-#elif UNICODE_DATA == UD_UCD
+#  elif UNICODE_DATA == UD_UCD
     RETURN_UCD(x, ucd, int, 0, !!(ucd->fl & UC_FL_XID_CONTINUE));
 
-#endif
+#  endif
 }
+
+#endif /* UNICODE_IDENTIFIERS */
 
 /*-------------------------*
  |   simple case folding   |

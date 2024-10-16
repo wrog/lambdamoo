@@ -20,8 +20,13 @@ extern int my_isdigit(uint32_t);
 extern int my_digitval(uint32_t);
 #endif
 
+#if !UNICODE_IDENTIFIERS
+inline int my_is_xid_start(uint32_t c) { return isalpha(c); }
+inline int my_is_xid_cont(uint32_t c)  { return isalnum(c); }
+#else
 extern int my_is_xid_start(uint32_t);
 extern int my_is_xid_cont(uint32_t);
+#endif
 
 extern uint32_t my_tolower(uint32_t);
 extern uint32_t my_toupper(uint32_t);

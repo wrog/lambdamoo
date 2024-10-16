@@ -70,7 +70,7 @@ dnl
  [[STRING_INTERNING],     [bool], yes, [do interning of identical strings]],
  [[MEMO_STRLEN],          [bool], no,  [memoize string lengths]],
  [[UNICODE_STRINGS],      [bool], yes, [allow Unicode in string constants]],
- [[UNICODE_IDENTIFIERS],  [bool], yes, [allow Unicode in identifiers]],
+ [[UNICODE_IDENTIFIERS],  [bool], no,  [allow Unicode in identifiers]],
  [[UNICODE_NUMBERS],      [bool], no,  [allow Unicode in numeric constants]],
 
 dnl
