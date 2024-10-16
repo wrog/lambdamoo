@@ -181,46 +181,51 @@ listconcat(Var first, Var second)
 }
 
 Var
-listrangeset(Var base, int from, int to, Var value)
+listrangeset(Var base, Num from, Num after, Var value)
 {
     /* base and value are free'd */
-    int index, offset = 0;
-    int val_len = value.v.list[0].v.num;
-    int base_len = base.v.list[0].v.num;
-    int lenleft = (from > 1) ? from - 1 : 0;
-    int lenmiddle = val_len;
-    int lenright = (base_len > to) ? base_len - to : 0;
-    int newsize = lenleft + lenmiddle + lenright;
-    Var ans;
+    size_t val_len = value.v.list[0].v.num;
+    size_t base_len = base.v.list[0].v.num;
+    size_t lenleft = (from > 1) ? from - 1 : 0;
+    size_t lenright = (base_len >= after) ? base_len - after + 1 : 0;
+    size_t newsize = lenleft + val_len + lenright;
 
-    ans = new_list(newsize);
+    /* be kind to your memory manager */
+    int index;
+    for (index = after; index <= base_len; index++)
+	(void)var_ref(base.v.list[index]);
     for (index = 1; index <= lenleft; index++)
-	ans.v.list[++offset] = var_ref(base.v.list[index]);
-    for (index = 1; index <= lenmiddle; index++)
-	ans.v.list[++offset] = var_ref(value.v.list[index]);
-    for (index = 1; index <= lenright; index++)
-	ans.v.list[++offset] = var_ref(base.v.list[to + index]);
+	(void)var_ref(base.v.list[index]);
+
+    Var ans = new_list(newsize);
+    memcpy(ans.v.list + 1, base.v.list + 1, lenleft * sizeof(Var));
+    memcpy(ans.v.list + 1 + lenleft + val_len, base.v.list + after,
+	   lenright * sizeof(Var));
+
+    memcpy(ans.v.list + 1 + lenleft, value.v.list + 1,
+	   val_len * sizeof(Var));
+    for (index = 1; index <= val_len; index++)
+	(void)var_ref(value.v.list[index]);
+
     free_var(base);
     free_var(value);
     return ans;
 }
 
 Var
-sublist(Var list, int lower, int upper)
+sublist(Var list, Num first, Num after)
 {
-    if (lower > upper) {
-	free_var(list);
-	return new_list(0);
-    } else {
-	Var r;
+    size_t length = after > first ? after - first : 0;
+    Var r = new_list(length);
+    if (length) {
 	int i;
-
-	r = new_list(upper - lower + 1);
-	for (i = lower; i <= upper; i++)
-	    r.v.list[i - lower + 1] = var_ref(list.v.list[i]);
-	free_var(list);
-	return r;
+	for (i = first; i < after; i++)
+	    (void)var_ref(list.v.list[i]);
+	memcpy(r.v.list + 1, list.v.list + first,
+	       length * sizeof(Var));
     }
+    free_var(list);
+    return r;
 }
 
 static void
@@ -323,75 +328,49 @@ unparse_value(Stream * s, Var v)
 }
 
 Var
-strrangeset(Var base, int from, int to, Var value)
+strrangeset(Var base, Num from, Num after, Var value)
 {
+    /* from and after are byte-indices. */
     /* base and value are free'd */
-    int index, offset = 0;
-    int val_len = memo_strlen(value.v.str);
-    int base_len = memo_strlen(base.v.str);
-    int charsleft = (from > 1) ? from - 1 : 0;
-    int lenleft = skip_utf(base.v.str, charsleft);
-    int lenmiddle = val_len;
-    int indright = lenleft + skip_utf(base.v.str + lenleft, to - from + 1);
-    int lenright = base_len - indright;
-    int newsize = lenleft + lenmiddle + lenright;
+    size_t val_len  = memo_strlen(value.v.str);
+    size_t base_len = memo_strlen(base.v.str);
+    size_t lenleft  = (from > 1) ? from - 1 : 0;
+    size_t lenright = (base_len >= after) ? base_len - after + 1 : 0;
+    size_t newlen   = lenleft + val_len + lenright;
 
-    Var ans;
-    char *s;
+    char *s = mymalloc(sizeof(char) * (newlen + 1), M_STRING);
+    memcpy(s + lenleft + val_len, base.v.str + after - 1, lenright);
+    s[newlen] = '\0';
 
-    ans.type = TYPE_STR;
-    s = mymalloc(sizeof(char) * (newsize + 1), M_STRING);
-
-    for (index = 0; index < lenleft; index++)
-	s[offset++] = base.v.str[index];
-    for (index = 0; index < lenmiddle; index++)
-	s[offset++] = value.v.str[index];
-    for (index = 0; index < lenright; index++)
-	s[offset++] = base.v.str[index + indright];
-    s[offset] = '\0';
-    ans.v.str = s;
+    memcpy(s, base.v.str, lenleft);
     free_var(base);
+
+    if (val_len == 1)
+	s[lenleft] = value.v.str[0];
+    else
+	memcpy(s + lenleft, value.v.str, val_len);
     free_var(value);
-    return ans;
+
+    return (Var){ .type = TYPE_STR, .v.str = s };
 }
 
 Var
-substr(Var str, int lower, int upper)
+substr(Var str, Num first, Num after)
 {
-    Var r;
+    /* first and after are byte-indices. */
+    /* str is free'd. */
+    Num len = after - first;
+    char *s;
 
-    r.type = TYPE_STR;
-    if (lower > upper)
-	r.v.str = str_dup("");
+    if (len <= 0)
+	s = str_dup("");
     else {
-	int loop, index = 0;
-        int lower_ind = skip_utf(str.v.str, lower - 1);
-        int upper_ind = lower_ind + skip_utf(str.v.str + lower_ind, upper + 1 - lower);
-	char *s = mymalloc(upper_ind - lower_ind + 1, M_STRING);
-
-	for (loop = lower_ind; loop < upper_ind; loop++)
-	    s[index++] = str.v.str[loop];
-	s[index] = '\0';
-	r.v.str = s;
+	s = mymalloc(len + 1, M_STRING);
+	memcpy(s, str.v.str + first - 1, len);
+	s[len] = '\0';
     }
     free_var(str);
-    return r;
-}
-
-Var
-strget(Var str, Var i)
-{
-    Var r;
-    char *s;
-    int ind = skip_utf(str.v.str, i.v.num - 1);
-    int n = clearance_utf(str.v.str[ind]);
-
-    r.type = TYPE_STR;
-    s = mymalloc(n + 1, M_STRING);
-    strncpy(s, str.v.str + ind, n);
-    s[n] = 0;
-    r.v.str = s;
-    return r;
+    return (Var){ .type = TYPE_STR, .v.str = s };
 }
 
 /**** built in functions ****/
