@@ -8,9 +8,17 @@
 #define UTF_CType_H 1
 
 #include "config.h"
+#include "options.h"
 
+#include "my-ctype.h"
+
+#if !UNICODE_NUMBERS
+inline int my_isdigit(uint32_t c)      { return isdigit(c); }
+inline int my_digitval(uint32_t c)     { return c - '0';    }
+#else
 extern int my_isdigit(uint32_t);
 extern int my_digitval(uint32_t);
+#endif
 
 extern int my_is_xid_start(uint32_t);
 extern int my_is_xid_cont(uint32_t);

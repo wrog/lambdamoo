@@ -49,37 +49,41 @@
  |   digits   |
  *------------*/
 
+#if UNICODE_NUMBERS
+
 int
 my_isdigit(uint32_t x)
 {
-#if   UNICODE_DATA == UD_GNU
+#  if   UNICODE_DATA == UD_GNU
     return uc_is_property_decimal_digit(x);
 
-#elif UNICODE_DATA == UD_ICU
+#  elif UNICODE_DATA == UD_ICU
     return u_getIntPropertyValue(x,UCHAR_NUMERIC_TYPE) == U_NT_DECIMAL;
 
-#elif UNICODE_DATA == UD_UCD
+#  elif UNICODE_DATA == UD_UCD
     RETURN_UCD(x, ucd, int, 0, ucd->numeric_type == UC_NT_Decimal);
 
-#endif
+#  endif
 }
 
 int
 my_digitval(uint32_t x)
 {
-#if   UNICODE_DATA == UD_GNU
+#  if   UNICODE_DATA == UD_GNU
     return uc_decimal_value(x);
 
-#elif UNICODE_DATA == UD_ICU
+#  elif UNICODE_DATA == UD_ICU
     return u_charDigitValue(x);
 
-#elif UNICODE_DATA == UD_UCD
+#  elif UNICODE_DATA == UD_UCD
     /* XXX assert(ucd->numeric_type == UC_NT_Decimal) */
     /* For digits, numeric_value_{den,exp} == 1 */
     RETURN_UCD(x, ucd, int, -1, ucd->numeric_value_num);
 
-#endif
+#  endif
 }
+
+#endif /* UNICODE_NUMBERS */
 
 /*---------------------------*
  |   identifier characters   |

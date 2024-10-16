@@ -71,7 +71,7 @@ dnl
  [[MEMO_STRLEN],          [bool], no,  [memoize string lengths]],
  [[UNICODE_STRINGS],      [bool], yes, [allow Unicode in string constants]],
  [[UNICODE_IDENTIFIERS],  [bool], yes, [allow Unicode in identifiers]],
- [[UNICODE_NUMBERS],      [bool], yes, [allow Unicode in numeric constants]],
+ [[UNICODE_NUMBERS],      [bool], no,  [allow Unicode in numeric constants]],
 
 dnl
 dnl Everything from here on is only used in #if/#elif or substitutions

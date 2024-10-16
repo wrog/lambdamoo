@@ -17,6 +17,7 @@
 
 #include <limits.h>
 #include <errno.h>
+#include "my-ctype.h"
 #include "my-math.h"
 #include "my-stdlib.h"
 #include "my-string.h"
