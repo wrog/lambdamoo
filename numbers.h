@@ -46,12 +46,12 @@ extern Var do_power(Var, Var);
  *
  * flags are as follows:
  */
-#define PN_FLOAT_OK    0x01   /* allow decimal. and exponent  */
-#define PN_REQ_FLOAT   0x02   /* force returning a float      */
-#define PN_REQ_INT     0x04   /* force returning an integer   */
-#define PN_NONNEG      0x08   /* non-negative numbers only,   */
-          /*  i.e., do not accept leading minus signs; this
-           *  also changes the range of acceptable integers
+#define PN_FLOAT_OK     0x1   /* parse '.' and 'E'/'e'        */
+#define PN_REQ_FLOAT    0x2   /* force returning a float      */
+#define PN_REQ_INT      0x4   /* force returning an integer   */
+#define PN_NONNEG       0x8   /* non-negative numbers only,   */
+          /*  i.e., do not allow leading signs; this also
+	   *  changes the range of acceptable integers
 	   *  and *may* make it possible for them to overflow
 	   *  to NUM_MIN -- what the yacc parser needs.
            *  See Very Long Comment in numbers.c for details. */
@@ -77,12 +77,13 @@ extern Var do_power(Var, Var);
  *
  * as per the following chart:
  *
- *    PN_REQ_flags             Value encountered
- *     specified    No decimal./exponent   Decimal./exponent seen
+ *                             Value encountered
+ *    PN_REQ_flags  !PN_FLOAT_OK or        PN_FLOAT_OK and
+ *     specified    No '.' and no 'E'/'e'  found '.' or 'E'/'e'
  *   _____________||_____________________|________________________
- *                ||    TYPE_INT         |  TYPE_INT or E_FLOAT
- *    PN_REQ_INT  ||       or            |  (float is truncated)
- *   _____________|| _   E_RANGE   _  _  |________________________
+ *                ||                     |  TYPE_INT or E_FLOAT
+ *    PN_REQ_INT  ||    TYPE_INT         |  (float is truncated)
+ *   _____________|| _   or E_RANGE   _  |________________________
  *     neither    ||                     |
  *   -------------||---------------------+     TYPE_FLOAT
  *   PN_REQ_FLOAT ||  (int is floated)   .      or E_FLOAT

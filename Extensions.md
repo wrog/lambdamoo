@@ -7,11 +7,12 @@ Contents
   + [Your First Extension](#user-content-babys-very-first-extension)
   + [Bonus Round for Emacs Users](#user-content-bonus-round-for-emacs-users)
 
-* [Some HOW-TOs](#user-content-some-how-tos)
+* [Some HOW-TOs](#user-content-how-tos)
   + [How to require a system shared library](#user-content-how-to-require-a-system-shared-library)
   + [How to incorporate a build directory](#user-content-how-to-incorporate-a-build-directory)
 
 * [XT Reference](#user-content-xt-reference)
+  + [About XT Syntax](#user-content-about-xt-syntax)
   + [Cmd Reference](#user-content-cmd-reference)
     - [<code>--enable-</code>](#user-content---enable--ew_name--text-),
       [<code>--with-</code>](#user-content---with----ew_name--text-),
@@ -34,7 +35,7 @@ Contents
       [<code>%path</code>](#user-content-path-directory_path),
       [<code>%require</code>](#user-content-require-requirement_name),
       [<code>=</code> or VAR <code>=</code> value](#user-content--var--value),
-  + [Makefile Reference](#user-content-makefile-reference)
+  + [MakeVar Reference](#user-content-makevar-reference)
 
 * [Philosophical Issues](#user-content-philosophical-issues)
   + [When is an Option not an Option](#user-content-when-is-an-option-not-an-option)
@@ -44,13 +45,30 @@ Tutorial
 --------
 ### Ground Rules and Preparation
 
-What follows depends on `autoconf`, so we're assuming you're working off of a `git` clone of the server sources rather than a tarball (since you wouldn't be here unless you were interested in developing new features and for that you need `git`; `autoconf` you do __not__ necessarily have to learn too much about; we just need you to be running a recent version).
+What follows depends on `autoconf`, so we're assuming you're working
+off of a `git` clone of the server sources rather than a tarball
+(since you wouldn't be here unless you were interested in developing
+new features and for that you need `git`; `autoconf` you do __not__
+necessarily have to learn too much about; we just need you to be
+running a recent version).
 
-We will also assume you have successfully cloned the MOO server source directory and done `autoconf && ./configure -C && make` to build a vanilla server.  (If you hadn't actually done `-C`, that's okay, just rerun the configure script as `./configure -C`; it should be a fast no-op.  Also `make` again, too, if you want, but that should also be a fast no-op.)
+We will also assume you have successfully cloned the MOO server source
+directory and done `autoconf && ./configure -C && make` to build a
+vanilla server.  (If you hadn't actually done `-C`, that's okay, just
+rerun the configure script as `./configure -C`; it should be a fast
+no-op.  Also `make` again, too, if you want, but that should also be a
+fast no-op.)
 
-(... also hoping you have an editor that does syntax highlighting  so that `#` and `dnl` comments look right?  Emacs has an`autoconf` mode that is different from its `m4` mode and you should use the former when editing _both_ `.ac` and `.m4` files in this source tree.  See [below for further Emacs tips](#user-content-bonus-round-for-emacs-users))
+(... also hoping you have an editor that does syntax highlighting so
+that `#` and `dnl` comments look right?  Emacs has an`autoconf` mode
+that is different from its `m4` mode and you should use the former
+when editing _both_ `.ac` and `.m4` files in this source tree.
+See [below for further Emacs tips](#user-content-bonus-round-for-emacs-users))
 
-In what follows, `$` at the beginning of the line is intended to be a shell prompt -- yes, real world people will display current directories and other things that are all irrelevant for what we're doing.  You'll be staying in the root MOO source directory throughout.
+In what follows, `$` at the beginning of the line is intended to be a
+shell prompt -- yes, real world people will display current
+directories and other things that are all irrelevant for what we're
+doing.  You'll be staying in the root MOO source directory throughout.
 
 Here is a quick convenience command you can set up:
 
@@ -58,15 +76,24 @@ Here is a quick convenience command you can set up:
 $ mooval() {
   printf "%s\n" ";$1" 'abort' |
    ./moo -e -l /dev/null Minimal.db /dev/null |
-   sed -e '0,/^[*]/d;/^MOO.*Bye.*NOT saving/,$d;/^$/d'
+   sed -e '1,/^[*]/d;/^MOO.*Bye.*NOT saving/,$d;/^$/d'
  }
 ```
 
-(Cutting&pasting everything after the `$` is probably your best bet here.  Or just save it to a file and source it from there (i.e., using the `.` command).  And yes, we're assuming you have a modern Unix shell that understands shell functions; any of `bash`, `ksh`, `zsh`, or `dash` will do.  Otherwise, you will need to write an equivalent shell script yourself and store it on your `PATH` somewhere (sorry)).
+(Cutting&pasting everything after the `$` is probably your best bet
+here.  Or just save it to a file and source it from there (i.e., using
+the `.` command).  And yes, we're assuming you have a modern Unix
+shell that understands shell functions; any of `bash`, `ksh`, `zsh`,
+or `dash` will do.  Otherwise, you will need to write an equivalent
+shell script yourself and store it on your `PATH` somewhere (sorry)).
 
-As you might guess, `mooval` runs a server, loads Minimal.db, redirects both log and checkpoints to nowhere, fires up Emergency Wizard Mode, evals the first argument, shows you the result, and then exits without trying to save anything:
+As you might guess, `mooval` runs a server, loads Minimal.db,
+redirects both log and checkpoints to nowhere, fires up Emergency
+Wizard Mode, evals the first argument, shows you the result, and then
+exits without trying to save anything:
 
-Here are, respectively, what successful evaluations and errors look like in this world:
+Here are, respectively, what successful evaluations and errors look
+like in this world:
 
 ```
 $ mooval 'server_version("features")'
@@ -77,22 +104,27 @@ MOO (#3): ** 1 errors during parsing:
   Line 2:  Unknown built-in function: hello
 ```
 
-and just __always__ put single quotes around that first argument; it means everything in between will be passed by the shell verbatim and MOO almost never uses single quotes for anything, so this is about as ideal as it gets.
+and just __always__ put single quotes around that first argument; it
+means everything in between will be passed by the shell verbatim and
+MOO almost never uses single quotes for anything, so this is about as
+ideal as it gets.
 
-(And yes, this version of `mooval` is quite simplistic.  Doubtless, you can already see multiple ways to improve or confuse it, all entirely beyond the scope of this document.)
+(And yes, this version of `mooval` is quite simplistic.  Doubtless,
+you can already see multiple ways to improve or confuse it, all
+entirely beyond the scope of this document.)
 
 ### Baby's Very First Extension
 
-0.  Copy the file [extensions_tutorial.ac](./extensions_tutorial.ac) to `extensions2.ac` (which,
-    whenever it exists, is automatically hooked into the build process
-    the way `extensions.ac` is, but there's no penalty for it not
-    existing.)
+0.  Copy the file [extensions2_tutorial.ac](./extensions2_tutorial.ac)
+    to `extensions2.ac` (which, whenever it exists, is automatically
+    hooked into the build process the way `extensions.ac` is, but
+    there's no penalty for it not existing.)
 
-    > [!IMPORTANT]
-    >
-    > When you are done with this tutorial, be sure to delete or
-    > rename `extensions2.ac` and then do one last `autoconf -f`
-    > to flush out whatever effects it's had.  Otherwise it lingers.
+  > [!IMPORTANT]
+  >
+  > When you are done with this tutorial, be sure to delete or
+  > rename `extensions2.ac` and then do one last `autoconf -f`
+  > to flush out whatever effects it's had.  Otherwise it lingers.
 
 1.  Visit `extensions2.ac`; it's nothing but comments and is where
     we'll be doing most of our edits.  You should probably take a moment
@@ -115,12 +147,16 @@ vs. "indented more".
 And by "same", I mean "same sequence of tab and space characters".
 
 Also, tabs __have__ to come first, trying to indent in any other way
-will give you a "spaces before tabs" error).
+will give you a "spaces before tabs" error).  Alsoalso each tab counts
+as a Very Large number of spaces, meaning if you are going to use tabs
+at all, you need to be absolutely consistent how you use them
+(e.g., if tabs are 8 spaces, then __all__ instances of 8 spaces in
+indentation need to be tabs)
 
-(Actually, life will be generally easier if you never use tabs in this
-file, but, for the tutorial's sake, I wanted the commented and uncommented
-lines to match up with each other to make it more readable so I'm doing
-that __just this once__ (promise))
+(Suffice it to say, life will be much easier if you never use
+tabs in this file, but, for the tutorial's sake, I wanted the
+commented and uncommented lines to match up with each other to make it
+more readable so I'm doing that __just this once__ (promise))
 
 (And yes, the "MIDDLE" and "BOTTOM" sections work differently.
 Really, they're just straight `m4` code).
@@ -181,7 +217,12 @@ MOO (#3): => {"regexp"}
 
 So you made the extension go away again.  Congratulations.
 
-Actually, this is important:  Whatever you do, __make sure you're cleaning up after yourself__, so that when your extension is disabled, your impact on the existing code is __zero__.  Yes, I know I may have violated that rule a bit for Unicode, but ... Unicode, so...  Point is, the less you're doing when your extension is disabled, the more The People Who Hate Your Extension will thank you.
+Actually, this is important: Whatever you do, __make sure you're
+cleaning up after yourself__, so that when your extension is disabled,
+your impact on the existing code is __zero__.  Yes, I know I may have
+violated that rule a bit for Unicode, but ... Unicode, so...  Point
+is, the less you're doing when your extension is disabled, the more
+The People Who Hate Your Extension will thank you.
 
 5.  Recomment the `%disabled` line.  Rebuild.
 
@@ -380,7 +421,8 @@ Here in The Future, we are More Advanced:
 #undef HELLO_ESMTP
 ```
 
-and it's `#undef` __not__ because that's the default but because __everything__ in `options.h.in` needs to be `#undef`.
+and it's `#undef` __not__ because that's the default but because
+__everything__ in `options.h.in` needs to be `#undef`.
 
 Normally, the actual default would have to be set in `options.ac`,
 however since this option is essentially useless without the extension,
@@ -408,13 +450,21 @@ $ mooval 'hello()'
 MOO (#3): => "ehlo world"
 ```
 
-But really this is all `MOO_DECLARE_OPTIONS` at work.  This is how you make a regular option and the only thing we're doing differently is that the `MOO_DECLARE_OPTIONS` invocation is not the one that's in `options.ac`.  Thus far, `MOO_XT_DECLARE_EXTENSIONS` is not seeing any of this.
+But really this is all `MOO_DECLARE_OPTIONS` at work.  This is how you
+make a regular option and the only thing we're doing differently is
+that the `MOO_DECLARE_OPTIONS` invocation is not the one that's in
+`options.ac`.  Thus far, `MOO_XT_DECLARE_EXTENSIONS` is not seeing any
+of this.
 
 We haven't even put the `--enable-hi` argument back.
 
 But maybe this is enough.
 
-Or maybe, once we get back to the release situation where this extension is disabled by default, and people start getting annoyed that they have to do both `--enable-hi` _and_ `--enable-def-HELLO_ESMTP` in order to get what they want.  We can do something to make their lives easier?
+Or maybe, once we get back to the release situation where this
+extension is disabled by default, and people start getting annoyed
+that they have to do both `--enable-hi` _and_
+`--enable-def-HELLO_ESMTP` in order to get what they want.
+We can do something to make their lives easier?
 
 Time for some option keywords.
 
@@ -456,13 +506,22 @@ MOO (#3): ** 1 errors during parsing:
   Line 2:  Unknown built-in function: hello
 ```
 
-Congratulations, you've completed the tutorial and earned your Extensions White Belt.  Go forth, and remember:  With great power comes great responsibility.
+Congratulations, you've completed the tutorial and earned your
+Extensions White Belt.  Go forth, and remember:  With great power
+comes great responsibility.
 
 ### Bonus round for Emacs users
 
-If you want to learn more from this (meaning the following is all optional, but really good if you can manage it), you can visit `configure`, `Makefile`, `config.status`,`config.h`,`options.h`,`bf_register.c`, and `version_src.h` in Emacs buffers, and then repeat as much of the tutorial as you can manage, but, this time:
+If you want to learn more from this (meaning the following is all
+optional, but really good if you can manage it), you can visit
+`configure`, `Makefile`, `config.status`, `config.h`, `options.h`,
+`bf_register.c`, and `version_src.h` in Emacs buffers, and then repeat
+as much of the tutorial as you can manage, but, this time:
 
-* After each rebuild, you diff the various buffers with what they've been been replaced with on-disk to see what got changed, then revert the buffers to ready them for the next command.  Just so that you know,
+* After each rebuild, you diff the various buffers with what they've
+  been been replaced with on-disk to see what got changed, then revert
+  the buffers to ready them for the next command.  Just so that you
+  know,
   + `autoconf` writes `configure`
   + `./configure` writes `Makefile`, `config.status`,`config.h`, and `options.h`
   + `make` writes `bf_register.c`, and `version_src.h`
@@ -495,18 +554,169 @@ If you want to learn more from this (meaning the following is all optional, but 
 
 HOW-TOs
 -------
-(for now, you have examples in [extensions.ac](./extensions.ac))
+On general principles, you can use [extensions.ac](./extensions.ac)
+as a source of examples.
 
 ### How to require a system shared library
-TODO
+
+The bare minimum for this would be something like
+
+```
+    %%extension myx
+      %require myxlib
+        %lib obf
+          %ac AC_SEARCH_LIBS([[obf_bar_create]], [[openbar]], [%USE%])
+```
+
+This will, if the extension is enabled, invoke `AC_SEARCH_LIBS` in the
+usual way to attempt to compile with `-lopenbar` and see if the
+function `obf_bar_create()` gets defined.  If the `%ac` code is
+successful (indicated by expanding `%USE%`, which should be in there
+literally), then this library is deemed chosen and we are done with
+this requirement.  Otherwise, since this library is the only way
+specified for satisfying this requirement, `./configure` will fail.
+
+`%ac` can be omitted if you want a search that automatically succeeds
+without doing anything (e.g., if you already know the library code is
+present)
+
+Multiple `%lib` stanzas get tried in order, by default.  Adding a
+`--with` argument allows the user to specify a search order using the
+keywords (`obf`, etc...).  `%alt` (under `%lib`) can be used to
+specify library keyword aliases.
+
+An `%ac_yes` directive (under `%require`) can be used to change the
+default behavior (what happens when the search order is `yes`).
+
+`AC_SEARCH_LIBS` takes care of setting the `LIBS` makevar, but if
+anything else needs to happen then further makevar settings can appear
+under `%lib` (e.g., `XT_CSRCS = myxlib.c` to add a file to the list of
+sources that need to be compiled and linked in when this library is
+chosen)
+
+Typically one will also want to create a cppname for `config.h` that
+gets #defined when this library is chosen.  This can be accomplished
+via a second argument to `%lib`.  Alternatively, a `%cdefine`
+directive (under `%require`) can be provided and given a template
+(name or value) where the chosen library keyword gets filled in.
+
+Note that requirement names (`myxlib`) are global but generally
+invisible to the user; the current convention, if the extension has
+only the one requirement, is to use some prefix derived from (and
+preferably unique to) the extension followed by `lib`.
+
+Library keyword names are specific to a given `%require`.
 
 ### How to incorporate a build directory
-TODO
 
+To specify a static build directory for a given library, assuming you
+have already done everything above under [How to require a system
+shared library](#user-content-how-to-require-a-system-shared-library)
+to create this library choice, add a `%build` stanza
+
+```
+    %%extension myx
+      %require myxlib
+        %lib obf
+          %ac AC_SEARCH_LIBS([[obf_bar_create]], [[openbar]], [%USE%])
+          %build
+            --with- obfpath = DIR
+              %?  use this obf build
+            %dirvar obf_dir
+
+            CPPFLAGS = -I$(obf_dir)/include
+            XT_LOBJS = $(obf_dir)/libobf.a
+
+            %make <<END
+$(obf_dir)/libobf.a:
+	$(MAKE) -C $(obf_dir) libobf.a
+END
+```
+
+Notice that the `%ac` directive is unchanged.  This means if the user
+does not specify `--with-obfpath` then the `%build` stanza is ignored
+and this tries `-lopenbar` as above.  What is different is that if
+`--with-obfpath` **is** given, that pre-empts all `%ac` lines from
+this and any other `%lib` stanzas for this requirement, no search is
+conducted, and we just go straight to the specified build directory to
+get the library we want.
+
+If the corresponding system-installed dynamic library is nonexistent
+or typically never gets built with the options needed, then the `%ac`
+line should probably be changed to something like
+
+```
+    %ac %FAIL%[="must use static build: --with-obfpath=DIR"]
+```
+
+so that we don't try to build with it and the user gets a useful error
+message.  You may also want to use `%ac_yes` to remove `obf` from the
+default search list if there are alternative libraries available.
+
+`%make` arguments are included verbatim in the Makefile and likewise
+for makevar settings that are *not* on the list of special cases
+(e.g., `CPPFLAGS`, `XT_CSRCS`, `XT_HDRS`, `XT_LOBJS`, where assigning
+actually means append or prepend new entries to a list).  Exactly what
+will be needed depends entirely on how building the library is
+supposed to work, but the above is a typical recipe.
+
+`%dirvar` is required; it's really hard to imagine how you'd write the
+Makefile inserts without it.
+
+In a development context you can use `%path` in place of
+`--with-obfpath` to specify a fixed build directory and save typing,
+but if you do, make sure to remove it before shipping / sending the
+pull request.
 
 ------------
 XT Reference
 ------------
+
+### About XT Syntax
+
+At top level, `XT` is a sequence of commands/directives/whatevers
+(hereafter referred to as "cmd"s because I don't really know what to
+call them).
+
+Blank lines and comments starting with `#` are completely ignored
+(except in here-docs (keep reading), where they are passed through
+verbatim, though nearly always into a context that *also* treats `#`
+as a comment character.)
+
+A cmd is a single line, which may then be followed by zero or more
+child cmds, to be terminated by end-of-file (i.e., the closing `]`
+in the `MOO_XT_DECLARE_EXTENSIONS` invocation) or another cmd at the
+same or higher level (i.e., **less** indented; yes, levels are
+determined by indentation as in Python; all children of a particular
+cmd must have **identical** indentation, meaning same sequence of tabs
+and spaces, tabs must come first; but really, just don't use tabs).
+
+…except there is also a provision for "here-doc" arguments:
+A cmd line that ends with `<<`_keyword_ (no comments allowed) also
+includes everything down to the next instance of _keyword_ on a line
+by itself with no leading or trailing whitespace.  Text included in
+this way is passed verbatim, with linebreaks, as a single parameter.
+This allows specifying multi-line snippets of `m4` code or makefile
+rules/recipes to be directly included somewhere as needed.
+
+Most cmds are a keyword followed by whitespace-separated arguments,
+though there are exceptions, noted in the individual cmd descriptions
+below.  In particular, lines of the form _VARIABLE_`=`_VALUE_ are all
+instances of the `=` cmd.
+
+Because the sequence of cmds is ultimately processed by `m4`, every cmd
+**must** be quote-balanced, i.e., occurences of `[` and `]` must be
+always be paired and nest properly.  This also applies to here-doc
+arguments, though there we only require that the **entire** here-doc be
+quote-balanced (i.e., linebreaks in here-docs do **not** need to
+respect the quote nesting).
+
+Note that brackets `[]` in the cmd synopses below are used to indicate
+optional parameters.  Literal square brackets should never be needed
+unless a parameter really does need to be raw `m4` code, as for, e.g.,
+`%ac` and `%ac_yes`.  (There is also, of course, the surrounding
+context of `MOO_XT_DECLARE_EXTENSIONS`, which is also raw `m4`).
+
 ### Cmd reference
 
 Here are all of the cmds.
@@ -516,24 +726,31 @@ The source that actually does the work is in [ac_include/ax_xt.m4](ac_include/ax
 #### `--enable-` _ew_name_ [`=` _text_ ]
 
 Declares an `--enable-` argument for `./configure` for the parent
-`%%extension`.  The expected format is
+`%%extension` that will generally be of the form
 `--enable-`_ew_name_`=`_keywords_, where _keywords_ is a
 comma--separated list indicating which subfeatures are being chosen,
 the individual possible keywords being declared via `%option` or
 `%option_set` (to have a single keyword that selects multiple
 subfeatures).
 
+Note that `--enable-` arguments are expected to be all one word in
+shell terms, that is, even though the declaration in `extensions.ac`
+is allowed additional whitespace for clarity, the actual argument
+provided on the command line must not do this (e.g.,
+`--enable- unicode = ids, nums` on a command line will not be recognized;
+it needs to be `--enable-unicode=ids,nums` )
+
 #### `--with-`   _ew_name_ [`=` _text_ ]
 
 Declares a `--with-` argument for `./configure`.
 
-If the parent declaration is `%require`, the expected format is
+If the parent declaration is `%require`, the expected form of the argument is
 `--with-`_ew_name_`=`_lib_keywords_, where _lib_keywords_ is a
 comma--separated list of library keywords in preference order.  The
 default (`yes` keyword) is to search for all of the libraries in order
 declared.
 
-If the parent declaration is `%build`, the expected format is
+If the parent declaration is `%build`, the expected form is
 `--with-`_ew_name_`=`_directory_path_, where _ew_name_, by convention,
 is expected to end in `path` (we don't enforce this yet, but maybe we
 should), and _directory_path_ indicates where the build directory is
@@ -541,17 +758,21 @@ to be found relative to the MOO source directory.  This directory is
 then assigned to the make variable specified by `%dirvar` and also
 substituted for `%DIR%` in any `%ac` code provided.
 
+Similarly to `--enable-`, a `--with-` argument likewise must be all
+one word in shell terms.
+
 #### `%cdefine`  _name_ [ _value_ ]
 
 For `%%extension` this determines the extension's cppname and/or its
 various option cppnames.  `%cdefine` must precede all `%option` declarations.
 
-It is is intended that an `AC_DEFINE` be issued for an extension
-cppname exactly when the extension is active.  Option cppnames are intended to be `AC_DEFINE`d
-if an option keyword is chosen either directly or indirectly (via
-`%option_set`) by the `--enable-`_ew_name_ argument.  In either case,
-if a given cppname is _also_ defined in a `MOO_DECLARE_OPTIONS` then
-the corresponding `--enable-def-` argument can override this
+It is intended that an `AC_DEFINE` be issued for an extension
+cppname exactly when the extension is active.  For option cppnames
+an `AC_DEFINE` is issued if an option keyword is chosen either
+directly or indirectly (via `%option_set` or `%implies`) by
+the `--enable-`_ew_name_ argument.  Either way, if a given cppname
+is _also_ defined in a `MOO_DECLARE_OPTIONS` then the corresponding
+`--enable-def-` argument can override this
 
 (... and if there's some reason that being able to override would be a
 bad idea, that's then also a reason to __not__ declare it in
@@ -564,7 +785,7 @@ library cppnames.  `%cdefine` must precede all `%lib` declarations.
 An `AC_DEFINE` for the requirement cppname is issued if and only if
 the requirement has been satisfied, which must and can only happen
 if the extension is active (if, say you want to do without having a
-separate extension cppname).  An `AC_DEFINE` for a Library cppnames
+separate extension cppname).  An `AC_DEFINE` for a Library cppname
 is issued if the library is selected.
 
 > [!IMPORTANT]
@@ -579,7 +800,10 @@ There are actually 3 forms of this declaration:
 
   Sets _cppname_ as the cppname for the extension or requirement,
   to be `AC_DEFINE`d if the parent extension is active or if
-  the parent library requirement has been satisfied,
+  the parent library requirement has been satisfied.
+
+  In this case, an individual option or lib will only get a cppname
+  if the corresponding `%option` or `%lib` cmd has a 2nd argument.
 
 * `%cdefine` _cppname%s_template_
 
@@ -610,7 +834,7 @@ There are actually 3 forms of this declaration:
   one of `options_epilog.h` or `config_epilog.h`, depending.
 
 For either of the templated cases, the option or library cppname to be
-substituted, if it is not specifed in the `%option` or `%lib` declaration,
+substituted, if it is not specifed in the `%option` or `%lib` cmd,
 defaults to the option or library keyword in all-caps.
 
 In all cases you need to ensure that each possible cppname has an
@@ -629,7 +853,7 @@ In general, this adds helptext to  `configure -hs`.
 * For `%%extension`, creates an overall section header.
 * For `--enable-` or `--with-`,
   describes what `--enable-`_ew_name  or `--with-`_ew_name does.
-* For `--option-` describes this option keyword.
+* For `%option` describes this option keyword.
 
 #### `%?-` _text_
 
@@ -665,6 +889,19 @@ all libraries is displayed if none of the libraries can be selected.
 (If you invoke both `%USE` and `%FAIL%`, the library will be selected
 and all `%FAIL%` messages will be ignored.)
 
+If `%lib` has no `%ac` subdirective, this is equivalent to specifying
+
+```
+    %ac %USE%
+```
+
+i.e., a search that automatically succeeds.  If you want a dynamic
+library search to automatically fail, do something like
+
+```
+    %ac %FAIL%[="this .so is Evil; do not use"]
+```
+
 For `%build`, the expansion shell code is executed if the build is
 selected.  In this case, `%DIR%` is available as a placeholder that
 expands to a shell code expression that evaluates to the build directory,
@@ -687,7 +924,7 @@ other extensions are active or not.
 The expansion is expected to either be a shell expression
 that expands to a comma-separated list of library keywords
 (as would be provided in `--with-`_ew_name_`=`) or a shell
-command that assigns to the placeholder `%LIB`.
+command that assigns to the placeholder `%LIB%`.
 
 Quoting within _m4_code_ should be such that placeholders will be
 m4-expanded.  E.g., to protect `uvw,xyz` from expansion
@@ -700,13 +937,14 @@ Specfies an alternate keyword for an `%option` or `%lib`.
 
 #### `%build`
 
-Specfies a static build for a `%lib`.
-Allowed subcmds are `--with-`, and `%ac`, `%make`, `%dirvar`, `%path`, and `=`.
+Specfies a static build for a `%lib`.  Allowed subcmds are
+`--with-`, `%ac`, `%make`, `%dirvar`, `%path`, and `=`.
 
 #### `%dirvar` _varname_
 
-Required in `%build` to specify the name of the make variable to be assigned the (absolute) build directory path
-(whether this comes from `--with-*path` or `%path`).
+Required in `%build` to specify the name of the make variable to be
+assigned the (absolute) build directory path (whether this comes from
+`--with-*path` or `%path`).
 
 #### `%disabled`
 
@@ -757,10 +995,10 @@ Allowed subcmds are `%implies`, `%?`, and `%alt`.
 Declares a fixed directory for `%build` or a default directory for the
 situation where `--with-*path` has not been supplied by the user.
 
-(Unless you're actually planning to this build directory as part of
-the MOO distribution (please don't; I worked hard on getting rid of
-these), this is really only recommended for development in order to
-spare you from having to retype`--with-whateverpath=path/to/your/build`
+(Unless you're actually planning to include this build directory as part
+of the MOO distribution (please don't; I worked hard on getting rid of
+these), this is really only recommended/intended for development in order to
+spare you from having to retype `--with-whateverpath=path/to/your/build`
 over and over while you're working through the issues.)
 
 #### `%require` _requirement_name_
@@ -790,7 +1028,7 @@ have already been added by other active extensions or selected
 libaries/builds,  with either a space or a newline separator as
 appropriate for that _VAR_.
 
-### Makefile reference
+### MakeVar reference
 
 The following are the "standard" makevars that the extension framework
 currently knows about and makes substitutions in:
@@ -800,24 +1038,24 @@ currently knows about and makes substitutions in:
   reference additional library headers or headers from a `%build`
   directory
 
-  > [!WARNING]
-  >
-  > Putting `-D` in `CPPFLAGS` for an extension is likely a mistake
-  > and you should instead consider adding a setting to `config.h`
-  > or `options.h`.
-  > (At the moment, unit tests and instrumentation builds are the
-  > only scenarios I can come up with where `-D` makes more sense
-  > and you're not going to be making extensions out of those.)
+ > [!WARNING]
+ >
+ > Putting `-D` in `CPPFLAGS` for an extension is likely a mistake
+ > and you should instead consider adding a setting to `config.h`
+ > or `options.h`.
+ > (At the moment, unit tests and instrumentation builds are the
+ > only scenarios I can come up with where `-D` makes more sense
+ > and you're not going to be making extensions out of those.)
 
 * `LIBS`
   (prepend) System libraries (`-lfoo`) needed by your extension;
   these will be found and filled in by autoconf snippets
   (what the `%ac` and `%ac_yes` directives are for).
 
-  > [!IMPORTANT]
-  >
-  > Any libraries or object files we need to `%build` ourselves
-  > and statically link go in `XT_LOBJS`, not `LIBS`.
+ > [!IMPORTANT]
+ >
+ > Any libraries or object files we need to `%build` ourselves
+ > and statically link go in `XT_LOBJS`, not `LIBS`.
 
 * `XT_CSRCS`
   `.c` source files present/compiled-in only if the extension is
@@ -840,11 +1078,11 @@ currently knows about and makes substitutions in:
   are always with respect to `$(abs_srcdir)` in order to make VPATH
   builds work.
 
-  > [!IMPORTANT]
-  >
-  > `XT_DIRS` cannot actually be set directly.  Use `%path` (to use a
-  > hardwired directory) or the combination of `--with-*path` and
-  > `%dirvar` (to get the directory from an argument).
+ > [!IMPORTANT]
+ >
+ > `XT_DIRS` cannot actually be set directly.  Use `%path` (to use a
+ > hardwired directory) or the combination of `--with-*path` and
+ > `%dirvar` (to get the directory from an argument).
 
 There are also two additional Makefile substitutions which also cannot
 be set directly, start out empty, and get lines appended to them
@@ -901,8 +1139,8 @@ completely agree:
     automatic vs.
   + settings that we _want_ the user to be able to do,
 
-  and it's not that huge difference whether we're making someone manually
-  edit a file vs. making them type `--enable-def-OPTIONNAME`,
+  and it's not that huge a difference whether we're making someone manually
+  edit `options.h` vs. making them type `--enable-def-OPTIONNAME`,
   even if some of the settings in `options.h` really __should not__
   be touched.
 
@@ -988,7 +1226,8 @@ separately later by `--enable-def`.
 If you decide __not__ to allow this for a particular cppname,
 you put it in `config.h.in` and you're done.
 
-If you're okay with people messing with it independently, __then__ you
+If you're okay with people messing with it independently,
+__then__ you
 + put it in `options.h.in`,
 + add a `MOO_DECLARE_OPTIONS` line, in which case
   + the type __has__ to be `[bool]` or `[int]` (for bitmasks) and
