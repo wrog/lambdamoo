@@ -50,15 +50,17 @@
 #   in the same or multiple languages may be active at the same time
 #   with no ill effects.
 #
+# EXPORTS
+#
 #   AX_LP_DEFINE_LANGUAGE( <LANGUAGE>, <DEFINE_CMD>, <GLOBAL_HOOKS>... )
-#   establishes a language definition with <DEFINE_CMD> as a macro to
-#   define individual cmds within the language, including a "root" cmd
-#   (named []) that is deemed to encompass the entire script.
+#     establishes a language definition with <DEFINE_CMD> as a macro to
+#     define individual cmds within the language, including a "root" cmd
+#     (named []) that is deemed to encompass the entire script.
 #
 #   AX_LP_PARSE_SCRIPT( <LANGUAGE>, <INITARGS>, <SCRIPT>)
-#   with <LANGUAGE> having been defined, []:fn(<INITARGS>) is
-#   invoked and then <SCRIPT> is parsed line by line, invoking the
-#   various cmd hooks, and finally []:fnend is invoked.
+#     with <LANGUAGE> having been defined, []:fn(<INITARGS>) is
+#     invoked and then <SCRIPT> is parsed line by line, invoking the
+#     various cmd hooks, and finally []:fnend is invoked.
 #
 #   Each line in a script is expected to contain a cmd word and an
 #   argument string, except blank lines and #-comments are ignored.
@@ -502,11 +504,11 @@ m4_popdef([_ax_lp_b],[_ax_lp_hd])]))
 #   the default :args/:allow is doable but might cause confusion...
 # ***)
 #
-# Every line is given an initial parse to extract the cmd word
-# (CMD), usually the first whitespace delimited word, and a
-# preliminary parameter list (PRELIMINARY_ARGS...), usually just the
-# entire rest of the line as a single string.  See _ax_lp_cmdargs for
-# exceptions.
+# Every line parsed by AX_LP_PARSE_SCRIPT is given an initial parse to
+# extract the cmd word (CMD), usually the first whitespace delimited
+# word, and a preliminary parameter list (PRELIMINARY_ARGS...),
+# usually just the entire rest of the line as a single string.
+# See _ax_lp_cmdargs for exceptions.
 #
 # Within <DEFINE_CMD>, the following :KWDs have special meanings:
 #
@@ -848,6 +850,10 @@ m4_eval($1__p_top - m4_if([$C],[1],[1],[[$2]])))]))
 #   -> current level number == height of stack
 #
 m4_define([ax_lp_level],   [m4_defn([$1__p_top])])
+
+
+#--------------------------------
+# errors
 
 # ax_lp_fatal(<CTX>,<MESSAGE>)
 #    print <MESSAGE> on stderr tagged with the current file position

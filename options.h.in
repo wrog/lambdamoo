@@ -165,7 +165,7 @@ useful for anything other than quick experiments.)
  * object_bytes() use to calculate memory consumption.
  *
  * Background:  The original implementations of these functions always
- * used the acual datatype sizes as reported by sizeof().  This then
+ * used the actual datatype sizes as reported by sizeof().  This then
  * meant that moving to a new hardware platform or recompiling the
  * server with options that changed the struct/union layouts could
  * change those numbers, which, if one *also* happens to have
@@ -672,6 +672,7 @@ useful for anything other than quick experiments.)
  * and can be set to a mask of flags indicating which are enabled.
  *
  * The current list of flags that matter is in options_epilog.h.
+ * Please do not mistake this for documentation.
  */
 
 #undef PRAGMAS

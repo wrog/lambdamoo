@@ -228,7 +228,7 @@ put () {
 	    :
     else
 	mv -f "$TMPDIR/$FILE" "$FILE"
-	printf "writing %s\n" "$FILE" >&2
+	printf "writing %s\n" "$FILE"
     fi
     chmod -w "$FILE"
 }

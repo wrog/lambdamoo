@@ -41,6 +41,29 @@
 #include "utils.h"
 
 
+/* Since NUM_MIN is a negative power of 2, (FlNum)NUM_MIN and
+   -(FlNum)NUM_MIN are guaranteed to be exact representations of
+   NUM_MIN and NUM_MAX+1 no matter which float and integer types we
+   are using, so this test should always correctly tell us whether a
+   number indeed will truncate to something in the integer range.
+
+   Note that when integers are more precise than floats (int64_t
+   vs. double or either of int32_t/int64_t vs. float):
+   (1) we cannot count on (FlNum)NUM_MIN-1 to be different from NUM_MIN
+       hence the use of ceil() to make sure we're always comparing
+       overly negative numbers with something exactly known.
+
+   (2) a float-parsing of NUM_MAX.0 may not be in range, either,
+       if it is getting rounded up to NUM_MAX+1 and the *actual*
+       highest integer-representable float is NUM_MAX+1-2^11.
+       There's no point in trying to rescue these situations; by the
+       time we get here, information on whether NUM_MAX or NUM_MAX+1
+       was intended is already lost.  Also (int)(-(FlNum)NUM_MIN)
+       sometimes evaluates to NUM_MIN which we *really* want to avoid.
+       (and we definitely have to range check because I've also seen
+       (int64_t)1.0e308 evaluate to INT64_MAX since there's no
+       provision in C for throwing an error here).
+*/
 inline int
 inrange_for_float_to_int(FlNum d)
 {
@@ -235,7 +258,7 @@ parse_number(unsigned flags, int32_t c_first,
     if (state & F_MINUS)
 	(*ungetch)('-');
 
-    /* "Dr. Corby ... was never here." */
+    /* "Dr. Korby ... was never here." */
     ret.v.err = E_NONE;
     goto return_error;
 
@@ -323,7 +346,7 @@ parse_number(unsigned flags, int32_t c_first,
  *       succeed, and, upon re-negation a few lines later, these
  *       numbers will all become [0..(NUM_MAX+1)(**)],
  *
- * and anything at started out as NUM_MIN will be returned from
+ * and anything that started out as NUM_MIN will be returned from
  * parse_number as NUM_MAX+1 but then will later get fed to a unary
  * negation op constant-folding, and then become the NUM_MIN
  * that it was originally supposed to be...

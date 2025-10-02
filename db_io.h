@@ -219,24 +219,31 @@ extern int dbio_scxnf(const char *format,...) FORMAT(scanf,1,2);
  *   This character is as for scanf, introducing a conversion spec.
  *   Each '%' that does not suppress assignment (%*....) is paired
  *   with the next remaining unused argument, which must be a
- *   (non-NULL) pointer to an lvalue of the correct type.  Upon
- *   successful return (>0), all locations corresonding to conversion
- *   specs other than those in skipped optional segments/lines will
- *   have been assigned.
+ *   (non-NULL) pointer to an lvalue of the correct type.
+ *
+ *   Upon successful return (>0), all lvalues corresponding to
+ *   conversion specs other than those in skipped optional
+ *   segments/lines will have been assigned and the remaining
+ *   lvalues will be untouched.
  *
  *   (If the return value is not sufficient for you to know *which*
  *    optional segments/lines were matched vs. skipped, you are
- *    probably trying to do too much in a single dbio_scxnf() call.)
+ *    likely trying to do too much in a single dbio_scxnf() call.)
  *
- *   Only the conversion specs listed below are recognized; do not use
- *   any others.  While they have been chosen to resemble scanf
- *   conversion specs so that a modern compiler may check the
- *   arguments without needing any weird options, the meanings are
+ *   Upon unsucessful return (=0), some of the lvalues may have
+ *   been assigned but it is UNSPECIFIED which ones (meaning you
+ *   should (re-)initialize all lvalues that will be subsequently
+ *   referenced).
+ *
+ *   Only the conversion specs listed below are recognized;
+ *   DO NOT USE ANY OTHERS.  While these have been chosen to resemble
+ *   scanf conversion specs so that a modern compiler may check the
+ *   arguments without needing any weird options, the meanings may be
  *   decidely different.
  *
  *   %*s       - no assignment
  *        must be at the end of a line format,
- *        skips the rest of the sujbect line.
+ *        skips the rest of the subject line.
  *
  *   %ms       - const char **
  *        must be at the end of the LAST line format, consumes all

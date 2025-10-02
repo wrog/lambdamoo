@@ -163,20 +163,27 @@ m4_if(# end of option declarations
 #  -----------------------------
 #   New option checklist/advice
 #  -----------------------------
+#  The following applies to
+#  (1) common option cppnames not associated with any extension, and
+#  (2) extension %option cppnames that are intended to be low-level
+#      settable using --enable-def-NAME,
+#  and *not* to extension cppnames that live in config.h.in
+#  (see discussion "When is an Option not an Option" in Extensions.md).
 #
-#  (*) Each option needs a declaration line in this file as above,
-#
-#      (( **except** for the 'DO NOT EDIT' ones that may, in a future
-#      server, be moved to config.h.in because they are arguably not
-#      really options.  See Extensions.md ))
+#  (*) Each option needs a declaration line, either in this file
+#      as above or, for options that solely pertain to an extension,
+#      in the extensions*.ac file.
 #
 #  (*) Each option needs an '#undef NAME' line in options.h.in
 #      prefaced with a full description what #define NAME does.
 #      (See options.h.in final comment on editing options.h.in)
 #
 #  (*) ./configure gives the values 'yes' and 'no' special treatment.
-#      Please do NOT create situations where a literal 'yes' or
-#      'no' needs to show up in C code.
+#      Do NOT create situations where a literal 'yes' or 'no'
+#      needs to show up in C code.
+#
+#  (*) Do NOT create situations where #define NAME with no value
+#      needs to mean something different from #define NAME 1
 #
 #  (*) Boolean options (TYPE=[bool]) where 'yes' and 'no' are
 #      supposed to be the only choices, should be named so that
@@ -184,9 +191,9 @@ m4_if(# end of option declarations
 #      the user, meaning NAME should a noun evoking behavior that
 #      one can reasonably imagine being "enabled" or "disabled".
 #
-#  (*) Please avoid double negatives; meaning,
-#      --enable-def-XIFICATION is way less confusing than
-#      --disable-def-DONT_DO_XIFICATION.
+#  (*) Avoid double negatives if you can.
+#      --enable-def-TOADSEXING is way less confusing than
+#      --disable-def-NO_TOADSEXING
 #      In other words, it's okay for 'yes' be the default.
 #      (IGNORE_PROP_PROTECTED is the poster child here)
 #

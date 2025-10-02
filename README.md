@@ -121,7 +121,7 @@ Note that `autoconf` always has to be run in the source directory
   building `configure` and related scripts.
 
   Try the latest version first.  As of this writing, `autoconf`
-  versions in the range 2.69-2.72 are known to work with this
+  versions in the range 2.69-2.73 are known to work with this
   distribution.
 
   Also __never__ run `autoreconf`.  We are not using the full suite.
@@ -135,10 +135,10 @@ Note that `autoconf` always has to be run in the source directory
 
 #### Libraries
 
-For all library prerequisites, the library itself may well already
-be installed, but you will also need the correponding build package
-with the `#include` headers (the `-dev` package in Debian/Ubuntu
-terminology).
+For all library prerequisites, the library itself may well already be
+installed on your system, but you will also need the correponding
+build package with the `#include` headers (the `-dev` package in
+Debian/Ubuntu terminology).
 
 In some cases, an extension may instead allow for building a
 statically linked library (`--with-ucdpath`, `--with-expatpath`)
@@ -282,7 +282,7 @@ There are two classes of command-line arguments for `./configure`
   + `--enable-def-`NAME(`=yes`) translates to
     `#define` NAME `1`
 
-  + (`--enable-def-`NAME(`=`) with no value translates to
+  + (`--enable-def-`NAME`=` with no value translates to
     `#define` NAME `OPTION_DEFAULT`
 
     which you should __never__ do on a command line since _if_ this is one
