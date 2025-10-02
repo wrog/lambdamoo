@@ -23,6 +23,7 @@ A non-string boolean-true value (e.g., `1`) returns the entire structure of know
 * `options` group  = all `options.h` settings
 * `make` group      = make command line variable overrides
 * `source` group   = source control information
+* `unicode` group   = about the unicode implementation
 
 The groups form a hierarchy so it is also possible to address
 individual settings, e.g.,

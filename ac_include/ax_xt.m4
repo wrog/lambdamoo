@@ -93,7 +93,7 @@
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-
+#
 
 # AX_Xt macro name prefix has lowercase 't'
 # so that we can use ax_lp_NTSC and not get surprised.
@@ -149,7 +149,8 @@ m4_set_add_all([_AX_Xt_substed_makevars]dnl
 []m4_set_listc([_AX_Xt_reserved_makevars]))
 
 # AX_Xt_add_makevar(<CTX>,<VAR>,<VALUE>)
-#    perform assignment for '=', '%dirvar', and '%make' subcmds
+#    perform assignment for '=' subcmd
+#    ('%dirvar' and '%make' use the _$0() version of this directly)
 #
 m4_define([AX_Xt_add_makevar],
   [m4_set_contains([_AX_Xt_reserved_makevars], [$2],
@@ -158,7 +159,7 @@ m4_define([AX_Xt_add_makevar],
       [_$0($@)_AX_Xt_append_source_group($@)],
       [_$0([$1], [XT_MAKEVARS], [$2 = $3])])])])
 
-# _AX_Xt_makevar_sep_<VAR>
+# _AX_Xt_makevar_sep(<VAR>)
 #    -> separator to use when adding a value to <VAR>
 #
 m4_define([_AX_Xt_makevar_sep], ax_lp_NTSC(
@@ -168,7 +169,7 @@ m4_define([_AX_Xt_makevar_sep_XT_RULES],    ax_lp_NTSC([N]))
 m4_define([_AX_Xt_makevar_sep_XT_MAKEVARS], ax_lp_NTSC([N]))
 
 # _AX_Xt_add_makevar(<CTX>,<VAR>,<VALUE>)
-#    append [sep]?[value] to [var]
+#    append [sep]?[value] to [var], no checking
 #
 m4_define([_AX_Xt_add_makevar],
   [ax_lp_hash_append([$1], [makevars], [$2],

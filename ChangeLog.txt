@@ -2670,9 +2670,9 @@ to 64-bit integers and Unicode).
             raises(E_INVARG) if N is not a legal STR character.
    where, in each case C has to be a one-character string, and
      'encode_chars(LS,ENCODING)'
-     'decode_chars(B,ENCODING[,FULLY])'
-   analogous to 'encode_binary(LS)' and 'decode_binary(LS[,FULLY])'
-   except these translate between moobinary (~-escaped strings of bytes)
+     'decode_chars(MB,ENCODING[,FULLY])'
+   analogous to 'encode_binary(LS)' and 'decode_binary(MB[,FULLY])'
+   except these translate between moobinary (~-escaped strings of chars)
    and either strings or intermixed lists of strings and numbers
    where the numbers are now code points rather than byte numbers
    (e.g., decode_chars("~ce~a3","utf8",1)' => {931}
@@ -2751,7 +2751,7 @@ branch for various reasons.
    -- waifs can use property and verbcall syntax.
    -- New option WAIF_DICT, if set, allows waif indexing ([]) syntax.
 
--- xml (Rob Leslie), June 2008
+-- xml (Ken Fox), June 2008
    New builtins:
      xml_parse_tree() and xml_parse_document(),
    both invoke the expat XML library to parse an XML-format source
@@ -2778,7 +2778,7 @@ Version 1.9.0alpha, 29 September 2025
 -- This version is a reconciliation of the 1.8.4/Codepoint fork.
    Given the general extent of changes since 1.8.1 over the course
    of 20+ years (even if 10 of them had essentially zero activity)
-   this (imho) needed to be a major-version bump.
+   this (imho) needed to be more than just a release-number bump.
 -- This version also incorporates the Other Variant Servers above
    that were previously maintained on a combinatorial explosion
    of separate branches (wrapped in a consequent tangle of merges)
@@ -2877,7 +2877,7 @@ Version 1.9.0alpha, 29 September 2025
       These options can be checked in-MOO using, e.g.,
          server_version("options/UNICODE_NUMBERS")
       *** ASPECTS OF UNICODE SUPPORT ARE EXPERIMENTAL,
-          meaning there are additional changes are being contemplated,
+          meaning there are additional changes being contemplated,
           mainly concerning handling of network linebreaks, non-ASCII control
           characters/linebreaks (read:  the character set may be reduced),
           string comparisons, and string substitutions, that will likely
@@ -3001,7 +3001,7 @@ Version 1.9.0alpha, 29 September 2025
    the presence of out-of-range numbers, non-ASCII UTF-8 sequences,
    unexpected (bitwise) operators, or structures (e.g., Waifs).
    1.9.0 has *NOT* changed the database format or version number
-   (Even if we did change the version number, there would still still
+   (Even if we did change the version number, there would still
    be a problem with all of the prior version checkpoint files out
    there).
    Therefore:
@@ -3021,7 +3021,7 @@ Version 1.9.0alpha, 29 September 2025
    and you'll know which it was.
    The particular server features that matter are:
    -- INT_TYPE_BITSIZE, FLOATING_TYPE
-      Loading a checkpoint onto a server with an equal-or-wider
+      Loading a checkpoint onto a server with equal-or-wider
       corresponding datatypes will succeed.  Loading onto a narrower
       datatype server succeeds only if there are no out-of-range
       values.  But for floating types, when moving to new hardware,
@@ -3117,12 +3117,16 @@ Version 1.9.0alpha, 29 September 2025
             https://github.com/wrog/libucd
       check out the 'dev' branch, and then use --with-ucdpath=<dir>
       to point to it.
-  -- expat/ build subdirectory originally added for the xml extension
-     has been removed, we now link to shared libexpat (version 2).
-     Static builds are possible with --with-expatpath=<dir>.
+   -- expat/ build subdirectory originally added for the xml extension
+      has been removed, we now link to shared libexpat (version 2).
+      Static builds are possible with --with-expatpath=<dir>.
 -- VPATH builds, for when you want to build multiple distinct server
-   variants at the same time, now work.
-   Use ./path/to/configure --srcdir=path/to
+   variants at the same time, now work.  You create a build directory,
+   cd to it, and then use
+      ./path/to/src/configure --srcdir=path/to/src  ...
+-- Fixed null pointer dereference when trying to dump an uninitialized
+   command history (luke-jr).
+-- disassemble() now shows all literal values (luke-jr).
 
 **** Changes relevant to server hackers:
 -- New configuration files:
@@ -3133,9 +3137,9 @@ Version 1.9.0alpha, 29 September 2025
       MOO_XT_DECLARE_EXTENSIONS(), and via its own
       MOO_DECLARE_OPTIONS, options associated with the extensions.
       (see Extensions.md for how the extension framework works)
-   -- extensions2.ac is a blank non-source-controlled file where a
+   -- extensions2.ac is an optional non-source-controlled file where a
       developer may declare additional extensions and options.
-      (Start the tutorial by copying extensions_tutorial.ac to there.)
+      (Start the tutorial by copying extensions2_tutorial.ac to there.)
 -- Makefile has been reorganized a bit.
    -- A number of variables prefixed with XT_ have been added;
       these are filled in by the extension framework, which for many
@@ -3150,7 +3154,7 @@ Version 1.9.0alpha, 29 September 2025
       'make clean' now removes 'moo'; if you preferred the prior
       behavior, 'touch clean-keeps-moo'.  Similarly the tarball now
       has 'clean-keeps-(keywords|parser)' to prevent removal of
-      files that aren't built there.  There being some confusion
+      files it does not build.  There being some confusion
       about what the *clean targets are for:
       -- clean     forces make        to start from scratch;
       -- distclean forces ./configure to start from scratch; and
@@ -3304,28 +3308,30 @@ Version 1.9.0alpha, 29 September 2025
       adding the rest of the non-Unicode features, then maxconcat
       (which may be the best exposition of maxconcat, since it was
       done last),
-   -- a "reconciliation branch" that starts all the way back
-      at WAIF_ROOT_4, introduces int64, the FlBox abstraction
-      and the other non-Unicode miscellaneous features and fixes
-      first, and then it splits into
+   -- a "reconciliation branch" representing the way everything
+      actually happened in the Correct Alternate History,
+      that starts all the way back at WAIF_ROOT_4,
+      introduces int64, the FlBox abstraction and the other
+      non-Unicode miscellaneous features and fixes first,
+      and then it splits into
       -- the 'w3' branch that does maxconcat joining into
          the mainline right before it starts on unicode
       -- the 'u4' branch that does unicode joining into
          Codepoint right before it starts on maxconcat
    then the final Codepoint merge followed by the
-   other extensions being introduced.  In all cases, the
+   other extensions being introduced.  On all 3 lines, the
    build/autoconf/extension-framework changes are early;
-   so most commits after 'introduce extensions.ac' on each of the
-   three lines should build (I have not checked them all).
+   so most commits after 'introduce extensions.ac' should
+   build (I have not checked them all).
 -- Style issues:
    -- .c and .h file prologues (the top of the file with the #include
-      declarations) have been systematically normalized and a few new
+      declarations) have been systematically normalized with a few new
       style rules being set.
    -- experiments.c is the new name for what was extensions.c,
       renamed to to avoid confusion with the extension framework,
       restored as a blank, playground file (Jay Carlson's verb cache
       code is now in db_tune.c), and also, with (new file with zero
-      actual code) experiments.h, set up as an example to illustrate
-      the new rules.
+      actual code) experiments.h, set up as an example to explain and
+      illustrate the new rules.
    -- Tabs in .m4 or .ac files are now frowned upon.
    -- Trailing whitespace is now forbidden.
