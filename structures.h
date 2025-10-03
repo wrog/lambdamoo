@@ -86,8 +86,8 @@ typedef uint16_t   UNum;
 
 #  if HAVE_INT32_T
 #    define HAVE_UNUMNUM_T 1
-typedef  int64_t   NumNum;
-typedef uint64_t  UNumNum;
+typedef  int32_t   NumNum;
+typedef uint32_t  UNumNum;
 #  endif
 
 #else
