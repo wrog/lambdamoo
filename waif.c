@@ -42,21 +42,6 @@ static waif_count_type waif_count = 0;
 #define MAP_PROP(Mmap, Mbit) (Mmap)[(Mbit) / 32] |= 1 << ((Mbit) % 32)
 #define N_MAPPABLE_PROPS (WAIF_MAPSZ * 32)
 
-static int
-count_set_bits(uint32_t x)
-{
-    register uint32_t i = x;	/* take no chances! */
-
-    /* clever trick for adding bits together in parallel to count them */
-    i = ((i & 0xAAAAAAAA) >> 1) + (i & ~0xAAAAAAAA);
-    i = ((i & 0xCCCCCCCC) >> 2) + (i & ~0xCCCCCCCC);
-    i = ((i & 0xF0F0F0F0) >> 4) + (i & ~0xF0F0F0F0);
-    i = ((i & 0xFF00FF00) >> 8) + (i & ~0xFF00FF00);
-    i = ((i & 0xFFFF0000) >> 16) + (i & ~0xFFFF0000);
-
-    return i;
-}
-
 void
 free_waif_propdefs(WaifPropdefs *wpd)
 {
@@ -193,7 +178,7 @@ count_waif_propvals(Waif *w)
     if (i < 0)
 	i = 0;
     for (j = 0; j < WAIF_MAPSZ; ++j)
-	i += count_set_bits(w->u.pmap[j]);
+	i += __builtin_popcountg(w->u.pmap[j]);
     return i;
 }
 
@@ -350,7 +335,7 @@ find_propval_offset(Waif *w, const char *name, int *pidx)
 	 * unmappable propvals which are always allocated.
 	 */
 	for (idx = j = 0; j < WAIF_MAPSZ; ++j)
-	    idx += count_set_bits(w->u.pmap[j]);
+	    idx += __builtin_popcountg(w->u.pmap[j]);
 	return i - N_MAPPABLE_PROPS + idx;
     } else if (!PROP_MAPPED(w->u.pmap, i)) {
 	/* property unmapped, so it's clear */
@@ -360,11 +345,11 @@ find_propval_offset(Waif *w, const char *name, int *pidx)
 	 * word to the right of the bit we found
 	 */
 	for (idx = j = 0; j < i / 32; ++j)
-	    idx += count_set_bits(w->u.pmap[j]);
+	    idx += __builtin_popcountg(w->u.pmap[j]);
 	if (i % 32 != 0) {
 	    uint32_t mask = -1;
 	    mask >>= 32 - i % 32;
-	    idx += count_set_bits(w->u.pmap[j] & mask);
+	    idx += __builtin_popcountg(w->u.pmap[j] & mask);
 	}
 	return idx;
     }
