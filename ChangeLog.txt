@@ -3169,7 +3169,7 @@ Version 1.9.0alpha, 29 September 2025
 -- options.h and config.h now have _epilogs to contain the
    preprocessor gymnastics to check values, so that ./configure
    doesn't accidentally rewrite any of it.
--- added #ifndef NOMAIN to server.c for unit testing
+-- added UNIT_TESTS to config.h for unit testing.
 -- In addition to the 'Num' abstraction for the MOO integer datatype
    we now have
    -- UNum for situations where Nums are known to be non-negative
@@ -3335,5 +3335,9 @@ Version 1.9.0alpha, 29 September 2025
       code is now in db_tune.c), and also, with (new file with zero
       actual code) experiments.h, set up as an example to explain and
       illustrate the new rules.
+   -- The prefix 'uT-' for C source filenames is reserved for
+      unit testing; any such files should be created in the test
+      suite, not here (since we want to be able to apply the same
+      tests to different checkouts/branches/etc...)
    -- Tabs in .m4 or .ac files are now frowned upon.
    -- Trailing whitespace is now forbidden.
