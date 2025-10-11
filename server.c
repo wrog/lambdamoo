@@ -1269,7 +1269,7 @@ read_active_connections(void)
     return 1;
 }
 
-#ifndef NOMAIN
+#ifndef UNIT_TESTS
 int
 main(int argc, char **argv)
 {

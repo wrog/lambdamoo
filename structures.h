@@ -491,11 +491,11 @@ extern Var zero;		/* useful constant */
  *
  * (1) If you are needing to add a new model,
  *     please make sure that, whatever you do, the prior models
- *     continue to produce the same numbers as before:
+ *     continue to produce the same numbers as before, e.g.,
  *
- *       ./configure --enable-sz=bq32 (... whatever model you want)
- *       rm -f byte_quota_test
- *       make byte_quota_test && ./byte_quota_test
+ *       ./configure --enable-testing=unit --enable-sz=bq32 # or bq64[b]
+ *       make uT-bquota
+ *       ./uT-bquota --report
  *
  * (2) If you are adding a new type, it perhaps does not truly matter
  *     how big you declare it to be, since, presumably, none of the

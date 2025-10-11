@@ -13,6 +13,7 @@ config.cache
 extensions2.ac
 keywords.c
 testing.ac
+uT-*
 version_options.h
 version.lastck
 version_src.h
