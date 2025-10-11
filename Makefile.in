@@ -17,6 +17,7 @@ VPATH = @srcdir@
 srcdir = @srcdir@
 abs_srcdir = @abs_srcdir@
 abs_builddir = @abs_builddir@
+@TEST_MAKEVARS@
 @SET_MAKE@
 
 # XT_MAKEVARS -----
@@ -166,7 +167,9 @@ $(COBJS): bf_register.h
 
 # XT_RULES ---------
 @XT_RULES@
-
+# TEST_RULES ---------
+@TEST_RULES@
+# --- distribution ---------
 distribution: version.lastck $(DISTFILES) $(DISTGENS) $(M4_SRCS:%=ac_include/%)
 	rm -f dist_version_number dist_hash_temp dist_manifest dist_version.fixed
 	printf "%s\n" $(DISTFILES) $(DISTGENS) $(M4_SRCS:%=ac_include/%) >dist_manifest
@@ -212,16 +215,16 @@ distclean-all: distclean
 
 gitclean-all: gitclean distclean-all
 
-clean: clean-keeps-moo clean-keeps-parser clean-keeps-keywords
+clean: clean-keeps-moo clean-keeps-parser clean-keeps-keywords $(TEST_CLEAN)
 	rm -f $(OBJS) $(DFILES) core \
 	  version_src.h version_make.* \
 	  bf_register.h bf_register.c bf_register.lastrun
 
-distclean: clean
-	rm -f config.h options.h Makefile config.status config.cache config.log config.lastrun \
-            version.lastck version_options.h
+distclean: clean $(TEST_DISTCLEAN)
+	rm -rf config.h options.h Makefile config.status config.cache config.log config.lastrun \
+          version.lastck version_options.h
 
-gitclean: distclean
+gitclean: distclean $(TEST_GITCLEAN)
 	rm -rf configure autom4te.cache version.fixed
 
 clean-keeps-keywords:

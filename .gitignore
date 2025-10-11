@@ -12,12 +12,15 @@ config.lastrun
 config.cache
 extensions2.ac
 keywords.c
+testing.ac
 version_options.h
 version.lastck
 version_src.h
 version_make.h
 version_make.t
 y.tab.h
+/.l8tf-install.prev
+/.l8tf-install.prev.sh
 *.o
 moo
 *.db

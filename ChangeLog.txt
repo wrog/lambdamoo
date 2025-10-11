@@ -3140,6 +3140,8 @@ Version 1.9.0alpha, 29 September 2025
    -- extensions2.ac is an optional non-source-controlled file where a
       developer may declare additional extensions and options.
       (Start the tutorial by copying extensions2_tutorial.ac to there.)
+   -- testing.ac is an optional non-source-controlled file
+      for integrating a test suite into the ./configure process
 -- Makefile has been reorganized a bit.
    -- A number of variables prefixed with XT_ have been added;
       these are filled in by the extension framework, which for many
