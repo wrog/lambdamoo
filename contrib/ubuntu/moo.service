@@ -1,0 +1,12 @@
+[Unit]
+Description=LambdaMOO Server
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/moo-server
+WorkingDirectory=/var/local/moo
+User=moo
+Group=moo
+
+[Install]
+WantedBy=multi-user.target
