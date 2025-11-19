@@ -2957,6 +2957,7 @@ Version 1.9.0alpha, 29 September 2025
       partially-entered verbcode, or otherwise acting on any garbled
       incomplete command.  It is thus now much safer to have emergency
       mode reading from piped stdin in a shell script.
+   -- (created wizard).owner is now self rather than a garbage oid.
 *** options.h is now a read-only file.  You can read it to learn
     about options, but you should now use ./configure to set them,
     (see README.md and next item)
