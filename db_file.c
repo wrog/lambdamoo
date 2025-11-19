@@ -543,19 +543,14 @@ fmt_verb_name(void *data)
 static int
 read_db_file(void)
 {
-    Objid oid;
-    UNum i, nobjs, nprogs, nusers, vnum;
-    Var user_list;
-    db_verb_handle h;
-    Program *program;
-
     /* Evidently, prehistory DBs had no header line, they would just
      * go straight to the object count.  Therefore, a prehistory DB
      * will not start with '*'.  Since stdio allows us to put back
      * one character, we can do a quick probe.  I prefer this to
      * further messing with dbio_scxnf.  --wrog
      */
-    if (header_format_string[0] != dbio_peek_byte()) {
+    int first_byte = dbio_peek_byte();
+    if (header_format_string[0] != first_byte) {
 	dbio_input_version = DBV_Prehistory;
     }
     else if (!dbio_scxnf(header_format_string, &dbio_input_version)) {
@@ -568,13 +563,19 @@ read_db_file(void)
 	return 0;
     }
 
-    if (!dbio_scxnf("%"SCNuN"\n%"SCNuN"\n%*d\n%"SCNuN,
+    UNum i,
+	nobjs = 0,
+	nprogs = 0,
+	nusers = 0;
+
+    if (first_byte != EOF &&
+	!dbio_scxnf("%"SCNuN"\n%"SCNuN"\n%*d\n%"SCNuN,
 		    &nobjs, &nprogs, &nusers)) {
 	errlog("READ_DB_FILE: Bad DB header (missing counts?)\n");
 	return 0;
     }
 
-    user_list = new_list(nusers);
+    Var user_list = new_list(nusers);
     for (i = 1; i <= nusers; i++) {
 	user_list.v.list[i].type = TYPE_OBJ;
 	if (!dbio_read_objid(&user_list.v.list[i].v.obj))
@@ -598,6 +599,8 @@ read_db_file(void)
     }
     oklog("LOADING: Reading %"PRIdN" MOO verb programs...\n", nprogs);
     for (i = 1; i <= nprogs; i++) {
+	Objid oid;
+	UNum vnum;
 	if (!dbio_scxnf("#%"SCNdN":%"SCNdN, &oid, &vnum)) {
 	    errlog("READ_DB_FILE: Bad program header, i = %"PRIdN".\n", i);
 	    return 0;
@@ -607,12 +610,14 @@ read_db_file(void)
 		   oid, vnum);
 	    return 0;
 	}
-	h = db_find_indexed_verb(oid, vnum + 1);	/* DB file is 0-based. */
+
+	db_verb_handle h = db_find_indexed_verb(oid, vnum + 1);	/* DB file is 0-based. */
 	if (!h.ptr) {
 	    errlog("READ_DB_FILE: Unknown verb index: #%"PRIdN":%"PRIdN".\n", oid, vnum);
 	    return 0;
 	}
-	program = dbio_read_program(dbio_input_version, fmt_verb_name, &h);
+
+	Program *program = dbio_read_program(dbio_input_version, fmt_verb_name, &h);
 	if (!program) {
 	    errlog("READ_DB_FILE: Unparsable program #%"PRIdN":%"PRIdN".\n", oid, vnum);
 	    return 0;
@@ -623,7 +628,7 @@ read_db_file(void)
     }
 
     oklog("LOADING: Reading forked and suspended tasks...\n");
-    if (!read_task_queue()) {
+    if (first_byte != EOF && !read_task_queue()) {
 	errlog("READ_DB_FILE: Can't read task queue.\n");
 	return 0;
     }

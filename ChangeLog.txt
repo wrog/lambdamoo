@@ -3056,6 +3056,10 @@ Version 1.9.0alpha, 29 September 2025
    wrong assumptions in verbcode concerning the capabilities of the
    server (e.g., verbs that depend on MAX_NUM == 2^32-1 will fail when
    INT_TYPE_BITSIZE=64)
+-- The initial database file may now be entirely empty (/dev/null).
+   This loads a database with no objects, connected users, or queued
+   tasks (mainly for testing, but it is now possible to build a
+   database completely from scratch in emergency mode).
 -- New options that are user-invisible (fully discussed in options.h)
    -- BOXED_FLOATS
       If set/#defined, FLOAT values are passed as pointers and refcounted.
