@@ -700,6 +700,7 @@ emergency_mode(void)
 	    if (!is_wizard(wizard)) {
 		if (first_valid < 0) {
 		    first_valid = db_create_object();
+		    db_set_object_owner(first_valid, first_valid);
 		    printf("** No objects in database; created #%"PRIdN".\n",
 			   first_valid);
 		}
