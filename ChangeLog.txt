@@ -3111,7 +3111,7 @@ Version 1.9.0alpha, 29 September 2025
          (default for the Unicode server)
       -- 'ylo' the original implementation from 1991
          (default for the non-Unicode server and
-          probably a bad idea to use for the Unicode server)
+          not allowed for the Unicode server)
       -- (now that Debian has deprecated pcre1, we hope to make
           pcre2 available soon)
    -- ucd/ build subdirectory added by Codepoint has been removed,
