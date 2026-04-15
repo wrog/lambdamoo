@@ -73,9 +73,14 @@ END_UCD_MAKE
       %?  choose RE engine (ylo,pcre)
 
     # yes, this is a hack:
-    %ac_yes AS_IF([[$moo_xt_do_unicode]], [%LIBS%[=pcre]], [%LIBS%[=ylo]])
+    # %ac_yes AS_IF([[$moo_xt_do_unicode]], [%LIBS%[=pcre]], [%LIBS%[=ylo]])
 
     %lib ylo
+      %ac <<END
+AS_IF([[$moo_xt_do_unicode]],
+      [%FAIL%[="incompatible with unicode"]],
+      [%USE%])
+END
       XT_CSRCS = regexpr.c pattern_ylo.c
       XT_HDRS = regexpr.h
     %lib pcre
