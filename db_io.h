@@ -277,6 +277,9 @@ extern int dbio_scxnf(const char *format,...) FORMAT(scanf,1,2);
  *   the % with a space.
  */
 
+#ifdef UNIT_TESTS
+extern const char *dbio_last_error;
+#endif
 
 /*********** Output ***********/
 
