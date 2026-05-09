@@ -87,7 +87,7 @@ enum dbio_intrange {
  *
  *  When an error or premature EOF occurs, the return value is zero
  *  with an error message being written to the server log, in which
- *  case you should not count on (*P) to be anything in particular.
+ *  case (*P) is left unchanged (garbage if you did not initialize it).
  */
 
 extern int dbio_read_integer(enum dbio_intrange r, intmax_t *p);
@@ -106,7 +106,8 @@ extern int dbio_read_integer(enum dbio_intrange r, intmax_t *p);
 static inline int dbio_read_##intxx(intxx_t *p) {		\
     intmax_t i = 0;					\
     int r = dbio_read_integer(DBIO_RANGE_##INTXX, &i);	\
-    *p = (intxx_t)i;					\
+    if(r)						\
+	*p = (intxx_t)i;				\
     return r;						\
 }							\
 
