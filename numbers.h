@@ -105,6 +105,15 @@ parse_number(unsigned flags,
 	     int32_t (*getch)(void),
 	     void (*ungetch)(int32_t));
 
+/*
+ * parse_number_from_string(string, flags)
+ *
+ * attempt to parse string as a number,
+ * flags are as for parse_number
+ * but with PN_MUST_EOF always set.
+ */
+extern Var parse_number_from_string(const char *, unsigned);
+
 
 #endif		/* !Numbers_H */
 

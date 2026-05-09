@@ -49,7 +49,10 @@
 
 static FILE *input;
 
-static const char *dbio_last_error = NULL;
+#ifndef UNIT_TESTS
+static
+#endif
+const char *dbio_last_error = NULL;
 
 void
 dbpriv_set_dbio_input(FILE * f)
