@@ -271,7 +271,7 @@ m4_define([_MOO_SVF_SOURCE_GIT],
   moo_DEFSRC='DEF(vcs_version,"'$moo_gversion'")'
 
   # include commit id
-  moo_DEFSRC=$moo_DEFSRC' DEF(commit,"'`git rev-list -1 HEAD`'")'
+  moo_DEFSRC=$moo_DEFSRC' DEF(commit,"'`cd $ac_top_srcdir ; git rev-list -1 HEAD`'")'
 
   if test "x$moo_gdesc" != x ; then
     moo_DEFSRC=$moo_DEFSRC' DEF(desc,"'$moo_gdesc'")'
@@ -288,7 +288,7 @@ m4_define([_MOO_SVF_SOURCE_GIT],
 #    does *not* write out moo_EXT
 #
 m4_define([_MOO_SVF_VN_FROM_GIT],
-[[moo_gdesc=`git describe --tags --match "v[0-9]*"`
+[[moo_gdesc=`cd $ac_top_srcdir ; git describe --tags --match "v[0-9]*"`
   # extract (MAJOR).(MINOR).(RELEASE)(EXT)-(CCOUNT) from git describe
   moo_ccount=`expr "X$moo_gdesc" : 'Xv[0-9][0-9]*[.][0-9][0-9]*[.][0-9][0-9]*[^-]*-\([0-9][0-9]*\)'`
   moo_RELEASE=`expr "X$moo_gdesc" : 'Xv[0-9][0-9]*[.][0-9][0-9]*[.]\([0-9][0-9]*\)'`
