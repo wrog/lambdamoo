@@ -115,6 +115,7 @@ dbio_read_line(const char **end)
     } while (len == blen && buffer[len-1] != '\n');
 
     if (stream_last_byte(dbio_line_stream) != '\n') {
+	reset_stream(dbio_line_stream);
 	if (end)
 	    *end = NULL;
 	return NULL;
