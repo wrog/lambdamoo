@@ -108,6 +108,10 @@ extern db_verb_handle find_verb_for_programming(Objid player,
 						const char **message,
 						const char **vname);
 
+#ifdef UNIT_TESTS
+extern size_t sizeof_forked_task(void);
+#endif
+
 #endif		/* !Tasks_H */
 
 /*

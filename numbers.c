@@ -393,7 +393,10 @@ snp_getch(void)
     return get_utf(&snp_string);
 }
 
-static Var
+#ifndef UNIT_TESTS
+static
+#endif
+Var
 parse_number_from_string(const char *str, unsigned flags)
 {
     snp_init(str);

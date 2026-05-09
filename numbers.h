@@ -105,6 +105,11 @@ parse_number(unsigned flags,
 	     void (*ungetch)(int32_t));
 
 
+#ifdef UNIT_TESTS
+extern Var parse_number_from_string(const char *, unsigned);
+#endif
+
+
 #endif		/* !Numbers_H */
 
 /*

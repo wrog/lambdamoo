@@ -1686,6 +1686,14 @@ activation_bytes(activation * ap)
     return total;
 }
 
+#ifdef UNIT_TESTS
+size_t
+sizeof_forked_task(void)
+{
+    return BQM_SIZEOF(forked_task);
+}
+#endif   /* UNIT_TESTS */
+
 static int
 forked_task_bytes(forked_task ft)
 {
