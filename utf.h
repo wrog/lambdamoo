@@ -29,7 +29,7 @@ static inline int is_utf8_cont_byte(uint8_t c UNUSED_)
  * advancing *ppc to the start of the next character.
  */
 static inline uint32_t get_utf(const char **ppc)
-{ return *(*ppc)++; }
+{ return (unsigned char)*(*ppc)++; }
 
 /* Write c to **ppc and advance *ppc as necessary
  * unless c is outside of the legal range for (Unicode|ASCII)
