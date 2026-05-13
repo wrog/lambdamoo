@@ -132,6 +132,7 @@ typedef  __float128  FlNum;
 #  define FLOAT_FN(name)  name##q
 #  define FLOAT_DEF(name) name##Q
 #  define FLOAT_DIGITS    FLT128_DIG
+#  define FLOAT_MANT_DIG  FLT128_MANT_DIG
 #  define strtoflnum      strtoflt128
 #  define PRIeR "Qe"
 #  define PRIfR "Qf"
@@ -143,6 +144,7 @@ typedef  long double  FlNum;
 #  define FLOAT_FN(name)  name##l
 #  define FLOAT_DEF(name) name##L
 #  define FLOAT_DIGITS    LDBL_DIG
+#  define FLOAT_MANT_DIG  LDBL_MANT_DIG
 #  define strtoflnum      strtold
 #  define PRIeR "Le"
 #  define PRIfR "Lf"
@@ -163,6 +165,7 @@ typedef  float  FlNum;
 #    define FLOAT_FN(name)  name##f
 #    define FLOAT_DEF(name) name##F
 #    define FLOAT_DIGITS    FLT_DIG
+#    define FLOAT_MANT_DIG  FLT_MANT_DIG
 #    define strtoflnum      strtof
 
 #  elif FLOATING_TYPE  == FT_DOUBLE
@@ -171,6 +174,7 @@ typedef  double  FlNum;
 #    define FLOAT_FN(name)  name
 #    define FLOAT_DEF(name) name
 #    define FLOAT_DIGITS    DBL_DIG
+#    define FLOAT_MANT_DIG  DBL_MANT_DIG
 #    define strtoflnum      strtod
 
 #  else
