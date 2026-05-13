@@ -100,13 +100,14 @@ parse_number(unsigned flags, int32_t c_first,
 #   define F_DIGIT  0x10     /* number is viable   */
 #   define F_XSIGN  0x20     /* forbid '-' and '+' */
 
+    unsigned state = F_INT*(!(flags & PN_FLOAT_OK));
+
     if (flags & PN_NONNEG) {
+	state |= F_XSIGN;
 	stream_add_char(ns, '-');
 	/* Yes, we are being tricky.
 	   See Very Long Comment below. */
     }
-
-    unsigned state = F_INT*(!(flags & PN_FLOAT_OK));
 
     if (EOF == c) goto at_eof;
 
