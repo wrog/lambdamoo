@@ -533,9 +533,12 @@ m4_popdef([_ax_lp_b],[_ax_lp_hd])]))
 #
 #     [:vars], [<ID>{, <ID>}*]
 #     [:var], [<ID>, <VALUE>],
-#       These declare local variables, :vars initializing
-#       all of them to [] while :var initializes a single
-#       <ID> to a particular value.
+#       These declare local variables;
+#       :vars initializes a list of them to [] while
+#       :var initializes a single <ID> to a particular value.
+#       (note: <VALUE> should be quoted as if you were doing
+#        m4_define(<ID>,<VALUE>); any unquoted portions are
+#        expanded in the context of the :fn hook invocation (below))
 #       Use ax_lp_{get,put,append...} to retrieve and set values later.
 #
 #     [:sets],   [<ID>{, <ID>}*]
@@ -643,9 +646,9 @@ m4_define([_ax_lp_lang_define_cmd],
 
     [:var], [m4_do(
       _ax_lp_fn_add([$1], [$2],
-        [m4_pushdef(]m4_dquote([$][1_]$4)[)]),
+        [m4_pushdef(]m4_dquote([$][1_])[$4)]),
       _ax_lp_fnend_add([$1], [$2],
-        [m4_popdef(]m4_dquote([$][1_]m4_car($4))[)]))],
+        [m4_popdef(]m4_dquote([$][1_]ax_lp_unquote_car_safely([$4]))[)]))],
 
     [:sets], [m4_do(
       _ax_lp_fn_add([$1], [$2],
@@ -925,3 +928,21 @@ m4_define([ax_lp_strhead],
 m4_define([ax_lp_strtail], ax_lp_NTSC(
   [m4_bregexp([$2],[\`]m4_bpatsubst(ax_lp_strhead([$1],[$2]),
      [.],[.])[\(\(.\|N\)*\)],[[\1]])]))
+
+
+# ax_lp_unquote_car_safely([<POSSIBLY_BOGUS_M4LIST>])
+#  = m4_car(<POSSIBLY_BOGUS_M4LIST>)
+#
+# (see m4sugar.m4 for definition of 'M4 list')
+# Splits its argument at the first comma and then unquotes the element
+# obtained, all without doing ANY expansion of the rest of the list
+# (thus protecting against lurking unquoted, stupid side-effects, e.g.,
+#
+#    [[a], [b], m4_fatal([bwahahahaha])]
+#
+# The first element MUST be quote-balanced and contain no commas.
+# You also have to quote the list argument (whereas m4_car() relies
+# on its list argument getting expanded to remove the outer quotes)
+
+m4_define([ax_lp_unquote_car_safely],
+  [m4_unquote(ax_lp_strhead(m4_index([$1,],[,]),[$1]))])
