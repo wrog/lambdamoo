@@ -504,6 +504,15 @@ m4_popdef([_ax_lp_b],[_ax_lp_hd])]))
 #   the default :args/:allow is doable but might cause confusion...
 # ***)
 #
+#   (Style note:  In invocations of AX_LP_DEFINE_LANGUAGE and the
+#    individual <DEFINE_CMD> macros, any full lines and whitespace
+#    preceding a keyword (that might otherwise be introduced by adding
+#    commentary) are eliminated, meaning it is, in these particular
+#    cases, mostly safe to add commentary, say, to explain a :var line,
+#    even though M4 would normally get messed up by this.  However,
+#    unbalanced []s can *still* screw you if you use #-comments;
+#    dnl is safer)
+#
 # Every line parsed by AX_LP_PARSE_SCRIPT is given an initial parse to
 # extract the cmd word (CMD), usually the first whitespace delimited
 # word, and a preliminary parameter list (PRELIMINARY_ARGS...),
@@ -600,17 +609,20 @@ m4_define([_ax_lp_lang_prefix], [[ax_lp_%($1)]])
 m4_define([_ax_lp_lang_globals], ax_lp_NTSC(
   [m4_if($C,[2],
     [m4_ifval([$2],[m4_fatal([odd number of arguments for $0 ($2)])])],
-    [m4_define([$1| $2], [$3])$0([$1],m4_shift3($@))])]))
+    [m4_define([$1| ]_ax_lp_clean_up_keyword([$2]), [$3])$0([$1],m4_shift3($@))])]))
 
 m4_define([_ax_lp_cmd_definer],
   [m4_define([$1],[_ax_lp_lang_define_cmd(_ax_lp_lang_prefix([$2]),$][@)])])
 
+# allow keywords to be preceeded by full-line comments
+m4_define([_ax_lp_clean_up_keyword], ax_lp_NTSC(
+  [m4_bpatsubst([[$1]],[^\([][]\)\(.*N\)*[ST]*],[\1])]))
 
 # _ax_lp_lang_define_cmd(<LANGUAGE_PREFIX>,<CMD>,[<KWD>,<KWDEXP>]*)
 #    define the hook functions that implement <CMD> in <LANGUAGE>
 #
 m4_define([_ax_lp_lang_define_cmd],
-  [m4_case([$3],
+  [m4_case(_ax_lp_clean_up_keyword([$3]),
 
     [:parent],
       [m4_set_add([$1| _ok_par],[$4|$2])],
