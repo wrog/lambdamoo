@@ -1,5 +1,5 @@
-# ax_lp.m4  -- parser for autoconf/m4-based domain-specific language
-# ===================================================================
+# ax_lp.m4 - m4sugar parser for domain-specific user-defined language
+# ====================================================================
 #
 # SYNOPSIS
 #
@@ -40,15 +40,15 @@
 #
 #   This provides a parser for a simple, user-defined, domain-specific
 #   command/directive/whatever (hereafter, "cmd") language, a means by
-#   which small scripts in such languages can be incorporated into a
-#   configure.ac, thus providing (we hope) a more readable/editable DSL
-#   format for aspects of the configuration that someone lacking deep
-#   knowledge of m4/autoconf syntax/internals may find easier to deal
-#   with.
+#   which small scripts in such languages can be incorporated into
+#   an m4sugar-based application (e.g., m4sh, autoconf, autotest,...)
+#   thus providing (we hope) a more user-friendly DSL format for
+#   specifying some particular aspect of that application for someone
+#   lacking deep knowledge of m4/autoconf/etc syntax/internals.
 #
 #   The parser is fully re-entrant, i.e., multiple parsing instances
 #   in the same or multiple languages may be active at the same time
-#   with no ill effects.
+#   with no ill effects.  It depends *only* on features of m4sugar.
 #
 # EXPORTS
 #
@@ -132,7 +132,7 @@ _lambda_(m4_shift2($@)m4_popdef([_lambda_]))])
 #-------------------------------------------------------
 # AX_LP_PARSE_SCRIPT( <LANGUAGE>, <INITARGS>, <SCRIPT>)
 
-AC_DEFUN([AX_LP_PARSE_SCRIPT],
+m4_defun([AX_LP_PARSE_SCRIPT],
   [_$0(_ax_lp_new_context(), $@)])
 
 # _AX_LP_PARSE_SCRIPT( <CTX>, <LANGUAGE>, <INITARGS>, <SCRIPT>)
@@ -581,7 +581,7 @@ m4_popdef([_ax_lp_b],[_ax_lp_hd])]))
 # variable name in a descendant cmd (it will hide/shadow the ancestral
 # declaration).
 #
-AC_DEFUN([AX_LP_DEFINE_LANGUAGE],
+m4_defun([AX_LP_DEFINE_LANGUAGE],
   [_ax_lp_cmd_definer([$2],[$1])dnl
 _ax_lp_lang_globals(_ax_lp_lang_prefix([$1]),
   [:args],  [m4_shift2($][@)],
