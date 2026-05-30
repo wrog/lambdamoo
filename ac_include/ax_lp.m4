@@ -727,11 +727,17 @@ m4_define([ax_lp_check_puts],
                    [m4_fatal([undeclared var: $2])])$0([$1], m4_shift3($@))])])
 
 # ax_lp_append(<CTX>,<VAR_ID>,<MOREVAL>,<SEP>)
-#   appends <MOREVAL> to <VAR_ID>'s value,
+# ax_lp_prepend(<CTX>,<VAR_ID>,<MOREVAL>,<SEP>)
+#   (ap|pre)pends <MOREVAL> to <VAR_ID>'s value,
 #   not including <SEP> if value was previously ''
+#     (This is different from how m4_append() works(!))
 #
 m4_define([ax_lp_append],
   [m4_append([$1_$2], [$3], m4_ifval(m4_defn([$1_$2]),[$4]))])
+
+m4_define([ax_lp_prepend],
+  [m4_define([$1_$2],
+    [$3]m4_ifval(m4_defn([$1_$2]), [[$4]m4_defn([$1_$2])]))])
 
 # ax_lp_ifdef(<CTX>, <VAR_ID>, <IF-DEF>, <IF-UNDEF>)
 # ax_lp_<VERB>(<CTX>, <VAR_ID>, <ARGS>...)
