@@ -180,7 +180,8 @@ m4_define([_AX_Xt_add_makevar],
 #      affected at this level
 #
 m4_define([_AX_Xt_put_makevars],
-  [ax_lp_hash_map_keys_sep([$1], [makevars],
+ [ax_lp_beta([&],[m4_ifval([&1],[[[&1]]],[])],
+  ax_lp_hash_map_keys_sep([$1], [makevars],
     [m4_pushdef([_ax_xt_v],],
     [)
 m4_format([[%*s]],[$2])dnl
@@ -191,7 +192,7 @@ ax_lp_beta([&],m4_if(m4_defn([_ax_xt_v]),[XT_MAKEVARS],
        _AX_Xt_makevar_sep(m4_defn([_ax_xt_v])),
        ax_lp_hash_get([$1], [makevars],
                       m4_defn([_ax_xt_v])))dnl
-m4_popdef([_ax_xt_v])])])
+m4_popdef([_ax_xt_v])]))])
 
 #-------------------------------
 # cdefine utilities
@@ -755,7 +756,7 @@ m4_ifval([&3],[[[
       AS_SET_CATFILE([[_ax_xt_dir1]], [[$srcdir]], [[$_ax_xt_dir0]])
       AS_IF([[test -d "$_ax_xt_dir1"]], [], [
         AC_MSG_ERROR([[directory not found: $_ax_xt_dir1]])])
-      AS_SET_CATFILE([[_ax_xt_dir]], [['$(abs_srcdir)']], [[$_ax_xt_dir0]])[&5]]dnl
+      AS_SET_CATFILE([[_ax_xt_dir]], [['$(abs_srcdir)']], [[$_ax_xt_dir0]])&5]dnl
 m4_ifval([&4], [m4_bpatsubst([[
       &4]], [%DIR%], [[$_ax_xt_dir1]])])],
 
@@ -900,7 +901,7 @@ AX_XT_DEFINE([%%extension],
   [:fnend],
   [ax_lp_beta([&],
     [m4_append([&1],
-      [AS_IF([[$&2do_&3]], [[&2active_xts="$&2active_xts &3"][&6]])]dnl
+      [AS_IF([[$&2do_&3]], [[&2active_xts="$&2active_xts &3"]&6])]dnl
 [&7][&4][&5])],
 
         ax_lp_get([$1],[g_configure],[g_sh_var_],
