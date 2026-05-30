@@ -1,5 +1,6 @@
 # ax_lp.m4 - m4sugar parser for domain-specific user-defined language
 # ====================================================================
+#serial 1
 #
 # SYNOPSIS
 #
@@ -93,7 +94,7 @@
 #
 # COPYRIGHT/LICENSE
 #
-#   Copyright (C) 2023, 2024  Roger F. Crew
+#   Copyright (C) 2023, 2024, 2026  Roger F. Crew
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License

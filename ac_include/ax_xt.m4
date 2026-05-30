@@ -1,5 +1,6 @@
 # ax_xt.m4 - language to specify optional variant builds in autoconf
 # ===================================================================
+#serial 1
 #
 # DESCRIPTION
 #
@@ -82,7 +83,7 @@
 #
 # AUTHOR/COPYRIGHT/LICENSE
 #
-#   Copyright (C) 2023, 2024, 2025  Roger F. Crew
+#   Copyright (C) 2023, 2024, 2025, 2026  Roger F. Crew
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License
