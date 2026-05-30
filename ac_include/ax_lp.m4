@@ -129,6 +129,19 @@ m4_define([ax_lp_beta],
   [m4_pushdef([_lambda_],m4_translit([[$2]],[$1],[$]))dnl
 _lambda_(m4_shift2($@)m4_popdef([_lambda_]))])
 
+# ax_lp_map_beta_sep(<A>,<DEFN>,<SEP>,<ARG1>,<ARG2>,...)
+#  -> <DEFN{A\$}>(<ARG1>)<SEP><DEFN{A\$}>(<ARG2>)<SEP>...
+#
+# Does repeated beta substitution while constructing the underlying
+# macro only once (likely more efficient for long argument lists
+# and/or large macro bodies).
+
+m4_define([ax_lp_map_beta_sep],
+  [m4_pushdef([_ax_lp_ beta],m4_translit([[$2]],[$1],[$]))dnl
+m4_map_args_sep([m4_indir([_ax_lp_ beta],],[)],[$3],m4_shift3($@))dnl
+m4_popdef([_ax_lp_ beta])])
+
+
 #-------------------------------------------------------
 # AX_LP_PARSE_SCRIPT( <LANGUAGE>, <INITARGS>, <SCRIPT>)
 
@@ -740,15 +753,9 @@ m4_define([ax_lp_prepend],
     [$3]m4_ifval(m4_defn([$1_$2]), [[$4]m4_defn([$1_$2])]))])
 
 # ax_lp_ifdef(<CTX>, <VAR_ID>, <IF-DEF>, <IF-UNDEF>)
-# ax_lp_<VERB>(<CTX>, <VAR_ID>, <ARGS>...)
-#   -> m4_<VERB>(<CTX>_<VAR_ID>, <ARGS>...)
 #
-m4_map_args_sep(
-  [ax_lp_beta([&],
-     [m4_define([ax_lp_&1],
-                [m4_&1(]m4_dquote([$][1_])[m4_shift($][@))])],],
-  [)], [],
-  [ifdef])
+m4_define([ax_lp_ifdef],
+  [m4_ifdef([$1_]m4_shift($@))]),
 
 #------
 # sets
@@ -764,12 +771,11 @@ m4_map_args_sep(
 #   ax_lp_<VERB>(<CTX>, <SET_ID>, <ARGS>...)
 #   -> m4_<VERB>(ax_lp_get(<CTX>,<SET_ID>), <ARGS>...)
 #
-m4_map_args_sep(
-  [ax_lp_beta([&],
-     [m4_define([ax_lp_&1],
-                [m4_&1(ax_lp_get(]m4_dquote([$][1],[$][2])[),
-                       m4_shift2($][@))])],],
-  [)], [],
+ax_lp_map_beta_sep([&],
+  [m4_define([ax_lp_&1],
+             [m4_&1(ax_lp_get(]m4_dquote([$][1],[$][2])[),
+                    m4_shift2($][@))])],
+  [],
   [set_add], [set_add_all],
   [set_contains], [set_empty], [set_size],
   [set_map_sep])
@@ -788,11 +794,10 @@ m4_map_args_sep(
 # ax_lp_hash_<VERB>(<CTX>,<HT_ID>[,<ARG>*])
 #   -> m4_set_<VERB>(ax_lp_get(<CTX>,<HT_ID>)[,<ARG>*])
 #
-m4_map_args_sep(
-  [ax_lp_beta([&],
-     [m4_define([ax_lp_hash_&1],
-         [m4_set_&1(ax_lp_get(]m4_dquote([$][1],[$][2])[),
-                    m4_shift2($][@))])],], [)],
+ax_lp_map_beta_sep([&],
+  [m4_define([ax_lp_hash_&1],
+      [m4_set_&1(ax_lp_get(]m4_dquote([$][1],[$][2])[),
+                 m4_shift2($][@))])],
   [],
   [empty], [size], [contains], [map_sep])
 
