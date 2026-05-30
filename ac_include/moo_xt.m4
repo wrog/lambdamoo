@@ -65,7 +65,9 @@ AX_LP_PARSE_SCRIPT([XT], [
 # These get m4_append()ed as we process the scripts:
 m4_define([_MOO_XT_EXTENSION_ARGS])
 m4_define([_MOO_XT_CONFIGURE_EXTENSIONS])
-# This is set by the first script
+
+# This is m4_defined()ed by each script, but since
+# they all overwrite it, only the last one matters
 m4_define([_MOO_XT_CONFIGURE_EPILOGUE])
 
 

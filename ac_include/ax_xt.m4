@@ -369,15 +369,15 @@ m4_popdef([_AX_Xt_set],[_AX_Xt_odd])],
 
   [:fnend],
   [ax_lp_beta([&],
-     [m4_ifval(m4_defn([&1]), [], [m4_define([&1],
+     [m4_define([&1],
 m4_set_map_sep(
     [_AX_Xt_substed_makevars],
     [[AC_SUBST(]m4_dquote(],[)[)]])dnl
 m4_map_args_sep(
      [ax_lp_beta([@],[
-[[ALL_XT_@1=']m4_set_map_sep([&2@1],[],[],[ ])[']]],],
+[[ALL_XT_@1=]]m4_dquote('m4_set_map_sep([&2@1],[],[],[ ])')],],
      [)], [],
-     _AX_Xt_source_groups))])],
+     _AX_Xt_source_groups))],
 
 ax_lp_get([$1],[g_epilogue],[g_srcgrp_]))])
 
