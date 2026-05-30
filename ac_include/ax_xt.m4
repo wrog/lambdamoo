@@ -374,9 +374,8 @@ m4_set_map_sep(
     [_AX_Xt_substed_makevars],
     [[AC_SUBST(]m4_dquote(],[)[)]])dnl
 m4_map_args_sep(
-     [ax_lp_beta([@],
-        [[AC_SUBST([ALL_XT_@1],
-                   ['m4_set_map_sep([&2@1],[],[],[ ])'])]],],
+     [ax_lp_beta([@],[
+[[ALL_XT_@1=']m4_set_map_sep([&2@1],[],[],[ ])[']]],],
      [)], [],
      _AX_Xt_source_groups))])],
 
