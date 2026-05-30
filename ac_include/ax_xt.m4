@@ -507,10 +507,8 @@ AX_XT_DEFINE([%alt],
   [:fn], [m4_do(
     _AX_Xt_set_require_new([$1], [all_kwds], [$2]),
     ax_lp_ifdef([$1], [kwd_xselect],
-      [ax_lp_put([$1], [kwd_xselect],
-        [x$2|]ax_lp_get([$1], [kwd_xselect]))]),
-    ax_lp_put([$1], [kwd_select],
-      [$2|]ax_lp_get([$1], [kwd_select])))])
+      [ax_lp_prepend([$1], [kwd_xselect], [x$2], [|])]),
+    ax_lp_prepend([$1],    [kwd_select],  [$2],  [|]))])
 
 
 AX_XT_DEFINE([%implies],
