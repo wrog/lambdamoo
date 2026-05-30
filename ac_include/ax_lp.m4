@@ -712,11 +712,19 @@ m4_define([_ax_lp_push_local_indir],
 m4_define([ax_lp_get],
   [m4_map_args_sep([m4_defn([$1_]],[)],[,],m4_shift($@))])
 
-# ax_lp_put(<CTX>,<VAR_ID>,<VAL>)  -> ''
+# ax_lp_put(<CTX>,<VAR_ID>,<VAL>,[<VAR_ID2>,<VAL2>,...])  -> ''
 #   assigns value <VAL> to <VAR_ID>
 #
 m4_define([ax_lp_put],
-  [m4_define([$1_$2], [$3])])
+  [m4_if([$#], [1], [],
+         [$#], [2], [m4_ifval([$2],[m4_fatal([even number of arguments for $0 ($2)])])],
+         [m4_define([$1_$2], [$3])$0([$1], m4_shift3($@))])])
+
+m4_define([ax_lp_check_puts],
+  [m4_if([$#], [1], [],
+         [$#], [2], [m4_ifval([$2],[m4_fatal([even number of arguments for $0 ($2)])])],
+         [m4_ifdef([$1_$2], [],
+                   [m4_fatal([undeclared var: $2])])$0([$1], m4_shift3($@))])])
 
 # ax_lp_append(<CTX>,<VAR_ID>,<MOREVAL>,<SEP>)
 #   appends <MOREVAL> to <VAR_ID>'s value,
