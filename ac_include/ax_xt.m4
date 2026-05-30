@@ -276,10 +276,10 @@ m4_define([_AX_Xt_put_nonoption_cdefs],
 
 m4_define([_AX_Xt_put_cdef_unless_option],
   [m4_set_contains([$2],[$1],[],[
-AS_VAR_COPY([_ax_xt_v],[$3][$1])
-AS_CASE([$_ax_xt_v],
-  [no],[],
-  [yes|''],[AC_DEFINE([$1],[1])],
+AS_VAR_COPY([[_ax_xt_v]],[[$3][$1]])
+AS_CASE([[$_ax_xt_v]],
+  [[no]],[],
+  [[yes|'']],[AC_DEFINE([$1],[1])],
   [AC_DEFINE_UNQUOTED([$1],[$_ax_xt_v])])])])
 
 
