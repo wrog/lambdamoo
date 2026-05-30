@@ -123,12 +123,12 @@ m4_set_add_all([_AX_Xt_reserved_makevars],
 # _AX_Xt_makevar_source_group_<makevar>
 #    source group corresponding to <makevar> (if defined)
 #
-m4_map_args_sep(
-  [ax_lp_beta([&], [m4_do(
+ax_lp_map_beta_sep([&],
+  [m4_do(
        m4_define([_AX_Xt_makevar_source_group_XT_&1],[&1]),
        m4_set_add([_AX_Xt_direct_makevars], [XT_&1]),
        m4_set_add([_AX_Xt_reserved_makevars], [ALL_XT_&1]))],
-     ], [)], [],
+  [],
   _AX_Xt_source_groups)
 
 # _AX_Xt_append_source_group(<MAKEVAR>,<VALUE>)
@@ -363,11 +363,10 @@ AX_XT_DEFINE([],
 m4_set_map_sep(
     [_AX_Xt_substed_makevars],
     [[AC_SUBST(]m4_dquote(],[)[)]])dnl
-m4_map_args_sep(
-     [ax_lp_beta([@],[
-[[ALL_XT_@1=]]m4_dquote('m4_set_map_sep([&2@1],[],[],[ ])')],],
-     [)], [],
-     _AX_Xt_source_groups))],
+ax_lp_map_beta_sep([@], [
+[[ALL_XT_@1=]]m4_dquote('m4_set_map_sep([&2@1],[],[],[ ])')],
+    [],
+    _AX_Xt_source_groups))],
 
 ax_lp_get([$1],[g_epilogue],[g_srcgrp_]))])
 
