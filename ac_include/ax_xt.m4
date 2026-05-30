@@ -225,20 +225,18 @@ m4_define([_AX_Xt_cdef_setup], [m4_do(
 
   m4_ifval([$2],
     [m4_if(m4_bregexp([$2],[%s]),[-1],
-      [ax_lp_put([$1], [cdef_sym], [$2])],
-      [m4_do(
-         ax_lp_put([$1], [cdef_sym], m4_dquote([$2])),
-         ax_lp_put([$1], [cdef_mode], [1]))])],
+      [ax_lp_put([$1], [cdef_sym],  [$2])],
+      [ax_lp_put([$1], [cdef_sym],  m4_dquote([$2]),
+                       [cdef_mode], [1])])],
     [ax_lp_fatal([$1],['%cdefine' name required])]),
 
   m4_ifval([$3],
     [m4_if(ax_lp_get([$1], [cdef_mode]),[1],
       [ax_lp_fatal([$1],['%cdefine name%s value' not allowed])],
       [m4_if(m4_bregexp([$3],[%s]),[-1],
-        [ax_lp_put([$1], [cdef_val], [$3])],
-        [m4_do(
-           ax_lp_put([$1], [cdef_val], m4_dquote([$3])),
-           ax_lp_put([$1], [cdef_mode], [2]))])])]),
+        [ax_lp_put([$1], [cdef_val],  [$3])],
+        [ax_lp_put([$1], [cdef_val],  m4_dquote([$3]),
+                         [cdef_mode], [2])])])]),
 
   m4_if(ax_lp_get([$1], [cdef_mode]),[0],
     [ax_lp_set_add([$1], [all_cdefs], [$2])]))])
@@ -259,9 +257,9 @@ m4_define([_AX_Xt_add_cdef],
     [m4_fatal([cant happen (cdef_mode = ]ax_lp_get([$1], [cdef_mode])[)])])])
 
 m4_define([_AX_Xt_add_cdef2],[m4_do(
-  ax_lp_put([$1],     [this_cdef], [$2]),
   ax_lp_set_add([$1], [all_cdefs], [$2]),
-  ax_lp_put([$1],     [this_cval], [$3]))])
+  ax_lp_put([$1],     [this_cdef], [$2],
+                      [this_cval], [$3]))])
 
 
 # _AX_Xt_put_nonoption_cdefs(<CTX>)
@@ -357,15 +355,7 @@ AX_XT_DEFINE([],
   [:var], [[g_srcgrp_],   [AX_Xt_SGROUP_]],
   [:var], [[g_cdef_set],  [AX_Xt_CDEF_SET]],
 
-  [:fn],
-  [m4_translit(
-[m4_pushdef([_AX_Xt_odd],
-    [m4_ifval([&1], [m4_fatal([odd argument: '&1'])])])dnl
-m4_pushdef([_AX_Xt_set],
-    [ax_lp_ifdef([$1], [&1], [], [m4_fatal([unknown keyword: &1])])dnl
-ax_lp_put([$1], &@)])],[&],[$])dnl
-m4_map_args_pair([_AX_Xt_set], [_AX_Xt_odd], m4_shift($@))dnl
-m4_popdef([_AX_Xt_set],[_AX_Xt_odd])],
+  [:fn],  [ax_lp_check_puts($@)ax_lp_put($@)],
 
   [:fnend],
   [ax_lp_beta([&],
@@ -440,11 +430,11 @@ AX_XT_DEFINE([--with-],
     [_AX_Xt_ew_defns([$1], [with], [$2], [$3])])
 
 m4_define([_AX_Xt_ew_defns],
-  [ax_lp_put([$1], [ew], [$2])dnl
-m4_ifval([$3],[],[ax_lp_fatal([$1],['--enable|with-' name expected])])dnl
-ax_lp_put([$1], [ew_name], [$3])dnl
-ax_lp_put([$1], [ew_vdesc], [$4])dnl
-ax_lp_put([$1], [ew_var], m4_translit([[$2-$3]],[-+.],[___]))])
+  [m4_ifval([$3],[],[ax_lp_fatal([$1],['--enable|with-' name expected])])dnl
+ax_lp_put([$1], [ew],       [$2],
+                [ew_name],  [$3],
+                [ew_vdesc], [$4],
+                [ew_var],   m4_translit([[$2-$3]],[-+.],[___]))])
 
 m4_define([_AX_Xt_ew_errname],
   [ax_lp_beta([&],
