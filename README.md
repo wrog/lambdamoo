@@ -20,12 +20,6 @@ lines of development -- or earlier servers, see [Legacy database support](#user-
 below for options/extensions you will need to enable/disable from
 `./configure` in order to continue running with minimal database changes.
 
-### Test Suite
-
-Unlike most modern applications, the LambdaMOO test suite is in a
-separate package not included here.  You should retrieve that as well
-(see instructions wherever you got this from).
-
 ## Getting Started
 
 For those of you starting fresh, what to do will depend on how you got
@@ -33,75 +27,90 @@ here.  There are two ways to proceed:
 
 ### Building from a distribution
 
-These are the instructions for building from a distribution tarball
-— a file of the form `LambdaMOO-1.9.nn-dist.tar.gz` — that you can (and
-likely already have) run `tar xzf` to unpack and then `cd`ed into the
-source directory created (at which point you most likely started
-reading this file).
+Here is how you build from a distribution tarball — a file of the form
+`LambdaMOO-1.9.nn-dist.tar.gz` — that you can (and likely already
+have) run `tar xzf` to unpack and then `cd`ed into the source
+directory created (at which point you presumably then started reading
+this file).
 
 The process from here is:
 
-```
     ./configure
     make
-```
+    make test
 
 The `./configure` script may complain about missing prerequisites.
-Various situations are covered below.
+Various situations and options are covered below.
 
 ### Building from git
 
-This process is more involved and requires `git`, `autoconf`,
-`gperf`, and `yacc`:
+This process is more involved, with several more prerequisites
+(listed below), but is essential if you want to do actual development.
 
-```
-    git clone REPOSITORY SRCDIR
-    cd SRCDIR
-    autoconf
-    ./configure
-    make
-```
+There are, in fact, two (2) repositories to retrieve and set up
+because, unlike many modern applications, the server source and the
+testing framework (`l8tf`) are kept separate.
 
-As of this writing (Sept. 2025), `REPOSITORY` is
+Here are the steps to create the build/development environment:
 
-   [https://github.com/wrog/lambdamoo.git](https://github.com/wrog/lambdamoo)
+1.  `git clone `_SERVER-REPOSITORY_` `_SERVER-SRCDIR_
+2.  `git clone `_TEST-REPOSITORY_`  `_TEST-SRCDIR_
 
-If this has changed and for whatever reason we were not able to put up a notice
-there about where we've moved to, [the LambdaMOO site](https://lambda.moo.mud.org)
-or [my own site](https://wrog.net/moo) will likely have something to say about this.
+As of this writing (July 2026), the repositories are located as follows:
+
+|                     |                                                                            |
+|--------------------:|:---------------------------------------------------------------------------|
+| _SERVER-REPOSITORY_ | [https://github.com/wrog/lambdamoo.git](https://github.com/wrog/lambdamoo) |
+|   _TEST-REPOSITORY_ | [https://github.com/wrog/l8tf.git](https://github.com/wrog/l8tf)           |
+
+If these have changed and for whatever reason we were not able to put
+up notices about where we've moved to, [the LambdaMOO site](https://lambda.moo.mud.org)
+or [my own site](https://wrog.net/moo) will likely have something to say
+about this.  Then
+
+3.  `cd `_SERVER-SRCDIR_
+4.  `../`_TEST-SRCDIR_`/install-l8tf`
+
+and everything proceeds as above in
+[building from a distribution](#user-content-building-from-a-distribution)
+
+Having _SERVER-SRCDIR_ and _TEST-SRCDIR_ as siblings of a common
+parent directory is the easiest and most-recommended setup.
+
+(Other arrangements can work, but too much cleverness with symbolic
+links or trying to have the repositories on differently mounted
+network drives may cause weirdness.  If you want _TEST-SRCDIR_
+to be within _SERVER-SRCDIR_, then you will need to learn about
+`.git/info/exclude`; I will strongly suggest __not__ trying
+to make _TEST-SRCDIR_ into a submodule.)
 
 ### VPATH builds
 
 To build in a different directory from where the sources live, useful
 to simultaneously create versions with different options set, you
-can instead do
+can do
 
-```
-    cd BUILD
-    PATH/TO/SRC/configure --srcdir=PATH/TO/SRC
+    cd _BUILD_
+    ./path/to/_SERVER-SRCDIR_/configure
     make
-```
 
-where `BUILD` is a fresh directory and `PATH/TO/SRC` is whatever path
-gets you from there back to the sources.  (E.g., if you wish to build
-within the subdirectory `b` of the source directory, you can:
+where _BUILD_ is a fresh directory.
 
-```
+E.g., if you are in _SERVER-SRCDIR_ and wish to build within the
+subdirectory `b`, you can:
+
     mkdir b
     cd b
-    ../configure --srcdir=..
+    ../configure
     make
-```
-
-).
 
 VPATH builds require the source directory to be pristine (i.e., no
 post-`./configure` or `make` artifacts can be present).  This means if
 you have previously done any building there, you will be needing to do
 at least a `make distclean` before any VPATH builds will be allowed.
 
-Note that `autoconf` always has to be run in the source directory
-(since it has to create the `./configure` script there).
+(Note that if you are running `autoconf` to recreate `configure`,
+that has to happen in _SERVER-SRCDIR_.)
 
 ### Prerequisites
 
@@ -117,15 +126,15 @@ Note that `autoconf` always has to be run in the source directory
 
 * `git` (surprise).
 
-* `autoconf` is from the GNU Autotools suite and is needed for
-  building `configure` and related scripts.
+* the GNU Autotools suite, including `autoconf`, `autotest` and `m4sh`,
+  is needed for building `configure` and the testing scripts.
 
   Try the latest version first.  As of this writing, `autoconf`
   versions in the range 2.69-2.73 are known to work with this
   distribution.
 
-  Also __never__ run `autoreconf`.  We are not using the full suite.
-  In particular, we are using neither `automake` nor `autoheader`,
+  Also __never__ run `autoreconf`.  We do not use the full suite.
+  In particular, we use neither `automake` nor `autoheader`,
   which will both get very confused.
 
 * `gperf` version 3.1 or later is needed for building `keywords.c`
@@ -133,9 +142,18 @@ Note that `autoconf` always has to be run in the source directory
 * A `yacc`-compatible parser generator is needed for building `parser.c`:
   Any of `yacc`, `bison`, or `byacc` will do.  (We do not use `lex`.)
 
+#### Test tools
+
+* `netcat`, there being multiple versions we know about
+  and the test configuration script will sort these out
+
+Currently, this the only additional requirement for testing,
+and, thus far, none of the test tools are required for
+building the server.
+
 #### Libraries
 
-For all library prerequisites, the library itself may well already be
+For a given library prerequisite, the library itself may well already be
 installed on your system, but you will also need the correponding
 build package with the `#include` headers (the `-dev` package in
 Debian/Ubuntu terminology).
@@ -143,6 +161,8 @@ Debian/Ubuntu terminology).
 In some cases, an extension may instead allow for building a
 statically linked library (`--with-ucdpath`, `--with-expatpath`)
 if you have the corresponding library source distribution.
+(In most cases these are simply builds that existed historically
+and there is no actual reason to prefer static linking.)
 
 * The `iconv` library is needed to support `encode_chars()` and
   `decode_chars()` which are available regardless of whether the
@@ -190,9 +210,7 @@ if you have the corresponding library source distribution.
 Once you have satisfied the prerequisites, `./configure` will reach the
 end of its run and you will see
 
-```
     config.status: creating options.h
-```
 
 Which means you now have an [`options.h`](./options.h) file, which
 lists all of the individual settings with the fully up-to-date and
@@ -764,6 +782,66 @@ loaded but _before_ any tasks (including the `$user_disconnected` or
 and if you `abort` or `quit` out of Emergency Wizard Mode,
 no tasks are run at all), to see what the settings were for
 the instance of the server that saved this checkpoint file.
+
+## Testing
+
+For detailed information on available tests, and various options for
+installing and running the test suites, start with _TEST-SRCDIR_`/README.md`
+
+### Conducting general tests on a distribution
+
+If you wish to generally test the viability of a distribution
+on a particular platform without having to choose a particular
+configuration or options, from the freshly unpacked distribution
+— or, equivalently from a server git repository once you have
+done `install-l8tf`, — you can do
+
+   `./tests/runall `_[SCHEDULE]_
+
+to launch a sequence of general tests and unit tests on a variety of
+configurations.
+
+_SCHEDULE_ is optional and defaults to `smoke` which is a fast,
+minimal-coverage schedule.  There are, of course, longer, slower ones.
+(You should test with `checkin` if you want your pull-request to have
+a prayer of being accepted.)
+
+(Note that you do this __before__ running `./configure` with a
+particular set of options.  Should it happen that you've already done
+a configure on the source directory, you will need to __undo__ it
+via either `make distclean` or, equivalently, supplying the
+`--distclean` option to `runall`, which needs to do multiple VPATH
+builds and thus requires a pristine source tree.)
+
+### Unit testing
+
+If you add `--enable-testing=unit` to the `configure` arguments,
+your "build" will have make targets and a test run directory that runs
+the unit tests without actually building a server.
+
+Some of these unit tests are useful utility programs in their own
+right.  Notably, `uT-bquota --report` will give you all relevant
+structure and value sizes for the chosen `BYTE_QUOTA_MODEL`; you can
+then, e.g., compare the `BQM_HW` results with the various abtract
+models to see how different your new, exotic hardware is.
+
+### Building without tests
+
+If it somehow matters that tests not be available for your build, you
+can add `--disable-testing` to the `configure` arguments to
+entirely prevent the creation of a test run directory.
+
+Or, if you only want to use _SERVER-REPOSITORY_ by itself, because
+_TEST-REPOSITORY_ is somehow unavailable (or is unexpectedly broken
+in your environment, or you Just Don`t Wanna use it), doing
+
+1.  `git clone `_SERVER-REPOSITORY_` `_SERVER-SRCDIR_
+2.  `cd `_SERVER-SRCDIR_
+3.  `autoconf`
+4.  `./configure`
+5.  `make`
+
+will provide the more historically authentic YOLO build-and-run experience.
 
 ## Historical material
 
