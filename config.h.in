@@ -122,6 +122,12 @@
 #undef mode_t
 #undef size_t
 
+/* gperf >= 3.1 changed the signature of its lookup function; the keyword size
+ * parameter went from unsigned int to size_t.  Use this to be compatible with
+ * both versions
+ */
+#undef gperf_kwdsize_t
+
 /* To implement the LambdaMOO built-in function `ctime()', which converts a
  * number of seconds since the POSIX `epoch' into a human-readable time/date
  * string, the server code needs to be able to find out the name of the local
