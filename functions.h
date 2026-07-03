@@ -89,9 +89,10 @@
    (*) It must have been allocated with alloc_data() and must be
        reclaimed by free_data() before the last bf_name() return.
 
-   (*) Use register_function_dbio() to declare read and write hooks
+   (*) Use register_function_state() to declare import and export hooks
        so that vdata from not-yet-completed built-in function calls
-       can be saved in db checkpoints.
+       can be saved in db checkpoints.  Use register_function_dbio()
+       for legacy database read and write hooks.
 
        [[[ Note that the read hook returns NULL to indicate failure,
            which then disallows bf_name() returning
@@ -169,6 +170,12 @@ typedef package (*bf_type) (Var, Byte, void *, Objid);
 typedef void    (*bf_write_type) (void *vdata);
 typedef void *  (*bf_read_type) (void);
 typedef void    (*bf_free_type) (void *vdata);
+/* `read' parses legacy database input and `write' is retained with that
+ * callback ABI.  `export' returns an owned payload; `import' borrows its
+ * payload for the call.
+ */
+typedef int     (*bf_export_type) (void *vdata, unsigned *version, Var *payload);
+typedef void *  (*bf_import_type) (unsigned version, Var payload);
 
 #define MAX_FUNC         256
 #define FUNC_NOT_FOUND   MAX_FUNC
@@ -185,6 +192,7 @@ extern unsigned register_function(const char *, int, int, bf_type,...);
 /* amends the previous register_function() call: */
 extern void register_function_dbio(bf_read_type, bf_write_type);
 extern void register_function_free(bf_free_type);
+extern void register_function_state(bf_import_type, bf_export_type);
 
 /*--------------*
  |  invocation  |
@@ -199,6 +207,8 @@ extern package call_bi_func(unsigned, Var, Byte, Objid, void *);
 
 extern void write_bi_func_data(Byte f_id, void *vdata);
 extern int read_bi_func_data(Byte f_id, void **vdata, Byte *pc);
+extern int export_bi_func_state(void *, Byte, unsigned *, Var *);
+extern int import_bi_func_state(Byte, unsigned, Var, void **);
 extern Byte *pc_for_bi_func_data(void);
 extern void free_bi_func_data(Byte f_id, void *vdata);
 

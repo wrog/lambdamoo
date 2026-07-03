@@ -98,7 +98,7 @@ DISTFILES = $(ALL_SRCS) Makefile.in config.h.in options.h.in \
 	ChangeLog.txt \
 	README.md README.rX README.1997 \
 	Extensions.md Version_Source.md \
-	MOOCodeSequences.txt AddingNewMOOTypes.txt \
+	MOOCodeSequences.txt SuspendResumeFormat.txt AddingNewMOOTypes.txt \
 	configure.ac extensions.ac extensions2_tutorial.ac \
 	options.ac aclocal.m4 \
 	restart restart.sh Minimal.db README.Minimal

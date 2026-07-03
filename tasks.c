@@ -1503,6 +1503,7 @@ read_task_queue(void)
 	}
 	rt_env = reorder_rt_env(old_rt_env, old_names, old_size, program);
 	program->first_lineno = first_lineno;
+	program->cached_lineno = first_lineno;
 
 	enqueue_ft(program, a, rt_env, MAIN_VECTOR, start_time, task_id);
     }
