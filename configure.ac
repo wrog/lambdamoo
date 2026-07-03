@@ -44,10 +44,9 @@ MOO_ALL_ARGUMENTS()dnl
 
 AC_PROG_MAKE_SET
 AC_PROG_YACC
-AC_CHECK_PROGS([GPERF], [gperf])
-[test "x$ac_cv_prog_GPERF" = x &&] AC_MSG_ERROR([[We need gperf]])dnl
-AC_ARG_VAR([GPERF],
-[The perfect hash function generator to use.  Defaults to 'gperf'.])
+MOO_PROG_GPERF
+AS_VAR_IF([[ac_cv_prog_GPERF]],[],
+  [AC_MSG_ERROR([[We need gperf]])])
 
 : ${CFLAGS="-std=c99"}
 AC_PROG_CC
@@ -60,6 +59,7 @@ test x$ac_cv_prog_cc_c99 = xno &&]
   AC_MSG_ERROR([[We need a C compiler that knows about C99]])dnl
 
 AC_USE_SYSTEM_EXTENSIONS
+MOO_TYPE_GPERF_KWDSIZE_T
 AC_PROG_CPP
 MOO_NEXT
 MOO_ALPHA

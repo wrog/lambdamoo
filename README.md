@@ -137,7 +137,7 @@ that has to happen in _SERVER-SRCDIR_.)
   In particular, we use neither `automake` nor `autoheader`,
   which will both get very confused.
 
-* `gperf` version 3.1 or later is needed for building `keywords.c`
+* `gperf` version 3.0 or later is needed for building `keywords.c`
 
 * A `yacc`-compatible parser generator is needed for building `parser.c`:
   Any of `yacc`, `bison`, or `byacc` will do.  (We do not use `lex`.)
