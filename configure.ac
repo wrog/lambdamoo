@@ -49,6 +49,7 @@ AC_CHECK_PROGS([GPERF], [gperf])
 AC_ARG_VAR([GPERF],
 [The perfect hash function generator to use.  Defaults to 'gperf'.])
 
+: ${CFLAGS="-std=c99"}
 AC_PROG_CC
 dnl  prior to 2.70 only tests for C89
 dnl    and AC_PROG_CC_C99 is needed to test for C99
