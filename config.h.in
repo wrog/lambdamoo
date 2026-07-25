@@ -38,6 +38,7 @@
 #undef _HPUX_SOURCE
 #undef _XOPEN_SOURCE
 #undef _GNU_SOURCE
+#undef __EXTENSIONS__
 
 /* The following symbols describe whether or not certain functions are declared
  * in header files on your system and, if so, where.  If, on your system, the
