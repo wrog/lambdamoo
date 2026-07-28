@@ -1,6 +1,6 @@
 # ax_xt.m4 - language to specify optional variant builds in autoconf
 # ===================================================================
-#serial 1
+#serial 2
 #
 # DESCRIPTION
 #
@@ -290,7 +290,8 @@ AS_CASE([[$_ax_xt_v]],
 #=======================
 
 # dummy routine to ensure this file is loaded
-AC_DEFUN([AX_XT_INIT],[])
+AC_DEFUN([AX_XT_INIT],
+[AC_REQUIRE([AX_LP_INIT])])
 
 AX_LP_DEFINE_LANGUAGE([XT],[AX_XT_DEFINE])
 
