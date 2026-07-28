@@ -512,9 +512,7 @@ stream_add_recoded_chars(Stream *s,
 	    stream_beginfill(s, inbytesleft * 2,
 			     &outbuf, &outbytesleft);
 	    ret = (size_t) -1 !=
-		iconv(cd, (void *)&inbuf, &inbytesleft,
-		      /*  Evidently, Solaris wants inbuf
-			  to be const. Oh, well... */
+		iconv(cd, (ICONV_CONST char **)&inbuf, &inbytesleft,
 		      &outbuf, &outbytesleft);
 
 	    stream_endfill(s, outbytesleft);
