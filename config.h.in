@@ -280,9 +280,10 @@
 #undef HAVE_QUADMATH_H
 
 /*
- * need endianness for iconv
+ * needed for iconv:
  */
 #undef WORDS_BIGENDIAN
+#undef ICONV_CONST
 
 /*----------------------*
  |  Extension settings  |

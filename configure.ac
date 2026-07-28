@@ -21,6 +21,7 @@ AC_INIT([LambdaMOO],[1.9+])
 fi]
 
 AC_CONFIG_MACRO_DIR([ac_include])
+AC_CONFIG_AUX_DIR([ac_aux])
 AC_CONFIG_SRCDIR([Minimal.db])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_HEADERS([options.h])
@@ -109,10 +110,11 @@ MOO_HAVE_FUNC_LIBS([mkfifo waitpid sigemptyset], [posix])
 dnl *** was -lposix /lib/libposix.a (is this still needed?)
 MOO_HAVE_FUNC_LIBS([crypt], [crypt crypt_d])
 dnl
-MOO_ICONV_LIBS
-AS_VAR_IF([moo_cv_iconv_lib],[fail],
-  [AC_MSG_ERROR([[no library for iconv_open, may need to install]])
-])
+AC_C_BIGENDIAN
+AM_ICONV
+AS_VAR_IF([am_func_iconv],[yes],[LIBS="$LIBICONV $LIBS"],
+  [AC_MSG_CHECKING([for iconv])AC_MSG_RESULT([$am_cv_func_iconv_summary])
+   AC_MSG_ERROR([[need working iconv library]])])
 AC_CHECK_HEADERS([unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h])
 AC_CHECK_FUNCS([remove rename poll select strerror strftime strtoul matherr])
 AC_CHECK_FUNCS([random lrand48 wait3 wait2 sigsetmask sigprocmask sigrelse])
