@@ -1,6 +1,6 @@
 # ax_lp.m4 - m4sugar parser for domain-specific user-defined language
 # ====================================================================
-#serial 1
+#serial 2
 #
 # SYNOPSIS
 #
@@ -142,6 +142,10 @@ m4_define([ax_lp_map_beta_sep],
 m4_map_args_sep([m4_indir([_ax_lp_ beta],],[)],[$3],m4_shift3($@))dnl
 m4_popdef([_ax_lp_ beta])])
 
+
+# ensure this file is seen by ac_local
+# (apparently m4_defun is not good enough)
+AC_DEFUN([AX_LP_INIT],[])
 
 #-------------------------------------------------------
 # AX_LP_PARSE_SCRIPT( <LANGUAGE>, <INITARGS>, <SCRIPT>)
