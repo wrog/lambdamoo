@@ -68,6 +68,7 @@ static Timer_ID task_alarm_id;
 static const char *handler_verb_name;	/* For in-DB traceback handling */
 static Var handler_verb_args;
 
+
 #ifdef WAIF_DICT
 /*
  * Jay Carlson's WAIF DICT patch.  These static moo-strings are needed for
@@ -726,6 +727,33 @@ call_verb2(Objid this, const char *vname
     set_rt_env_var(env, SLOT_ARGS, args);	/* no var_dup */
 
     return E_NONE;
+}
+
+
+/**** individual operation helpers ****/
+
+/* shifts:  caller is assumed to have verified
+ *   0 <= by < INT_TYPE_BITSIZE
+ * since, per C99, anything else is undefined behavior.
+ */
+static inline Num
+shift_left(Num n, UNum by)
+{
+    return (Num)((UNum)n << by);
+}
+static inline Num
+logical_shift_right(Num n, UNum by)
+{
+    return (Num)((UNum)n >> by);
+}
+static inline Num
+arithmetic_shift_right(Num n, UNum by)
+{
+    /* C99: (signed negative)>>n is undefined behavior
+     * because it *might* be 1s-complement; bleah.
+     * ***FIX?: Can autoconf verify 2s-complement?
+     */
+    return (Num)(n >= 0 ? (UNum)n >> by : ~(~(UNum)n >> by));
 }
 
 static inline int
@@ -2197,29 +2225,23 @@ do {								\
 				|| (UNum)rhs.v.num >= sizeof(Num) * CHAR_BIT) {
 				ans.type = TYPE_ERR;
 				ans.v.err = E_INVARG;
-			    } else {
-
-/*
- * Defines logical and arithmetic right shift behavior. Needed because
- * ANSI C doesn't define what happens when you right shift a negative
- * number.
- */
-#define HIGHONES(c)	((Num)(~(UNum)0 << (sizeof(Num) * CHAR_BIT - (c))))
-#define LOWONES(c)	(~HIGHONES(c))
-#define LOGSHIFTR(a,b)	((Num)((UNum)a >> b) & LOWONES(b))
-#define SHIFTR(a,b)	(LOGSHIFTR(a,b) ^ (a < 0 ? HIGHONES(b) : 0))
-
+			    }
+			    else {
 				ans.type = TYPE_INT;
 				if (eop == EOP_SHL)
-				    ans.v.num = lhs.v.num << rhs.v.num;
+				    ans.v.num = shift_left(lhs.v.num,
+							   (UNum)rhs.v.num);
 				else if (eop == EOP_SHR)
-				    ans.v.num = SHIFTR(lhs.v.num, rhs.v.num);
+				    ans.v.num = arithmetic_shift_right(lhs.v.num,
+								      (UNum)rhs.v.num);
 				else if (eop == EOP_LSHR)
-				    ans.v.num = LOGSHIFTR(lhs.v.num, rhs.v.num);
+				    ans.v.num = logical_shift_right(lhs.v.num,
+								   (UNum)rhs.v.num);
 				else
 				    panic("Can't happen in EOP bitwise operators!");
 			    }
-			} else {
+			}
+			else {
 			    ans.type = TYPE_ERR;
 			    ans.v.err = E_TYPE;
 			}
