@@ -671,8 +671,15 @@ SIMPLE_BINARY(multiply, *)
 			ans.v.err = E_TYPE;			\
 		    } else if (a.type == TYPE_INT		\
 			       && b.v.num != 0) {		\
-			ans.type = TYPE_INT;			\
-			ans.v.num = a.v.num iop b.v.num;	\
+			if (a.v.num == NUM_MIN			\
+			    && b.v.num == -1) {			\
+			    /* undefined behavior; can trap */	\
+			    ans.type = TYPE_INT;		\
+			    ans.v.num = a.v.num iop 1;		\
+			} else {				\
+			    ans.type = TYPE_INT;		\
+			    ans.v.num = a.v.num iop b.v.num;	\
+			}					\
 		    } else if (a.type == TYPE_FLOAT		\
 			       && fl_unbox(b.v.fnum) != 0.0) {	\
 			FlNum d = fexpr;			\
