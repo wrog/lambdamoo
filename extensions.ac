@@ -70,10 +70,7 @@ END_UCD_MAKE
 
   %require relib
     --with- relib = LIB,..
-      %?  choose RE engine (ylo,pcre)
-
-    # yes, this is a hack:
-    # %ac_yes AS_IF([[$moo_xt_do_unicode]], [%LIBS%[=pcre]], [%LIBS%[=ylo]])
+      %?  choose RE engine (ylo,pcre{,1,2})
 
     %lib ylo
       %ac <<END
@@ -83,17 +80,34 @@ AS_IF([[$moo_xt_do_unicode]],
 END
       XT_CSRCS = regexpr.c pattern_ylo.c
       XT_HDRS = regexpr.h
-    %lib pcre
+
+    %lib pcre1
       XT_CSRCS = pattern_pcre.c
       %ac <<END
 MOO_LIB_PCRE1([%USE%],
-  [%FAIL%[="PCRE library not found (must be PCRE1, not PCRE2;
+  [%FAIL%[="PCRE version 1 library not found;
    use 'apt-get install libpcre3-dev' in Debian or Ubuntu;
-   Fedora, Red Hat, MacOS homebrew all have 'pcre' packages)"]],
-  [%FAIL%[="-lpcre cannot be used:  This PCRE1 library lacks
+   Fedora, Red Hat, MacOS homebrew all have 'pcre' packages"]],
+  [%FAIL%[="-lpcre cannot be used:  This PCRE(1) library lacks
    either support for UTF-8 or for Unicode character properties.
    We need at least version 8."]])
 END
+
+    %lib pcre2 HAVE_PCRE2
+      XT_CSRCS = pattern_pcre.c
+      %ac <<END
+MOO_LIB_PCRE2([%USE%],
+  [%FAIL%[="PCRE version 2 library not found;
+   use 'apt-get install libpcre2-dev' in Debian or Ubuntu;
+   Fedora, Red Hat, MacOS homebrew all have 'pcre2' packages."]],
+  [%FAIL%[="-lpcre2-8 lacks required Unicode-property support."]])
+END
+
+    %lib_list pcre = pcre1, pcre2
+    %lib_list yes  = ylo, pcre
+
+    # don't need this anymore, left here for posterity
+    # %ac_yes AS_IF([[$moo_xt_do_unicode]], [%LIBS%[=pcre]], [%LIBS%[=ylo]])
 
 ##==============
 %%extension xml
@@ -186,6 +200,28 @@ AS_IF([[test "$moo_cv_icuuc_lib" = yes]],[[
   LIBS="-licuuc $LIBS"]
   $1],[$2])])
 
+# MOO_LIB_PCRE2( <IF-FOUND>, <IF-NOT-FOUND>, <IF-BROKEN> )
+#
+AC_DEFUN([MOO_LIB_PCRE2],
+[AC_CHECK_LIB([pcre2-8], [pcre2_match_8], [
+AC_CACHE_CHECK([[whether -lpcre2-8 was built with required features]],
+  [moo_lib_cv_pcre2_unicode],
+[[_moo_save_libs=$LIBS
+LIBS="-lpcre2-8 $LIBS"]
+# A cross-built PCRE2 cannot be queried; a successful link is the best evidence.
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[@%:@ define PCRE2_CODE_UNIT_WIDTH 8
+@%:@ include <pcre2.h>]],[[
+  uint32_t have_unicode;
+  pcre2_config(PCRE2_CONFIG_UNICODE, &have_unicode);
+  return have_unicode ? 0 : 1;
+]])], [[moo_lib_cv_pcre2_unicode=yes]], [[moo_lib_cv_pcre2_unicode=no]],
+      [[moo_lib_cv_pcre2_unicode=yes]])[
+LIBS=$_moo_save_libs]])
+AS_IF([[test $moo_lib_cv_pcre2_unicode = yes]],[[
+  LIBS="-lpcre2-8 $LIBS"]
+  $1], [$3])], [[moo_lib_cv_pcre2_unicode=no]
+$2])])
+
 # MOO_LIB_PCRE1( <IF-FOUND>, <IF-NOT-FOUND>, <IF-BROKEN> )
 #
 AC_DEFUN([MOO_LIB_PCRE1],
@@ -194,12 +230,14 @@ AC_CACHE_CHECK([[whether -lpcre was built with required features]],
   [moo_lib_cv_pcre_utf8],
 [[_moo_save_libs=$LIBS
 LIBS="-lpcre $LIBS"]
+# A cross-built PCRE1 cannot be queried; a successful link is the best evidence.
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[@%:@ include <pcre.h>]],[[
   int have_utf8, have_props;
   pcre_config(PCRE_CONFIG_UTF8, &have_utf8);
   pcre_config(PCRE_CONFIG_UNICODE_PROPERTIES, &have_props);
   return (have_utf8 && have_props) ? 0 : 1;
-]])], [[moo_lib_cv_pcre_utf8=yes]], [[moo_lib_cv_pcre_utf8=no]])[
+]])], [[moo_lib_cv_pcre_utf8=yes]], [[moo_lib_cv_pcre_utf8=no]],
+      [[moo_lib_cv_pcre_utf8=yes]])[
 LIBS=$_moo_save_libs]])
 AS_IF([[test $moo_lib_cv_pcre_utf8 = yes]],[[
   LIBS="-lpcre $LIBS"]

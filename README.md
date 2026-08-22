@@ -190,18 +190,15 @@ and there is no actual reason to prefer static linking.)
   use `--with-ucdpath=/path/to/libucd-build` to incorporate the build
   statically.)
 
-* If Unicode is enabled then the regexp extension will require `pcre`,
-  the Perl Compatible Regular Expression library to implement
-  `match()` properly for strings containing non-ASCII codepoints.
+* If Unicode is enabled then the regexp extension will require a Perl
+  Compatible Regular Expression library to implement `match()` properly
+  for strings containing non-ASCII codepoints.  Either of PCRE1 or PCRE2
+  may be used (PCRE1 is better tested for now, but this will likely change).
 
-  And here we mean the old version, PCRE1, not the newer and fancier
-  PCRE2.  Confusingly, in Debian and Ubuntu, the package to install
-  for this is actually labeled `libpcre3-dev`, I have no idea why.
-  Debian has also helpfully deprecated this library so it is not
-  available in the latest release (you will need to install it from
-  the `bookworm` repositories or make sure you retain it when
-  upgrading).  MacOS homebrew, FreeBSD, and Fedora all have perfectly
-  reasonable `pcre` packages that do the right thing.
+  PCRE2 means its 8-bit library.  In Debian and Ubuntu, install the
+  `libpcre2-dev` package.  MacOS Homebrew, FreeBSD, and Fedora provide
+  it in their `pcre2` packages.  Older systems can instead provide PCRE1
+  with UTF-8 and Unicode-property support (version 8 or later).
 
 ### Using ./configure
 
@@ -470,11 +467,18 @@ associated new options
 The regular expression matching facility has been repackaged as a
 mandatory extension in order to expose the library choices, currently
 
-*  `--with-relib=pcre`,
-   use Perl-Compatible Regular Expressions version 1
-
 *  `--with-relib=ylo`,
-   use the original implementation (not suitable for Unicode)
+   the original implementation (not suitable for Unicode)
+
+*  `--with-relib=pcre2`,
+   Perl-Compatible Regular Expressions version 2
+
+*  `--with-relib=pcre1`,
+   Perl-Compatible Regular Expressions version 1
+
+*  `--with-relib=pcre`,
+   Perl-Compatible Regular Expressions, whichever version is
+   available (equivalent to `--with-relib=pcre1,pcre2`, for now)
 
 For developers, the extensions framework is described in [Extensions.md](./Extensions.md).
 

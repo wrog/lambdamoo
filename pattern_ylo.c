@@ -152,7 +152,7 @@ match_pattern(Pattern p, const char *string, Match_Indices * indices,
 		      is_reverse ? -len : len,
 		      &regs)) {
     default:
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < MATCH_GROUP_LIMIT; i++) {
 	    /* Convert from 0-based open interval to 1-based closed one. */
 	    indices[i].start = regs.start[i] + 1;
 	    indices[i].end = regs.end[i];
