@@ -283,6 +283,13 @@
  *----------------------*/
 
 /*
+ * For Perl Compatible Regular Expressions, use the PCRE2 API;
+ * otherwise pattern_pcre.c uses the PCRE1 API.
+ * (This has no effect on pattern_ylo.c)
+ */
+#undef HAVE_PCRE2
+
+/*
  * --enable-unicode core implementation is present
  * (we are using general UTF-8 in strings)
  */

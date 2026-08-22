@@ -768,7 +768,7 @@ do_match(Var arglist, int reverse)
     int i;
     Pattern pat;
     Var ans;
-    Match_Indices regs[10];
+    Match_Indices regs[MATCH_GROUP_LIMIT];
 
     subject = arglist.v.list[1].v.str;
     pattern = arglist.v.list[2].v.str;
@@ -790,9 +790,9 @@ do_match(Var arglist, int reverse)
 	    ans.v.list[4].type = TYPE_STR;
 	    ans.v.list[1].v.num = utf_char_index(subject, regs[0].start);
 	    ans.v.list[2].v.num = utf_char_index(subject, regs[0].end + 1) - 1;
-	    ans.v.list[3] = new_list(9);
+	    ans.v.list[3] = new_list(MATCH_GROUP_LIMIT - 1);
 	    ans.v.list[4].v.str = str_ref(subject);
-	    for (i = 1; i <= 9; i++) {
+	    for (i = 1; i < MATCH_GROUP_LIMIT; i++) {
 		ans.v.list[3].v.list[i] = new_list(2);
 		ans.v.list[3].v.list[i].v.list[1].type = TYPE_INT;
 		ans.v.list[3].v.list[i].v.list[1].v.num = utf_char_index(subject, regs[i].start);
