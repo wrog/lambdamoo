@@ -24,6 +24,14 @@ typedef struct {
     int start, end;
 } Match_Indices;
 
+/*
+ * Number of match index entries produced by match_pattern(), including the
+ * whole match at index zero.  This controls matching storage only; supporting
+ * more groups would also require changes to the pattern translators and their
+ * backreference syntax, among other things.
+ */
+#define MATCH_GROUP_LIMIT 10
+
 typedef struct {
     void *ptr;
 } Pattern;
