@@ -545,10 +545,10 @@ static package
 bf_set_player_flag(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 {				/* (object, yes/no) */
     Var obj;
-    char bool;
+    char player_flag;
 
     obj = arglist.v.list[1];
-    bool = is_true(arglist.v.list[2]);
+    player_flag = is_true(arglist.v.list[2]);
 
     free_var(arglist);
 
@@ -557,9 +557,9 @@ bf_set_player_flag(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid pr
     else if (!is_wizard(progr))
 	return make_error_pack(E_PERM);
 
-    if (bool) {
+    if (player_flag)
 	db_set_object_flag(obj.v.obj, FLAG_USER);
-    } else {
+    else {
 	boot_player(obj.v.obj);
 	db_clear_object_flag(obj.v.obj, FLAG_USER);
     }
