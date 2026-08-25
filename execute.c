@@ -595,7 +595,7 @@ free_activation(activation * ap, char data_too)
     free_program(ap->prog);
 
     if (data_too && ap->bi_func_pc && ap->bi_func_data)
-	free_data(ap->bi_func_data);
+	free_bi_func_data(ap->bi_func_id, ap->bi_func_data);
     /* else bi_func_state will be later freed by bi_function */
 }
 
@@ -2764,13 +2764,21 @@ bf_call_function(Var arglist, Byte next, void *vdata, Objid progr)
 	free_data(s);
     }
 
-    if (p.kind == BI_CALL) {
+    if (p.kind == BI_CALL && p.u.call.pc != 0) {
 	s = alloc_data(sizeof(struct cf_state));
 	s->fnum = fnum;
 	s->data = p.u.call.data;
 	p.u.call.data = s;
     }
     return p;
+}
+
+static void
+bf_call_function_free(void *vdata)
+{
+    struct cf_state *s = vdata;
+    if (s->data)
+	free_bi_func_data(s->fnum, s->data);
 }
 
 static void
@@ -2982,7 +2990,8 @@ void
 register_execute(void)
 {
     register_function("call_function", 1, -1, bf_call_function, TYPE_STR),
-	register_function_dbio(bf_call_function_read, bf_call_function_write);
+	register_function_dbio(bf_call_function_read, bf_call_function_write),
+	register_function_free(bf_call_function_free);
 
     register_function("raise", 1, 3, bf_raise, TYPE_ANY, TYPE_STR, TYPE_ANY);
     register_function("suspend", 0, 1, bf_suspend, TYPE_INT);

@@ -50,6 +50,7 @@ struct bft_entry {
     bf_type func;
     bf_read_type read;
     bf_write_type write;
+    bf_free_type free;
     int protected;
 };
 
@@ -78,6 +79,7 @@ register_function(const char *name, int minargs, int maxargs, bf_type func, ...)
     bf_table[top_bf_table].func = func;
     bf_table[top_bf_table].read  = NULL;
     bf_table[top_bf_table].write = NULL;
+    bf_table[top_bf_table].free  = NULL;
     bf_table[top_bf_table].protected = 0;
 
     var_type *proto = NULL;
@@ -104,6 +106,16 @@ register_function_dbio(bf_read_type read, bf_write_type write)
     bf_table[top_bf_table-1].read = read;
     bf_table[top_bf_table-1].write = write;
 }
+
+void
+register_function_free(bf_free_type free)
+{
+    if (top_bf_table == 0)
+	panic("register_function_dbio: register_function() not called?");
+
+    bf_table[top_bf_table-1].free = free;
+}
+
 
 /*** looking up functions -- by name or num ***/
 
@@ -207,6 +219,21 @@ call_bi_func(unsigned n, Var arglist, Byte func_pc,
      */
     return (*(f->func)) (arglist, func_pc, vdata, progr);
     /* f->func is responsible for freeing/using up arglist. */
+}
+
+void
+free_bi_func_data(Byte f_id, void *vdata)
+{
+    if (!vdata)
+	return;
+
+    if (f_id >= top_bf_table)
+	panic("FREE_BI_FUNC_DATA for unknown function??");
+
+    bf_free_type freefn = bf_table[f_id].free;
+    if (freefn)
+	freefn(vdata);
+    free_data(vdata);
 }
 
 void
