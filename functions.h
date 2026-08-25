@@ -99,6 +99,16 @@
            (??? FIX ??? -- not a problem so far).
        ]]]
 
+   (*) If *vdata is a structure with pointers to objects that are
+       refcounted or otherwise needing to be reclaimed themselves
+       prior to *vdata itself being reclaimed, then
+
+       use register_function_free() to declare a destructor to do
+       whatever is needed before the final free_data() so that those
+       situations (e.g., task_queue destruction) where vdata is
+       reclaimed outside of the bf_name() that created it do not leak
+       memory.
+
 **********************/
 
 /*------------------*
@@ -158,6 +168,7 @@ package make_space_pack(void);
 typedef package (*bf_type) (Var, Byte, void *, Objid);
 typedef void    (*bf_write_type) (void *vdata);
 typedef void *  (*bf_read_type) (void);
+typedef void    (*bf_free_type) (void *vdata);
 
 #define MAX_FUNC         256
 #define FUNC_NOT_FOUND   MAX_FUNC
@@ -173,6 +184,7 @@ extern unsigned register_function(const char *, int, int, bf_type,...);
 
 /* amends the previous register_function() call: */
 extern void register_function_dbio(bf_read_type, bf_write_type);
+extern void register_function_free(bf_free_type);
 
 /*--------------*
  |  invocation  |
@@ -188,6 +200,7 @@ extern package call_bi_func(unsigned, Var, Byte, Objid, void *);
 extern void write_bi_func_data(Byte f_id, void *vdata);
 extern int read_bi_func_data(Byte f_id, void **vdata, Byte *pc);
 extern Byte *pc_for_bi_func_data(void);
+extern void free_bi_func_data(Byte f_id, void *vdata);
 
 /*--------------*
  |  protection  |
