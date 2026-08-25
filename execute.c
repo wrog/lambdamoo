@@ -575,6 +575,26 @@ push_activation(void)
 	return 0;
 }
 
+struct cf_state {
+    unsigned fnum;
+    void *data;
+};
+
+static unsigned call_function_fnum = FUNC_NOT_FOUND;
+
+static void
+free_bi_func_data(unsigned fnum, void *data)
+{
+    if (!data)
+	return;
+    if (fnum == call_function_fnum) {
+	struct cf_state *s = data;
+	if (s->data)
+	    free_bi_func_data(s->fnum, s->data);
+    }
+    free_data(data);
+}
+
 void
 free_activation(activation * ap, char data_too)
 {
@@ -595,7 +615,7 @@ free_activation(activation * ap, char data_too)
     free_program(ap->prog);
 
     if (data_too && ap->bi_func_pc && ap->bi_func_data)
-	free_data(ap->bi_func_data);
+	free_bi_func_data(ap->bi_func_id, ap->bi_func_data);
     /* else bi_func_state will be later freed by bi_function */
 }
 
@@ -2733,11 +2753,6 @@ setup_activ_for_eval(Program * prog)
 
 /**** built in functions ****/
 
-struct cf_state {
-    unsigned fnum;
-    void *data;
-};
-
 static package
 bf_call_function(Var arglist, Byte next, void *vdata, Objid progr)
 {
@@ -2764,7 +2779,7 @@ bf_call_function(Var arglist, Byte next, void *vdata, Objid progr)
 	free_data(s);
     }
 
-    if (p.kind == BI_CALL) {
+    if (p.kind == BI_CALL && p.u.call.pc != 0) {
 	s = alloc_data(sizeof(struct cf_state));
 	s->fnum = fnum;
 	s->data = p.u.call.data;
@@ -2981,10 +2996,11 @@ bf_task_stack(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 void
 register_execute(void)
 {
-    register_function_with_read_write("call_function", 1, -1, bf_call_function,
-				      bf_call_function_read,
-				      bf_call_function_write,
-				      TYPE_STR);
+    call_function_fnum =
+	register_function_with_read_write("call_function", 1, -1, bf_call_function,
+					  bf_call_function_read,
+					  bf_call_function_write,
+					  TYPE_STR);
     register_function("raise", 1, 3, bf_raise, TYPE_ANY, TYPE_STR, TYPE_ANY);
     register_function("suspend", 0, 1, bf_suspend, TYPE_INT);
     register_function("read", 0, 2, bf_read, TYPE_OBJ, TYPE_ANY);
