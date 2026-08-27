@@ -590,12 +590,12 @@ register_objects(void)
 {
     register_function("toobj", 1, 1, bf_toobj, TYPE_ANY);
     register_function("typeof", 1, 1, bf_typeof, TYPE_ANY);
-    register_function_with_read_write("create", 1, 2, bf_create,
-				      bf_create_read, bf_create_write,
-				      TYPE_OBJ, TYPE_OBJ);
-    register_function_with_read_write("recycle", 1, 1, bf_recycle,
-				      bf_recycle_read, bf_recycle_write,
-				      TYPE_OBJ);
+    register_function("create", 1, 2, bf_create, TYPE_OBJ, TYPE_OBJ),
+	register_function_dbio(bf_create_read, bf_create_write);
+
+    register_function("recycle", 1, 1, bf_recycle, TYPE_OBJ),
+	register_function_dbio(bf_recycle_read, bf_recycle_write);
+
     register_function("object_bytes", 1, 1, bf_object_bytes, TYPE_OBJ);
     register_function("valid", 1, 1, bf_valid, TYPE_OBJ);
     register_function("parent", 1, 1, bf_parent, TYPE_OBJ);
@@ -606,9 +606,8 @@ register_objects(void)
     register_function("is_player", 1, 1, bf_is_player, TYPE_OBJ);
     register_function("set_player_flag", 2, 2, bf_set_player_flag,
 		      TYPE_OBJ, TYPE_ANY);
-    register_function_with_read_write("move", 2, 2, bf_move,
-				      bf_move_read, bf_move_write,
-				      TYPE_OBJ, TYPE_OBJ);
+    register_function("move", 2, 2, bf_move, TYPE_OBJ, TYPE_OBJ),
+	register_function_dbio(bf_move_read, bf_move_write);
 }
 
 
