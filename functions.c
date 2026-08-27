@@ -56,11 +56,9 @@ struct bft_entry {
 static struct bft_entry bf_table[MAX_FUNC];
 static unsigned top_bf_table = 0;
 
-static unsigned
-register_common(const char *name, int minargs, int maxargs, bf_type func,
-		bf_read_type read, bf_write_type write, va_list args)
+unsigned
+register_function(const char *name, int minargs, int maxargs, bf_type func, ...)
 {
-    int va_index;
     int num_arg_types = maxargs == -1 ? minargs : maxargs;
 
     if (top_bf_table == MAX_FUNC) {
@@ -78,46 +76,33 @@ register_common(const char *name, int minargs, int maxargs, bf_type func,
     bf_table[top_bf_table].minargs = minargs;
     bf_table[top_bf_table].maxargs = maxargs;
     bf_table[top_bf_table].func = func;
-    bf_table[top_bf_table].read = read;
-    bf_table[top_bf_table].write = write;
+    bf_table[top_bf_table].read  = NULL;
+    bf_table[top_bf_table].write = NULL;
     bf_table[top_bf_table].protected = 0;
 
-    if (num_arg_types > 0)
-	bf_table[top_bf_table].prototype =
-	    mymalloc(num_arg_types * sizeof(var_type), M_PROTOTYPE);
-    else
-	bf_table[top_bf_table].prototype = 0;
-    for (va_index = 0; va_index < num_arg_types; va_index++)
-	bf_table[top_bf_table].prototype[va_index] = va_arg(args, var_type);
+    var_type *proto = NULL;
+    if (num_arg_types > 0) {
+	va_list args;
+	int va_index;
 
+	proto = mymalloc(num_arg_types * sizeof(var_type), M_PROTOTYPE);
+	va_start(args, func);
+	for (va_index = 0; va_index < num_arg_types; ++va_index)
+	    proto[va_index] = va_arg(args, var_type);
+	va_end(args);
+    }
+    bf_table[top_bf_table].prototype = proto;
     return top_bf_table++;
 }
 
-unsigned
-register_function(const char *name, int minargs, int maxargs,
-		  bf_type func,...)
+void
+register_function_dbio(bf_read_type read, bf_write_type write)
 {
-    va_list args;
-    unsigned ans;
+    if (top_bf_table == 0)
+	panic("register_function_dbio: register_function() not called?");
 
-    va_start(args, func);
-    ans = register_common(name, minargs, maxargs, func, 0, 0, args);
-    va_end(args);
-    return ans;
-}
-
-unsigned
-register_function_with_read_write(const char *name, int minargs, int maxargs,
-				  bf_type func, bf_read_type read,
-				  bf_write_type write,...)
-{
-    va_list args;
-    unsigned ans;
-
-    va_start(args, write);
-    ans = register_common(name, minargs, maxargs, func, read, write, args);
-    va_end(args);
-    return ans;
+    bf_table[top_bf_table-1].read = read;
+    bf_table[top_bf_table-1].write = write;
 }
 
 /*** looking up functions -- by name or num ***/

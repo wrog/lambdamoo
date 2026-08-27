@@ -2981,10 +2981,9 @@ bf_task_stack(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr)
 void
 register_execute(void)
 {
-    register_function_with_read_write("call_function", 1, -1, bf_call_function,
-				      bf_call_function_read,
-				      bf_call_function_write,
-				      TYPE_STR);
+    register_function("call_function", 1, -1, bf_call_function, TYPE_STR),
+	register_function_dbio(bf_call_function_read, bf_call_function_write);
+
     register_function("raise", 1, 3, bf_raise, TYPE_ANY, TYPE_STR, TYPE_ANY);
     register_function("suspend", 0, 1, bf_suspend, TYPE_INT);
     register_function("read", 0, 2, bf_read, TYPE_OBJ, TYPE_ANY);
