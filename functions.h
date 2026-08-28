@@ -26,6 +26,81 @@
 #include "program.h"
 #include "structures.h"
 
+/******************************************
+ |  HOW BUILT-IN FUNCTIONS WORK
+ |  (+ rules to follow to prevent leaks):
+ +-----------------------------------------
+
+   When a built-in function is first invoked, the corresponding
+   bf_fname() declared using register_function() is called as follows:
+
+     bf_name( arglist, 1, NULL, progr )
+
+   progr, an object, indicates whose permissions we are running with.
+   arglist, the list of arguments, has already been type-checked
+   to the extent specified and carries a refcount (that this
+   function now has the responsiblity to free_var())
+
+   The return value, a 'package', specifies the immediate outcome
+   (return something, raise error, abort, suspend...).  If this is
+   something *other* than a (.kind=) BI_CALL *with* .pc nonzero,
+   this built-in invocation is then deemed resolved.
+
+   Returning BI_CALL -- make_call_pack(pc, vdata) -- means a
+   subsidiary verb call has been set up (see execute:call_verb*),
+   i.e., a new activation has been pushed with the vm jumped to the
+   right place.
+
+   Never return make_call_pack(1, ...).  1 is reserved.
+
+   .pc zero -- tail_call_pack() -- means that the resolution of the
+   verb call will *be* the resolution of this built-in invocation.
+   Always use tail_call_pack() for this.
+
+   Never return make_call_pack(0, non-NULL).
+
+   Returning BI_CALL with .pc nonzero means bf_name() *will* be called
+   again -- even in cases of external error or the task getting
+   aborted -- as follows:
+
+     bf_name( return_value, pc, vdata, progr )
+
+   where return_value is from the verb call and carries a refcount,
+   while pc and vdata are from the call package previously returned.
+   bf_name() can be re-called as many times as you want and pc values
+   other than 0 or 1 can be arbitrarily re-used.  The structure of
+   vdata can depend on pc.
+
+   [[[ There is currently no way to tell the difference between a
+       normal verb call return of 0 and a verb call having done a
+       raise/abort other than that, in the latter case, subsequent
+       BI_CALL returns will immediately call bf_name() again,
+       completing the sequence of bf_name() calls as if there had been
+       no external error but not actually calling any other verbs.
+
+       Meaning, when writing bf_name(), keep in mind that zero *might*
+       be an error in which case further verb calls will not do what
+       you expect, though, since verb calls are UserLand, you should
+       never count on them doing anything in particular anyway.
+   ]]].
+
+   If vdata is ever non-NULL:
+
+   (*) It must have been allocated with alloc_data() and must be
+       reclaimed by free_data() before the last bf_name() return.
+
+   (*) Use register_function_dbio() to declare read and write hooks
+       so that vdata from not-yet-completed built-in function calls
+       can be saved in db checkpoints.
+
+       [[[ Note that the read hook returns NULL to indicate failure,
+           which then disallows bf_name() returning
+           make_call_pack(nonzero,NULL) for this builtin at all
+           (??? FIX ??? -- not a problem so far).
+       ]]]
+
+**********************/
+
 /*------------------*
  |  struct package  |
  *------------------*/
@@ -71,7 +146,7 @@ package make_int_pack(Num v);
 package make_float_pack(FlNum v);
 package make_string_pack(const char *s);
 package no_var_pack(void);
-package make_call_pack(Byte pc, void *data);
+package make_call_pack(Byte pc, void *vdata);
 package tail_call_pack(void);
 package make_suspend_pack(enum error (*) (vm, void *), void *);
 package make_space_pack(void);
@@ -110,9 +185,8 @@ extern package call_bi_func(unsigned, Var, Byte, Objid, void *);
  |  serialization  |
  *-----------------*/
 
-extern void write_bi_func_data(void *vdata, Byte f_id);
-extern int read_bi_func_data(Byte f_id, void **bi_func_state,
-			     Byte * bi_func_pc);
+extern void write_bi_func_data(Byte f_id, void *vdata);
+extern int read_bi_func_data(Byte f_id, void **vdata, Byte *pc);
 extern Byte *pc_for_bi_func_data(void);
 
 /*--------------*

@@ -2774,13 +2774,13 @@ bf_call_function(Var arglist, Byte next, void *vdata, Objid progr)
 }
 
 static void
-bf_call_function_write(void *data)
+bf_call_function_write(void *vdata)
 {
-    struct cf_state *s = data;
+    struct cf_state *s = vdata;
 
     dbio_printf("bf_call_function data: fname = %s\n",
 		name_func_by_num(s->fnum));
-    write_bi_func_data(s->data, s->fnum);
+    write_bi_func_data(s->fnum, s->data);
 }
 
 static void *
@@ -3151,7 +3151,7 @@ write_activ(activation a)
     dbio_printf("%u %u %u\n", a.pc, a.bi_func_pc, a.error_pc);
     if (a.bi_func_pc != 0) {
 	dbio_write_string(name_func_by_num(a.bi_func_id));
-	write_bi_func_data(a.bi_func_data, a.bi_func_id);
+	write_bi_func_data(a.bi_func_id, a.bi_func_data);
     }
 }
 

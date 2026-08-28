@@ -225,7 +225,7 @@ call_bi_func(unsigned n, Var arglist, Byte func_pc,
 }
 
 void
-write_bi_func_data(void *vdata, Byte f_id)
+write_bi_func_data(Byte f_id, void *vdata)
 {
     if (f_id >= top_bf_table)
 	errlog("WRITE_BI_FUNC_DATA: Unknown function number: %d\n", f_id);
@@ -367,13 +367,13 @@ make_string_pack(const char *s)
 }
 
 package
-make_call_pack(Byte pc, void *data)
+make_call_pack(Byte pc, void *vdata)
 {
     package p;
 
     p.kind = BI_CALL;
     p.u.call.pc = pc;
-    p.u.call.data = data;
+    p.u.call.data = vdata;
 
     return p;
 }
