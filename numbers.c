@@ -74,8 +74,8 @@ inrange_for_float_to_int(FlNum d)
 
 Var
 parse_number(unsigned flags, int32_t c_first,
-	     int32_t (*getch)(void),
-	     void (*ungetch)(int32_t))
+	     int32_t (*getch) (void),
+	     void (*ungetch) (int32_t))
 {
     int32_t c = c_first;
     Stream *ns = new_stream(30);
@@ -255,9 +255,9 @@ parse_number(unsigned flags, int32_t c_first,
 	goto parse_error;
 
     if (state & F_DOT)
-	(*ungetch)('.');
+	(*ungetch) ('.');
     if (state & F_MINUS)
-	(*ungetch)('-');
+	(*ungetch) ('-');
 
     /* "Dr. Korby ... was never here." */
     ret.v.err = E_NONE;
