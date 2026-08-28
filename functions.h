@@ -26,6 +26,82 @@
 #include "program.h"
 #include "structures.h"
 
+/******************************************
+ |  HOW BUILT-IN FUNCTIONS WORK
+ |  (+ rules to follow to prevent leaks):
+ +-----------------------------------------
+ *
+ *  Invoking a built-in function type-checks the arguments
+ *  according to the register_function() description,
+ *  then calls the registered bf_NAME() function as follows:
+ *
+ *    bf_NAME( arglist, pc = 1, vdata = NULL, caller_perms )
+ *
+ *  Here, arglist carries a refcount that bf_NAME() needs to
+ *  dispose of, meaning free_var(arglist) has to happen somewhere.
+ *
+ *  This must return a 'package' specifying the immediate outcome:
+ *    value returned, error raised, nested call, aborted, or suspended.
+ *
+ *  For BI_CALL (nested call) -- make_call_pack(pc, vdata) -- bf_NAME
+ *  is expected to have set up a nested verb call (see call_verb* in
+ *  execute.c), i.e., leaving the new activation pushed and the vm
+ *  jumped to the start of the verb code.
+ *
+ *  BI_CALL with .pc == 0 is a "tail call"
+ *  -- always use tail_call_pack() for this --
+ *  in which case whatever the nested call returns/raises
+ *  is what the built-in itself will return/raise.
+ *
+ *  For all other nested calls, bf_NAME() is repeatedly called until
+ *  the outcome is either a tail call or *not* a nested call [i].
+ *
+ *  Never do
+ *    make_call_pack(0, vdata != NULL)
+ *      no opportunity to reclaim vdata -> leak.
+ *    make_call_pack(1, ...)
+ *      pc == 1 is reserved for the first bf_NAME call.
+ *
+ *  Subsequent calls to bf_NAME() will be of the form
+ *
+ *    bf_NAME( return_value, pc, vdata, caller_perms )
+ *
+ *  where return_value is from the prior nested call (== 0 on error or
+ *  abort) and also carries a refcount.  All nonzero values indicate a
+ *  normal return, but it is not currently possible to disinguish a
+ *  zero return from the nested call having errored/aborted.
+ *
+ *  pc and vdata are from the prior bf_NAME() return package.
+ *  Use/re-use of pc values other than 0 or 1 is unrestricted,
+ *  but vdata must be non-NULL in those cases [ii,iii]
+ *
+ *  (*) Use alloc_data() to create vdata; reclaim using free_data()
+ *      before the final bf_NAME() return for this built-in
+ *      invocation
+ *
+ *  (*) Use register_function_dbio() to declare read and write hooks
+ *      so that vdata from not-yet-completed built-in function calls
+ *      can be saved in db checkpoint files [iii]
+ *
+ *  Notes:
+ *
+ *  [i] Currently, the sequence of bf_NAME() calls completes even if a
+ *      nested call raises an error or aborts the task -- for nested
+ *      calls after the error/abort the bf_NAME() calls still happen
+ *      but the nested calls themselves are skipped
+ *      (??? FIX ??? -- do we really still need to do this?)
+ *
+ *  [ii] ... unless this is database version 3 (DBV_FLOAT), in which
+ *      case pc==2 && vdata==NULL is allowed as a special bugfix that
+ *      gets immediately patched to be pc==0 and saved that way
+ *      in version 4+.
+ *
+ *  [iii] Read hook returning NULL to indicate failure is the main
+ *      reason we can't yet allow make_call_pack(2+,NULL)
+ *      (??? FIX ??? -- not a problem so far).
+ *
+ **********************/
+
 /*------------------*
  |  struct package  |
  *------------------*/
@@ -71,7 +147,7 @@ package make_int_pack(Num v);
 package make_float_pack(FlNum v);
 package make_string_pack(const char *s);
 package no_var_pack(void);
-package make_call_pack(Byte pc, void *data);
+package make_call_pack(Byte pc, void *vdata);
 package tail_call_pack(void);
 package make_suspend_pack(enum error (*) (vm, void *), void *);
 package make_space_pack(void);
@@ -110,9 +186,8 @@ extern package call_bi_func(unsigned, Var, Byte, Objid, void *);
  |  serialization  |
  *-----------------*/
 
-extern void write_bi_func_data(void *vdata, Byte f_id);
-extern int read_bi_func_data(Byte f_id, void **bi_func_state,
-			     Byte * bi_func_pc);
+extern void write_bi_func_data(Byte f_id, void *vdata);
+extern int read_bi_func_data(Byte f_id, void **vdata, Byte *pc);
 extern Byte *pc_for_bi_func_data(void);
 
 /*--------------*
