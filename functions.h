@@ -73,16 +73,16 @@ package make_string_pack(const char *s);
 package no_var_pack(void);
 package make_call_pack(Byte pc, void *data);
 package tail_call_pack(void);
-package make_suspend_pack(enum error (*)(vm, void *), void *);
+package make_suspend_pack(enum error (*) (vm, void *), void *);
 package make_space_pack(void);
 
 /*----------------*
  |  registration  |
  *----------------*/
 
-typedef package(*bf_type) (Var, Byte, void *, Objid);
-typedef void (*bf_write_type) (void *vdata);
-typedef void *(*bf_read_type) (void);
+typedef package (*bf_type) (Var, Byte, void *, Objid);
+typedef void    (*bf_write_type) (void *vdata);
+typedef void *  (*bf_read_type) (void);
 
 #define MAX_FUNC         256
 #define FUNC_NOT_FOUND   MAX_FUNC

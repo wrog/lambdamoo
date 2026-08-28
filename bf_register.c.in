@@ -19,7 +19,7 @@ do_all_registrations(void)
     regfn *rfn_after = rfn + sizeof(all_regfns) / sizeof(regfn);
 
     while (rfn < rfn_after)
-	(*rfn++)();
+	(*rfn++) ();
 
     db_init_hooks();
 }
