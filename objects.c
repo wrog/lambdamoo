@@ -422,7 +422,7 @@ first_proc(void *data, Objid oid)
 }
 
 static Objid
-get_first(Objid oid, int (*for_all) (Objid, int (*)(void *, Objid), void *))
+get_first(Objid oid, int (*for_all) (Objid, int (*) (void *, Objid), void *))
 {
     Objid result = NOTHING;
 
