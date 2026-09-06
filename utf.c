@@ -234,17 +234,20 @@ utf_byte_range(const char *s0, Num cis[2])
     } while (cis != cidone);
 }
 
-/* requires 1 <= bi <= strlen(s0)+2;
-   s0[bi] (bi as a 1-based byte index,
-   meaning s0[bi-1] in C terms,
-   is assumed to be a character start but never dereferenced.  */
+/* requires bi <= strlen(s0)+2 (caller must check/know).
+   bi, as a 1-based byte index, is assumed to be a character start
+   s0[bi] (meaning s0[bi-1] in C terms) is not checked if bi>1.
+   bi<=1 is treated as if s0 is preceded by arbitrarily many
+   1-byte chars so that those byte and char "indices" are the same. */
 Num
 utf_char_index(const char *s0, Num bi)
 {
-    if (is_utf8_cont_byte(s0[0])) {
+    if (bi <= 1)
+	return bi;
+    if (is_utf8_cont_byte(s0[0]))
 	/* protect against backwards overruns. */
 	panic("UTF_CHAR_INDEX given malformed utf8");
-    }
+
     Num ci = 1;
     const char *s = s0 + bi - 1;
     while (s > s0) {
