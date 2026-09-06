@@ -29,6 +29,7 @@ Contents
       [<code>%disabled</code>](#user-content-disabled),
       [<code>%implies</code>](#user-content-implies-keyword),
       [<code>%lib</code>](#user-content-lib-lib_keyword-cpp_keyword),
+      [<code>%lib_list</code>](#user-content-lib_list-lib_keyword--lib_keywordlib_keyword),
       [<code>%make</code>](#user-content-make-makefile_insert),
       [<code>%option_set</code>](#user-content-option_set-keyword--keywordkeyword),
       [<code>%option</code>](#user-content-option-keyword-cpp_keyword),
@@ -965,6 +966,18 @@ to _lib_keyword_ upcased, and the setting of `%cdefine`.
 
 Allowed subcmds are `%ac`, `%alt`, `=`, and `%build`
 
+#### `%lib_list` _lib_keyword_ `=` _lib_keyword_[,_lib_keyword_...]
+
+For `%require`, this declares a library search list _lib_keyword_ that,
+if included in a `--with-`_ew_name_`=` list expands as declared, i.e.,
+the libraries will be searched for in the order specified if this part
+of the search list is reached.
+
+If _lib_keyword_ is `yes`, then this declares the default search list
+(in which case `%ac_yes` should not be used).
+
+A `%lib_list` does __not__ get a cppname.
+
 #### `%make` _makefile_insert_
 
 For a `%build`, declare the additional dependencies and recipes to be
@@ -1007,7 +1020,8 @@ Declares a requirement for an extension.  Currently, the only
 supported notion of "requirement" is that of a required library that
 needs to be linked in order for the extension to function.
 
-Allowed subcmds are `--with-`, `%cdefine`, `%ac_yes`, and `%lib`.
+Allowed subcmds are `--with-`, `%cdefine`, `%ac_yes`, `%lib`,
+and `%lib_list`.
 
 Candidate libraries to satisfy the requirement are declared using
 `%lib` and, if the extension is enabled, the library search loop
@@ -1015,8 +1029,10 @@ tests them in the order specified by the `--with-`_ew_name_
 argument given by the user, which defaults to `yes`, which,
 in turn, can be
 
-*  declared directly with `m4` code using `%ac_yes`, or is,
-   by default,
+*  defined and set as a list keyword by `%lib_list`,
+*  declared directly with `m4` code using `%ac_yes`
+   _(this possibility may get deprecated)_, or, otherwise, is,
+   by default
 *  the list of all `%lib` declarations in the order they occur.
 
 #### `=` (_VAR_ `=` _value_)
