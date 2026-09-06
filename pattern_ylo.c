@@ -17,6 +17,9 @@
 
 #include "pattern.h"
 
+#include "config.h"
+#include "options.h"
+
 #include "my-ctype.h"
 #include "my-stdlib.h"
 #include "my-string.h"
