@@ -27,14 +27,15 @@ Contents
       [<code>%build</code>](#user-content-build),
       [<code>%dirvar</code>](#user-content-dirvar-varname),
       [<code>%disabled</code>](#user-content-disabled),
-      [<code>%implies</code>](#user-content-implies-other_keyword),
-      [<code>%lib</code>](#user-content-lib-keyword-cpp_keyword),
+      [<code>%implies</code>](#user-content-implies-keyword),
+      [<code>%lib</code>](#user-content-lib-lib_keyword-cpp_keyword),
+      [<code>%lib_list</code>](#user-content-lib_list-lib_keyword--lib_keywordlib_keyword),
       [<code>%make</code>](#user-content-make-makefile_insert),
-      [<code>%option_set</code>](#user-content-option_set-os_keyword--keyword-keyword-),
+      [<code>%option_set</code>](#user-content-option_set-keyword--keywordkeyword),
       [<code>%option</code>](#user-content-option-keyword-cpp_keyword),
       [<code>%path</code>](#user-content-path-directory_path),
       [<code>%require</code>](#user-content-require-requirement_name),
-      [<code>=</code> or VAR <code>=</code> value](#user-content--var--value),
+      [<code>=</code> (<code><em>VAR</em> = <em>value</em></code>)](#user-content--var--value),
   + [MakeVar Reference](#user-content-makevar-reference)
 
 * [Philosophical Issues](#user-content-philosophical-issues)
@@ -746,7 +747,7 @@ Declares a `--with-` argument for `./configure`.
 
 If the parent declaration is `%require`, the expected form of the argument is
 `--with-`_ew_name_`=`_lib_keywords_, where _lib_keywords_ is a
-comma--separated list of library keywords in preference order.  The
+comma-separated list of library keywords in preference order.  The
 default (`yes` keyword) is to search for all of the libraries in order
 declared.
 
@@ -951,28 +952,40 @@ assigned the (absolute) build directory path (whether this comes from
 Indicates that an extension is disabled by default.
 Otherwise it is enabled by default.
 
-#### `%implies` _other_keyword_
+#### `%implies` _keyword_
 
-For `%option`, indicates that _other_keyword_, which may be
+For `%option`, indicates that _keyword_, which may be
 a single option or a set thereof is implied by selecting
-__this__ option's keyword.
+the keyword of the parent `%option`.
 
-#### `%lib` _keyword_ [_cpp_keyword_]
+#### `%lib` _lib_keyword_ [_cpp_keyword_]
 
-Declares a library choice for `%require` with  _keyword_ and a
+Declares a library choice for `%require` with  _lib_keyword_ and a
 corresponding cppname as determined by _cpp_keyword_, which defaults
-to _keyword_ upcased, and the setting of `%cdefine`.
+to _lib_keyword_ upcased, and the setting of `%cdefine`.
 
 Allowed subcmds are `%ac`, `%alt`, `=`, and `%build`
+
+#### `%lib_list` _lib_keyword_ `=` _lib_keyword_[,_lib_keyword_...]
+
+For `%require`, this declares a library search list _lib_keyword_ that,
+if included in a `--with-`_ew_name_`=` list expands as declared, i.e.,
+the libraries will be searched for in the order specified if this part
+of the search list is reached.
+
+If _lib_keyword_ is `yes`, then this declares the default search list
+(in which case `%ac_yes` should not be used).
+
+A `%lib_list` does __not__ get a cppname.
 
 #### `%make` _makefile_insert_
 
 For a `%build`, declare the additional dependencies and recipes to be
 included in `Makefile` if this build is selected.
 
-#### `%option_set` _os_keyword_ `=` _keyword_ [_keyword_ ...]
+#### `%option_set` _keyword_ `=` _keyword_[,_keyword_...]
 
-For an `%%extension`, this declares a option set _os_keyword_ that, if
+For an `%%extension`, this declares a option set _keyword_ that, if
 selected, implies all of the right-hand-side _keywords_.
 
 An `%option_set` does __not__ get a cppname.
@@ -1007,15 +1020,22 @@ Declares a requirement for an extension.  Currently, the only
 supported notion of "requirement" is that of a required library that
 needs to be linked in order for the extension to function.
 
-Allowed subcmds are `--with-`, `%cdefine`, `%ac_yes`, and `%lib`.
+Allowed subcmds are `--with-`, `%cdefine`, `%ac_yes`, `%lib`,
+and `%lib_list`.
 
-The order for the library search loop is specified by the
-`--with-`_ew_name_ argument given by the user, which defaults to
-`yes`, which means whatever `%ac_yes` says, unless there is no
-`%ac_yes` declaration, in which case it's order in which the `%lib`
-declarations occur.
+Candidate libraries to satisfy the requirement are declared using
+`%lib` and, if the extension is enabled, the library search loop
+tests them in the order specified by the `--with-`_ew_name_
+argument given by the user, which defaults to `yes`, which,
+in turn, can be
 
-#### `=` [_VAR_ `=` _value_]
+*  defined and set as a list keyword by `%lib_list`,
+*  declared directly with `m4` code using `%ac_yes`
+   _(this possibility may get deprecated)_, or, otherwise, is,
+   by default
+*  the list of all `%lib` declarations in the order they occur.
+
+#### `=` (_VAR_ `=` _value_)
 
 Allowed in `%%extension`, `%lib` or `%build`.
 The specified variable setting is included in `Makefile` if the

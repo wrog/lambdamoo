@@ -518,13 +518,20 @@ AX_XT_DEFINE([%implies],
     ax_lp_set_add([$1], [opt_implies], [$2]))])
 
 
+# arguments of the form KWD = KWD1,KWD2,...
+m4_define([_AX_Xt_args_kwdlist_assignment], ax_lp_NTSC([m4_translit(
+  [[:args],
+   [m4_if(m4_bregexp([&2],[^[^TS,]+[TS]*=]),[-1],
+      [ax_lp_fatal([&1], [= expected])],
+      [m4_unquote(m4_split(
+         m4_bpatsubst(m4_bpatsubst([[[&2]]],
+             [^\(..[^=]*[^=TS]\)[TS]*=], [\1,]),
+           [,\(.\)&], [\1]),
+         [,[TS]*]))])]],
+  [&],[$])]))
+
 AX_XT_DEFINE([%option_set],
-  [:args], ax_lp_NTSC(
-    [m4_if(m4_bregexp([$2],[^[^TS]+[TS]*=]),[-1],
-      [ax_lp_fatal([$1],[= expected])],
-      [m4_bpatsubst([[$2]],
-        [^.\([^TS]+\)[TS]*=[TS]*\(.*\).$],
-        [[\1],m4_do(m4_split([\2],[,[TS]*]))])])]),
+  _AX_Xt_args_kwdlist_assignment,
 
   [:sets], [[os_mems]],
   [:var],  [[os_name], [$2]],
@@ -533,10 +540,11 @@ AX_XT_DEFINE([%option_set],
     m4_map_args_sep(
       [_AX_Xt_set_require_new([$1], [all_kwds],], [)], [],
       m4_do(m4_split([$2],[|]))),
-    m4_map_args_sep(
-      [_AX_Xt_set_require_prev([$1], [all_kwds],], [)], [],
-      m4_shift2($@)),
-    ax_lp_set_add_all([$1], [os_mems], m4_shift2($@)))],
+    m4_if([$#],[2],[],[m4_do(
+      m4_map_args_sep(
+        [_AX_Xt_set_require_prev([$1], [all_kwds],], [)], [],
+        m4_shift2($@)),
+      ax_lp_set_add_all([$1], [os_mems], m4_shift2($@)))]))],
 
   [:fnend], [m4_do(
      ax_lp_append([$1], [help],
@@ -560,6 +568,7 @@ AX_XT_DEFINE([%require],
   [:parent],  [%%extension],
   [:subcmds], [[--with-], [%cdefine], [%ac_yes]],
 
+  [:hashes],  [[lists]],
   [:sets], [[all_kwds], [all_cdefs]],
   [:vars], [[ew_name],[ew_var],[ew_vdesc],[yescode],
             [all_libs],[cdef_sym],[cdef_val],[rq_acarg],
@@ -568,6 +577,49 @@ AX_XT_DEFINE([%require],
   [:var],  [[cdef_mode], [0]],
   [:var],  [[rq_name],  [$2]],
   [:var],  [[ew],     [with]])
+
+
+# <CTX>,<W1>,<W2>,... -> [ <W1expansion> <W2expansion>...]
+m4_define([AX_Xt_expand_list],ax_lp_NTSC(
+  [m4_if([$C$2],[2],[],
+         [m4_if([$2],[],[],
+                [ax_lp_hash_get([$1],[lists],[$2],[[$2]])_])$0([$1],m4_shift2($@))])]))
+m4_define([_AX_Xt_expand_list],ax_lp_NTSC(
+  [m4_if([$C$2],[2],[],
+         [m4_if([$2],[],[],
+                [[S]ax_lp_hash_get([$1],[lists],[$2],[[$2]])])$0([$1],m4_shift2($@))])]))
+
+
+AX_XT_DEFINE([%lib_list],
+  [:parent], [%require],
+  _AX_Xt_args_kwdlist_assignment,
+
+  [:var],  [[ls_name], [$2]],
+  [:vars], [[ls_exp]],
+
+  [:fn], [m4_do(
+    m4_if([$#],[2],[],[m4_do(
+      m4_map_args_sep(
+        [_AX_Xt_set_require_prev([$1], [all_kwds],], [)], [],
+        m4_shift2($@)),
+      ax_lp_put([$1], [ls_exp], AX_Xt_expand_list([$1],m4_shift2($@))))]),
+    ax_lp_map_beta_sep([&],
+      [_AX_Xt_set_require_new([$1], [all_kwds], [&1])dnl
+ax_lp_hash_put([$1], [lists], [&1], ax_lp_get([$1], [ls_exp]))],
+      [],
+      m4_unquote(m4_split([$2],[|]))))],
+
+  [:fnend],
+  [m4_if(ax_lp_get([$1], [ls_name]), [yes],
+    [ax_lp_put([$1], [yescode],
+       m4_dquote("ax_lp_get([$1], [ls_exp])"))],
+    [ax_lp_append([$1], [icases], ax_lp_beta([&],
+[[,[[
+      &2]],  ]m4_if([&4],[],[[[]]],[[[[
+        &1rqtry_&3="$&1rqtry_&3 &4"]]]])],
+
+      ax_lp_get([$1], [g_sh_var_], [ls_name],
+                      [rq_name], [ls_exp])))])])
 
 
 # _AX_Xt_with_arg([ctx])
