@@ -8,22 +8,25 @@
  * "as is" without express or implied warranty.
  */
 
-# include "pattern.h"
+#include "pattern.h"
 
-# include <pcre.h>
-# include "my-stdio.h"
-# include "my-string.h"
+#include "config.h"
+#include "options.h"
 
-# include "streams.h"
-# include "utf.h"
-# include "storage.h"
-# include "exceptions.h"
+#include <pcre.h>
+#include "my-stdio.h"
+#include "my-string.h"
 
-# define DEBUG       0
-# define UTF8_CHECK  0
+#include "streams.h"
+#include "utf.h"
+#include "storage.h"
+#include "exceptions.h"
 
-# define MATCH_LIMIT            100000
-# define MATCH_LIMIT_RECURSION    5000
+#define DEBUG       0
+#define UTF8_CHECK  0
+
+#define MATCH_LIMIT            100000
+#define MATCH_LIMIT_RECURSION    5000
 
 typedef struct {
     pcre *code;
@@ -181,16 +184,16 @@ const char *translate(const char *moopat)
 		stream_printf(s, "\\%d(?#)", c - '0');
 		break;
 
-# define P_WORD          "[^\\W_]"
-# define P_NONWORD       "[\\W_]"
+#define P_WORD          "[^\\W_]"
+#define P_NONWORD       "[\\W_]"
 
-# define P_ALT(a, b)     "(?:"a"|"b")"
-# define P_LBEHIND(p)    "(?<="p")"
-# define P_LAHEAD(p)     "(?="p")"
-# define P_LOOKBA(b, a)  P_LBEHIND(b) P_LAHEAD(a)
+#define P_ALT(a, b)     "(?:"a"|"b")"
+#define P_LBEHIND(p)    "(?<="p")"
+#define P_LAHEAD(p)     "(?="p")"
+#define P_LOOKBA(b, a)  P_LBEHIND(b) P_LAHEAD(a)
 
-# define P_WORD_BEGIN    P_ALT("^", P_LBEHIND(P_NONWORD)) P_LAHEAD(P_WORD)
-# define P_WORD_END      P_LBEHIND(P_WORD) P_ALT("$", P_LAHEAD(P_NONWORD))
+#define P_WORD_BEGIN    P_ALT("^", P_LBEHIND(P_NONWORD)) P_LAHEAD(P_WORD)
+#define P_WORD_END      P_LBEHIND(P_WORD) P_ALT("$", P_LAHEAD(P_NONWORD))
 
 	    case 'b':
 		stream_add_string(s, P_ALT(P_WORD_BEGIN, P_WORD_END));
@@ -243,9 +246,9 @@ Pattern new_pattern(const char *pattern, int case_matters)
     Pattern p;
 
     options |= PCRE_UTF8;
-# if !UTF8_CHECK
+#if !UTF8_CHECK
     options |= PCRE_NO_UTF8_CHECK;
-# endif
+#endif
 
     /* allow PCRE to optimize .* at beginning of pattern by implicit anchor */
     options |= PCRE_DOTALL;
@@ -254,12 +257,12 @@ Pattern new_pattern(const char *pattern, int case_matters)
 	options |= PCRE_CASELESS;
 
     translated = translate(pattern);
-# if DEBUG
+#if DEBUG
     fprintf(stderr, __FILE__ ": \"%s\" => /%s/\n", pattern, translated);
-# endif
+#endif
 
     code = pcre_compile(translated, options, &error, &error_offset, 0);
-# if DEBUG
+#if DEBUG
     if (!code) {
 	fprintf(stderr, __FILE__ ": pcre_compile() failed: %s\n", error);
 	fprintf(stderr, __FILE__ ":   /%s/\n", translated);
@@ -268,7 +271,7 @@ Pattern new_pattern(const char *pattern, int case_matters)
 	    fputc(' ', stderr);
 	fprintf(stderr, "^\n");
     }
-# endif
+#endif
 
     if (code) {
 	pcre_extra *extra;
@@ -282,10 +285,10 @@ Pattern new_pattern(const char *pattern, int case_matters)
 	 * it's difficult to merge the study data later.
 	 */
 	extra = pcre_study(code, 0, &error);
-# if DEBUG
+#if DEBUG
 	if (error)
 	    fprintf(stderr, __FILE__ ": pcre_study() failed: %s\n", error);
-# endif
+#endif
 
 	if (!extra) {
 	    extra = pcre_malloc(sizeof(*extra));
@@ -355,9 +358,9 @@ Match_Result match_pattern(Pattern p, const char *string,
 	pcre_callout = 0;
     }
 
-# if !UTF8_CHECK
+#if !UTF8_CHECK
     options |= PCRE_NO_UTF8_CHECK;
-# endif
+#endif
 
     rc = pcre_exec(regexp->code, extra, string, memo_strlen(string), 0,
 		   options, ovec, sizeof(ovec) / sizeof(ovec[0]));
@@ -372,9 +375,9 @@ Match_Result match_pattern(Pattern p, const char *string,
 	    return MATCH_FAILED;
 
 	default:
-# if DEBUG
+#if DEBUG
 	    fprintf(stderr, __FILE__ ": pcre_exec() failed: %d\n", rc);
-# endif
+#endif
 	case PCRE_ERROR_MATCHLIMIT:
 	case PCRE_ERROR_RECURSIONLIMIT:
 	    return MATCH_ABORTED;
