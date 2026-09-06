@@ -87,9 +87,11 @@ utf_byte_range(const char *s UNUSED_, Num cis[2] UNUSED_)
 
 /*  Given a 1-based byte index into s of a character start, return the
  *  corresponding 1-based character index.  Unlike with byte_index()
- *  and byte_range() the argument needs to be range-checked in advance.
- *     1 <= bi <= strlen(s)+2
- *  is required.
+ *  and byte_range() the argument needs to be range-checked in advance
+ *  to ensure
+ *     bi <= strlen(s)+2
+ *  (For bi < 1, we pretend s is preceded by arbitrarily many 1-byte
+ *  chars so that the (fake) character index will be the same.)
  */
 inline Num
 utf_char_index(const char *s UNUSED_, Num bi) {
