@@ -346,10 +346,9 @@ struct vc_entry {
     struct vc_entry *next;
 };
 
-static vc_entry **vc_table = NULL;
-static int vc_size = 0;
+#define VC_SIZE 8192 /* must be a power of 2 */
 
-#define DEFAULT_VC_SIZE 7507
+static vc_entry *vc_table[VC_SIZE];
 
 void
 db_priv_affected_callable_verb_lookup(void)
@@ -357,12 +356,9 @@ db_priv_affected_callable_verb_lookup(void)
     int i;
     vc_entry *vc, *vc_next;
 
-    if (vc_table == NULL)
-	return;
-
     db_verb_generation++;
 
-    for (i = 0; i < vc_size; i++) {
+    for (i = 0; i < VC_SIZE; i++) {
 	vc = vc_table[i];
 	while (vc) {
 	    vc_next = vc->next;
@@ -370,18 +366,6 @@ db_priv_affected_callable_verb_lookup(void)
 	    myfree(vc, M_VC_ENTRY);
 	    vc = vc_next;
 	}
-	vc_table[i] = NULL;
-    }
-}
-
-static void
-make_vc_table(int size)
-{
-    int i;
-
-    vc_size = size;
-    vc_table = mymalloc(size * sizeof(vc_entry *), M_VC_TABLE);
-    for (i = 0; i < size; i++) {
 	vc_table[i] = NULL;
     }
 }
@@ -399,7 +383,7 @@ db_verb_cache_stats(void)
 	histogram[i] = 0;
     }
 
-    for (i = 0; i < vc_size; i++) {
+    for (i = 0; i < VC_SIZE; i++) {
 	depth = 0;
 	for (vc = vc_table[i]; vc; vc = vc->next)
 	    depth++;
@@ -435,7 +419,7 @@ db_log_cache_stats(void)
 	histogram[i] = 0;
     }
 
-    for (i = 0; i < vc_size; i++) {
+    for (i = 0; i < VC_SIZE; i++) {
 	depth = 0;
 	for (vc = vc_table[i]; vc; vc = vc->next)
 	    depth++;
@@ -469,10 +453,7 @@ db_find_callable_verb(Objid oid, const char *verb)
 #ifdef VERB_CACHE
     unsigned int hash, bucket;
     Objid first_parent_with_verbs = oid;
-    vc_entry *vc;
-
-    if (vc_table == NULL)
-	make_vc_table(DEFAULT_VC_SIZE);
+    vc_entry *vc, *prev = NULL;
 
     for (o = dbpriv_find_object(oid); o; o = dbpriv_find_object(o->parent)) {
 	if (o->verbdefs != NULL)
@@ -486,13 +467,18 @@ db_find_callable_verb(Objid oid, const char *verb)
     }
 
     hash = str_hash(verb) ^ (~first_parent_with_verbs);		/* ewww, but who cares */
-    bucket = hash % vc_size;
+    bucket = hash & (VC_SIZE - 1);
 
-    for (vc = vc_table[bucket]; vc; vc = vc->next) {
+    for (vc = vc_table[bucket]; vc; prev = vc, vc = vc->next) {
 	if (hash == vc->hash
 	    && first_parent_with_verbs == vc->oid_key
-	    && !mystrcasecmp(verb, vc->verbname)) {
+	    && (verb == vc->verbname || !mystrcasecmp(verb, vc->verbname))) {
 	    /* we haaave a winnaaah */
+	    if (prev) {
+		prev->next = vc->next;
+		vc->next = vc_table[bucket];
+		vc_table[bucket] = vc;
+	    }
 	    if (vc->h.verbdef) {
 		verbcache_hit++;
 		vh.ptr = &vc->h;
