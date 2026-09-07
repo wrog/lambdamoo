@@ -47,6 +47,7 @@
 #include "storage.h"
 #include "utils.h"
 #include "exceptions.h"
+#include "pattern.h"
 #include "streams.h"
 #include "utf-ctype.h"
 
@@ -176,6 +177,14 @@ init_version_structure(void)
 #endif
     {
 	Stream *ds = new_stream(5);
+	const char *re_which;
+
+	pattern_version(&re_which, ds);
+	BEGIN_GROUP(regexp);
+	_DSTR("lib", re_which);
+	_DSTR("version", reset_stream(ds));
+	END_GROUP();
+
 	BEGIN_GROUP(unicode);
 	_DSTR("version",     dotted_list(ds, my_unicode_version()));
 	_DSTR("lib",         my_unilib_name);

@@ -177,6 +177,13 @@ free_pattern(Pattern p)
     }
 }
 
+void
+pattern_version(const char **lib, Stream *s)
+{
+    *lib = "ylo";
+    stream_add_string(s, "0.0 1995-10-27");
+}
+
 
 /*
  * $Log$

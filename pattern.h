@@ -20,6 +20,9 @@
 
 #include "config.h"
 
+#include "streams.h"
+
+
 typedef struct {
     int start, end;
 } Match_Indices;
@@ -44,6 +47,8 @@ extern Pattern new_pattern(const char *pattern, int case_matters);
 extern Match_Result match_pattern(Pattern p, const char *string,
 				Match_Indices * indices, int is_reverse);
 extern void free_pattern(Pattern p);
+
+extern void pattern_version(const char **lib, Stream *s);
 
 #endif		/* !Pattern_H */
 
