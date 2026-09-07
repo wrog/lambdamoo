@@ -580,3 +580,30 @@ void free_pattern(Pattern p)
 }
 
 #endif    /* HAVE_PCRE2 */
+
+
+void
+pattern_version(const char **lib, Stream *s)
+{
+#if !HAVE_PCRE2
+    *lib = "pcre";
+    stream_add_string(s, pcre_version());
+
+#else  /* HAVE_PCRE2 */
+    ssize_t sz = pcre2_config(PCRE2_CONFIG_VERSION, NULL);
+
+    *lib = "pcre2";
+    if (sz < 0)
+	stream_add_string(s, "?? (FAIL1)");
+    else {
+	char *buf;
+	size_t bsz;
+	stream_beginfill(s, sz, &buf, &bsz);
+	if (pcre2_config(PCRE2_CONFIG_VERSION, buf) < 0)
+	    stream_add_string(s, "?? (FAIL2)");
+	else
+	    stream_endfill(s, bsz - sz);
+    }
+
+#endif  /* HAVE_PCRE2 */
+}
