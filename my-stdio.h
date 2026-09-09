@@ -61,7 +61,8 @@ extern int vfscanf(FILE *, const char *, va_list);
 
 #if !HAVE_RENAME
 #  include "my-unistd.h"
-#  define rename(old, new)	(link(old, new) && unlink(old))
+#  define rename(old, new)  \
+        (0 == link(old, new)  &&  0 == unlink(old))
 #endif
 
 #endif		/* !My_StdIO_H */
