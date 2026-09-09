@@ -21,6 +21,8 @@
 
 #include "db.h"
 
+#include <errno.h>
+
 #include "config.h"
 #include "options.h"
 
@@ -716,6 +718,25 @@ const char *reason_names[] =
 {"DUMPING", "CHECKPOINTING", "PANIC-DUMPING"};
 
 static int
+finish_dump_file(FILE *f)
+{
+    int error = 0;
+
+    if (fflush(f) != 0)
+	error = errno;
+    if (!error && fsync(fileno(f)) != 0)
+	error = errno;
+    if (fclose(f) != 0 && !error)
+	error = errno;
+
+    if (error) {
+	errno = error;
+	return 0;
+    }
+    return 1;
+}
+
+static int
 dump_database(Dump_Reason reason)
 {
     Stream *s = new_stream(100);
@@ -776,12 +797,28 @@ dump_database(Dump_Reason reason)
 		goto retryDumping;
 	    }
 	} else {
-	    fflush(f);
-	    fsync(fileno(f));
-	    fclose(f);
+	    if (!finish_dump_file(f)) {
+		log_perror("Finishing temporary dump file");
+		remove(temp_name);
+		if (reason == DUMP_CHECKPOINT) {
+		    errlog("Abandoning checkpoint attempt...\n");
+		    success = 0;
+		} else {
+		    int retry_interval = 60;
+
+		    errlog("Waiting %d seconds and retrying dump...\n",
+			   retry_interval);
+		    timer_sleep(retry_interval);
+		    goto retryDumping;
+		}
+		goto dumpingFinished;
+	    }
 	    oklog("%s on %s finished\n", reason_names[reason], temp_name);
 	    if (reason != DUMP_PANIC) {
+#if !HAVE_RENAME
+		/* The link/unlink compatibility rename cannot replace a file. */
 		remove(dump_db_name);
+#endif
 		if (rename(temp_name, dump_db_name) != 0) {
 		    log_perror("Renaming temporary dump file");
 		    success = 0;
@@ -792,7 +829,7 @@ dump_database(Dump_Reason reason)
 	log_perror("Opening temporary dump file");
 	success = 0;
     }
-
+  dumpingFinished:
     free_stream(s);
 
 #ifndef UNFORKED_CHECKPOINTS
