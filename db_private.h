@@ -168,6 +168,7 @@ extern Exception dbpriv_dbio_failed;
 				/* Raised by DBIO in case of failure (e.g.,
 				 * running out of disk space for the dump).
 				 */
+extern int dbpriv_dbio_errno;   /* errno when dbpriv_dbio_errno was raised */
 
 extern void dbpriv_set_dbio_input(FILE *);
 extern void dbpriv_set_dbio_output(FILE *);
