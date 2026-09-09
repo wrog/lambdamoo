@@ -21,6 +21,8 @@
 
 #include "db.h"
 
+#include <errno.h>
+
 #include "config.h"
 #include "options.h"
 
@@ -718,16 +720,22 @@ const char *reason_names[] =
 static int
 dump_database(Dump_Reason reason)
 {
+    const int retry_interval = 60;
     Stream *s = new_stream(100);
     char *temp_name;
     FILE *f;
-    int success;
-
-  retryDumping:
+    int success = 0;
 
     stream_printf(s, "%s.#%d#", dump_db_name, dump_generation);
     remove(reset_stream(s));	/* Remove previous checkpoint */
+    goto beginDumping;
 
+ retryDumping:
+    errlog("Waiting %d seconds and retrying dump...\n",
+	   retry_interval);
+    timer_sleep(retry_interval);
+
+ beginDumping:
     if (reason == DUMP_PANIC)
 	stream_printf(s, "%s.PANIC", dump_db_name);
     else {
@@ -757,42 +765,39 @@ dump_database(Dump_Reason reason)
     }
 #endif
 
-    success = 1;
-    if ((f = fopen(temp_name, "w")) != 0) {
-	dbpriv_set_dbio_output(f);
-	if (!write_db_file(reason_names[reason])) {
-	    log_perror("Trying to dump database");
-	    fclose(f);
-	    remove(temp_name);
-	    if (reason == DUMP_CHECKPOINT) {
-		errlog("Abandoning checkpoint attempt...\n");
-		success = 0;
-	    } else {
-		int retry_interval = 60;
-
-		errlog("Waiting %d seconds and retrying dump...\n",
-		       retry_interval);
-		timer_sleep(retry_interval);
-		goto retryDumping;
-	    }
-	} else {
-	    fflush(f);
-	    fsync(fileno(f));
-	    fclose(f);
-	    oklog("%s on %s finished\n", reason_names[reason], temp_name);
-	    if (reason != DUMP_PANIC) {
-		remove(dump_db_name);
-		if (rename(temp_name, dump_db_name) != 0) {
-		    log_perror("Renaming temporary dump file");
-		    success = 0;
-		}
-	    }
-	}
-    } else {
+    if (NULL == (f = fopen(temp_name, "w"))) {
 	log_perror("Opening temporary dump file");
-	success = 0;
+	goto dumpingFinished;
     }
+    dbpriv_set_dbio_output(f);
+    if (!write_db_file(reason_names[reason]))  /* sets dbpriv_dbio_errno */
+	;
+    else if (0 != fflush(f) ||
+	     0 != fsync(fileno(f)))
+	dbpriv_dbio_errno = errno;
 
+    if (   (0 != fclose(f) && !dbpriv_dbio_errno)
+	|| (0 != (errno = dbpriv_dbio_errno)))	{
+
+	log_perror("Trying to dump database");
+	remove(temp_name);
+	if (reason != DUMP_CHECKPOINT)
+	    goto retryDumping;
+
+	errlog("Abandoning checkpoint attempt...\n");
+	goto dumpingFinished;
+    }
+    oklog("%s on %s finished\n", reason_names[reason], temp_name);
+
+    if (reason != DUMP_PANIC &&
+	(0 != rename(temp_name, dump_db_name))) {
+
+	log_perror("Renaming temporary dump file");
+	goto dumpingFinished;
+    }
+    success = 1;
+
+  dumpingFinished:
     free_stream(s);
 
 #ifndef UNFORKED_CHECKPOINTS
