@@ -605,6 +605,7 @@ dbio_read_program(DB_Version version, const char *(*fmtr) (void *), void *data)
 /*********** Output ***********/
 
 Exception dbpriv_dbio_failed;
+int dbpriv_dbio_errno = 0;
 
 static FILE *output;
 
@@ -613,6 +614,7 @@ static Stream *dbio_float_stream = NULL;
 void
 dbpriv_set_dbio_output(FILE * f)
 {
+    dbpriv_dbio_errno = 0;
     output = f;
 }
 
@@ -625,6 +627,13 @@ dbpriv_dbio_output_finished(void)
     }
 }
 
+static inline void
+dbio_raise_error(void)
+{
+    dbpriv_dbio_errno = errno;
+    RAISE(dbpriv_dbio_failed, 0);
+}
+
 void
 dbio_printf(const char *format,...)
 {
@@ -632,7 +641,7 @@ dbio_printf(const char *format,...)
 
     va_start(args, format);
     if (vfprintf(output, format, args) < 0)
-	RAISE(dbpriv_dbio_failed, 0);
+	dbio_raise_error();
     va_end(args);
 }
 
