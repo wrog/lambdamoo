@@ -1174,7 +1174,7 @@ single_char_first_argument(Var arglist)
 {
     const char *s = arglist.v.list[1].v.str;
     uint32_t ucs = get_utf(&s);
-    if (*s)
+    if (ucs && *s)
 	ucs = 0;
     free_var(arglist);
     return ucs;
