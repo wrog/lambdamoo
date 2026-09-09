@@ -824,7 +824,8 @@ bf_min(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 		r = arglist.v.list[i];
     }
 
-    r = var_ref(r);
+    if (!bad_types)
+	r = var_ref(r);
     free_var(arglist);
     if (bad_types)
 	return make_error_pack(E_TYPE);
@@ -855,7 +856,8 @@ bf_max(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
 		r = arglist.v.list[i];
     }
 
-    r = var_ref(r);
+    if (!bad_types)
+	r = var_ref(r);
     free_var(arglist);
     if (bad_types)
 	return make_error_pack(E_TYPE);
