@@ -801,67 +801,48 @@ bf_tofloat(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUS
     return make_float_pack(d);
 }
 
-static package
-bf_min(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
-{
-    Var r;
-    int i, nargs = arglist.v.list[0].v.num;
-    int bad_types = 0;
 
-    r = arglist.v.list[1];
-    if (r.type == TYPE_INT) {	/* integers */
-	for (i = 2; i <= nargs; i++)
-	    if (arglist.v.list[i].type != TYPE_INT)
-		bad_types = 1;
-	    else if (arglist.v.list[i].v.num < r.v.num)
-		r = arglist.v.list[i];
-    } else {			/* floats */
-	for (i = 2; i <= nargs; i++)
-	    if (arglist.v.list[i].type != TYPE_FLOAT)
-		bad_types = 1;
-	    else if (fl_unbox(arglist.v.list[i].v.fnum)
-		     < fl_unbox(r.v.fnum))
-		r = arglist.v.list[i];
-    }
+#define _GET_INT(v)     ((v).num)
+#define _GET_FLOAT(v)   (fl_unbox((v).fnum))
+#define _MINMAX_LOOP(WHICH,CMP)				\
+  do {							\
+      int i;						\
+      for (i = 2; i <= nargs; i++)			\
+	  if (arglist.v.list[i].type != TYPE_##WHICH)	\
+	      goto type_error;				\
+	  else if (_GET_##WHICH(arglist.v.list[i].v)	\
+		   CMP _GET_##WHICH(r.v))		\
+	      r = arglist.v.list[i];			\
+  } while(0)
 
-    r = var_ref(r);
-    free_var(arglist);
-    if (bad_types)
-	return make_error_pack(E_TYPE);
-    else
-	return make_var_pack(r);
-}
+#define DEFINE_BF_MINMAX(bf_mnmx,CMP)			\
+  static package					\
+  bf_mnmx(Var arglist, Byte next UNUSED_,		\
+	  void *vdata UNUSED_, Objid progr UNUSED_)	\
+  {							\
+      int nargs = arglist.v.list[0].v.num;		\
+      package p = make_error_pack(E_TYPE);		\
+							\
+      Var r = arglist.v.list[1];			\
+      if (r.type == TYPE_INT)				\
+	  _MINMAX_LOOP(INT,CMP);			\
+      else						\
+	  _MINMAX_LOOP(FLOAT,CMP);			\
+							\
+      p = make_var_pack(var_ref(r));			\
+    type_error:						\
+      free_var(arglist);				\
+      return p;						\
+  }
 
-static package
-bf_max(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
-{
-    Var r;
-    int i, nargs = arglist.v.list[0].v.num;
-    int bad_types = 0;
+DEFINE_BF_MINMAX(bf_min,<)
+DEFINE_BF_MINMAX(bf_max,>)
 
-    r = arglist.v.list[1];
-    if (r.type == TYPE_INT) {	/* integers */
-	for (i = 2; i <= nargs; i++)
-	    if (arglist.v.list[i].type != TYPE_INT)
-		bad_types = 1;
-	    else if (arglist.v.list[i].v.num > r.v.num)
-		r = arglist.v.list[i];
-    } else {			/* floats */
-	for (i = 2; i <= nargs; i++)
-	    if (arglist.v.list[i].type != TYPE_FLOAT)
-		bad_types = 1;
-	    else if (fl_unbox(arglist.v.list[i].v.fnum)
-		     > fl_unbox(r.v.fnum))
-		r = arglist.v.list[i];
-    }
+#undef _GET_INT
+#undef _GET_FLOAT
+#undef _MINMAX_LOOP
+#undef DEFINE_BF_MINMAX
 
-    r = var_ref(r);
-    free_var(arglist);
-    if (bad_types)
-	return make_error_pack(E_TYPE);
-    else
-	return make_var_pack(r);
-}
 
 static package
 bf_abs(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
