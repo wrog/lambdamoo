@@ -209,7 +209,8 @@ extern Except_Arm *alloc_except(int, Arg_List *, Stmt *);
 extern Scatter *alloc_scatter(enum Scatter_Kind, int, Expr *);
 extern char *alloc_string(const char *);
 
-extern void dealloc_node(void *);
+extern Var astpool_ref_var(Var);
+
 extern void dealloc_string(char *);
 extern void free_stmt(Stmt *);
 

@@ -1069,8 +1069,6 @@ scatter_from_arglist(Arg_List *a)
 						       : SCAT_REST,
 				 a->expr->e.id, 0);
 	    anext = a->next;
-	    dealloc_node(a->expr);
-	    dealloc_node(a);
 	} else {
 	    yyerror("Scattering assignment targets must be simple variables.");
 	    return 0;

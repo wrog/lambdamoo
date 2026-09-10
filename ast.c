@@ -19,83 +19,117 @@
 
 #include "my-string.h"
 
+#include "arena.h"
 #include "list.h"
 #include "log.h"
 #include "program.h"
+#include "storage.h"
 #include "structures.h"
 #include "sym_table.h"
-#include "storage.h"
 #include "utils.h"
 
-struct entry {
-    void *ptr;
-    Memory_Type type;
-};
+static Arena *ast_arena = NULL;
 
-static int pool_size, next_pool_slot;
-static struct entry *pool;
+static char **tracked_strings = NULL;
+static int tracked_strings_count = 0;
+static int tracked_strings_size = 0;
+
+#if FLOATS_ARE_BOXED
+static FlBox *tracked_floats = NULL;
+static int tracked_floats_count = 0;
+static int tracked_floats_size = 0;
+#endif
+
+static void
+track_string(char *str)
+{
+    if (tracked_strings_count >= tracked_strings_size) {
+	tracked_strings_size =
+	    tracked_strings_size == 0 ? 16 : tracked_strings_size * 2;
+	tracked_strings = myrealloc(tracked_strings,
+				    tracked_strings_size * sizeof(char *),
+				    M_AST_POOL);
+    }
+    tracked_strings[tracked_strings_count++] = str;
+}
+
+#if FLOATS_ARE_BOXED
+static void
+track_float(FlBox fnum)
+{
+    if (tracked_floats_count >= tracked_floats_size) {
+	tracked_floats_size = tracked_floats_size == 0 ? 8 : tracked_floats_size * 2;
+	tracked_floats = myrealloc(tracked_floats,
+				   tracked_floats_size * sizeof(FlBox),
+				   M_AST_POOL);
+    }
+    tracked_floats[tracked_floats_count++] = fnum;
+}
+#endif
+
+static void
+release_ast(void)
+{
+    int i;
+
+    for (i = 0; i < tracked_strings_count; i++)
+	free_str(tracked_strings[i]);
+
+#if FLOATS_ARE_BOXED
+    for (i = 0; i < tracked_floats_count; i++) {
+	Var value;
+
+	value.type = TYPE_FLOAT;
+	value.v.fnum = tracked_floats[i];
+	free_var(value);
+    }
+#endif
+
+    if (tracked_strings) {
+	myfree(tracked_strings, M_AST_POOL);
+	tracked_strings = NULL;
+    }
+    tracked_strings_count = 0;
+    tracked_strings_size = 0;
+
+#if FLOATS_ARE_BOXED
+    if (tracked_floats) {
+	myfree(tracked_floats, M_AST_POOL);
+	tracked_floats = NULL;
+    }
+    tracked_floats_count = 0;
+    tracked_floats_size = 0;
+#endif
+
+    if (ast_arena) {
+	arena_destroy(ast_arena);
+	ast_arena = NULL;
+    }
+}
 
 void
 begin_code_allocation(void)
 {
-    pool_size = 10;
-    next_pool_slot = 0;
-    pool = mymalloc(pool_size * sizeof(struct entry), M_AST_POOL);
+    ast_arena = arena_create(4096, M_AST_POOL);
 }
 
 void
 end_code_allocation(int aborted)
 {
-    if (aborted) {
-	int i;
-
-	for (i = 0; i < next_pool_slot; i++) {
-	    if (pool[i].ptr != 0)
-		myfree(pool[i].ptr, pool[i].type);
-	}
-    }
-    myfree(pool, M_AST_POOL);
-}
-
-static void *
-astpool_ref(void *ptr, Memory_Type type)
-{
-    if (next_pool_slot >= pool_size) {	/* enlarge the pool */
-	struct entry *new_pool;
-	int i;
-
-	pool_size *= 2;
-	new_pool = mymalloc(pool_size * sizeof(struct entry), M_AST_POOL);
-	for (i = 0; i < next_pool_slot; i++) {
-	    new_pool[i] = pool[i];
-	}
-	myfree(pool, M_AST_POOL);
-	pool = new_pool;
-    }
-    pool[next_pool_slot].type = type;
-    return pool[next_pool_slot++].ptr = ptr;
+    if (aborted)
+	release_ast();
 }
 
 static inline void *
 allocate(int size, Memory_Type type)
 {
-    return astpool_ref(mymalloc(size, type), type);
-}
-
-static void
-deallocate(void *ptr)
-{
-    int i;
-
-    for (i = 0; i < next_pool_slot; i++) {
-	if (ptr == pool[i].ptr) {
-	    myfree(ptr, pool[i].type);
-	    pool[i].ptr = 0;
-	    return;
-	}
+    if (type == M_STRING) {
+	char *str = mymalloc(size, M_STRING);
+	track_string(str);
+	return str;
     }
-
-    errlog("DEALLOCATE: Unknown pointer deallocated\n");
+    (void)type;
+    return arena_alloc(ast_arena, size);
 }
 
 char *
@@ -110,7 +144,16 @@ alloc_string(const char *buffer)
 void
 dealloc_string(char *str)
 {
-    deallocate(str);
+    int i;
+    /* Backwards; most strings are released right after they're added */
+    for (i = tracked_strings_count; i-- > 0;) {
+	if (tracked_strings[i] == str) {
+	    free_str(str);
+	    tracked_strings[i] = tracked_strings[--tracked_strings_count];
+	    return;
+	}
+    }
+    free_str(str);
 }
 
 #if FLOATS_ARE_BOXED
@@ -118,7 +161,8 @@ dealloc_string(char *str)
 FlBox
 astpool_recv_float(FlBox fnump)
 {
-    return astpool_ref(fnump, M_FLOAT);
+    track_float(fnump);
+    return fnump;
 }
 
 /*
@@ -137,10 +181,19 @@ astpool_recv_float(FlBox fnump)
  */
 #endif	/* FLOATS_ARE_BOXED */
 
-void
-dealloc_node(void *node)
+Var
+astpool_ref_var(Var value)
 {
-    deallocate(node);
+    value = var_ref(value);
+
+    if (value.type == TYPE_STR)
+	track_string((char *) value.v.str);
+#if FLOATS_ARE_BOXED
+    else if (value.type == TYPE_FLOAT)
+	track_float(value.v.fnum);
+#endif
+
+    return value;
 }
 
 Stmt *
@@ -241,202 +294,10 @@ alloc_scatter(enum Scatter_Kind kind, int id, Expr * expr)
     return sc;
 }
 
-static void free_expr(Expr *);
-
-static void
-free_arg_list(Arg_List * args)
-{
-    Arg_List *arg, *next_arg;
-
-    for (arg = args; arg; arg = next_arg) {
-	next_arg = arg->next;
-	free_expr(arg->expr);
-	myfree(arg, M_AST);
-    }
-}
-
-static void
-free_scatter(Scatter * sc)
-{
-    Scatter *next_sc;
-
-    for (; sc; sc = next_sc) {
-	next_sc = sc->next;
-	if (sc->expr)
-	    free_expr(sc->expr);
-	myfree(sc, M_AST);
-    }
-}
-
-static void
-free_expr(Expr * expr)
-{
-    switch (expr->kind) {
-
-    case EXPR_VAR:
-	free_var(expr->e.var);
-	break;
-
-    case EXPR_ID:
-    case EXPR_LENGTH:
-	/* Do nothing. */
-	break;
-
-    case EXPR_PROP:
-    case EXPR_INDEX:
-    case EXPR_PLUS:
-    case EXPR_MINUS:
-    case EXPR_TIMES:
-    case EXPR_DIVIDE:
-    case EXPR_MOD:
-    case EXPR_AND:
-    case EXPR_OR:
-    case EXPR_EQ:
-    case EXPR_NE:
-    case EXPR_LT:
-    case EXPR_LE:
-    case EXPR_GT:
-    case EXPR_GE:
-    case EXPR_IN:
-    case EXPR_ASGN:
-    case EXPR_EXP:
-    case EXPR_BITAND:
-    case EXPR_BITXOR:
-    case EXPR_BITOR:
-    case EXPR_SHL:
-    case EXPR_SHR:
-    case EXPR_LSHR:
-	free_expr(expr->e.bin.lhs);
-	free_expr(expr->e.bin.rhs);
-	break;
-
-    case EXPR_COND:
-	free_expr(expr->e.cond.condition);
-	free_expr(expr->e.cond.consequent);
-	free_expr(expr->e.cond.alternate);
-	break;
-
-    case EXPR_VERB:
-	free_expr(expr->e.verb.obj);
-	free_expr(expr->e.verb.verb);
-	free_arg_list(expr->e.verb.args);
-	break;
-
-    case EXPR_RANGE:
-	free_expr(expr->e.range.base);
-	free_expr(expr->e.range.from);
-	free_expr(expr->e.range.to);
-	break;
-
-    case EXPR_CALL:
-	free_arg_list(expr->e.call.args);
-	break;
-
-    case EXPR_NEGATE:
-    case EXPR_NOT:
-    case EXPR_COMPLEMENT:
-	free_expr(expr->e.expr);
-	break;
-
-    case EXPR_LIST:
-	free_arg_list(expr->e.list);
-	break;
-
-    case EXPR_CATCH:
-	free_expr(expr->e.catch.try);
-	free_arg_list(expr->e.catch.codes);
-	if (expr->e.catch.except)
-	    free_expr(expr->e.catch.except);
-	break;
-
-    case EXPR_SCATTER:
-	free_scatter(expr->e.scatter);
-	break;
-
-    default:
-	errlog("FREE_EXPR: Unknown Expr_Kind: %d\n", expr->kind);
-	break;
-    }
-
-    myfree(expr, M_AST);
-}
-
 void
-free_stmt(Stmt * stmt)
+free_stmt(Stmt * stmt UNUSED_)
 {
-    Stmt *next_stmt;
-    Cond_Arm *arm, *next_arm;
-    Except_Arm *except, *next_e;
-
-    for (; stmt; stmt = next_stmt) {
-	next_stmt = stmt->next;
-
-	switch (stmt->kind) {
-
-	case STMT_COND:
-	    for (arm = stmt->s.cond.arms; arm; arm = next_arm) {
-		next_arm = arm->next;
-		free_expr(arm->condition);
-		free_stmt(arm->stmt);
-		myfree(arm, M_AST);
-	    }
-	    if (stmt->s.cond.otherwise)
-		free_stmt(stmt->s.cond.otherwise);
-	    break;
-
-	case STMT_LIST:
-	    free_expr(stmt->s.list.expr);
-	    free_stmt(stmt->s.list.body);
-	    break;
-
-	case STMT_RANGE:
-	    free_expr(stmt->s.range.from);
-	    free_expr(stmt->s.range.to);
-	    free_stmt(stmt->s.range.body);
-	    break;
-
-	case STMT_WHILE:
-	    free_expr(stmt->s.loop.condition);
-	    free_stmt(stmt->s.loop.body);
-	    break;
-
-	case STMT_FORK:
-	    free_expr(stmt->s.fork.time);
-	    free_stmt(stmt->s.fork.body);
-	    break;
-
-	case STMT_EXPR:
-	case STMT_RETURN:
-	    if (stmt->s.expr)
-		free_expr(stmt->s.expr);
-	    break;
-
-	case STMT_TRY_EXCEPT:
-	    free_stmt(stmt->s.catch.body);
-	    for (except = stmt->s.catch.excepts; except; except = next_e) {
-		next_e = except->next;
-		free_arg_list(except->codes);
-		free_stmt(except->stmt);
-		myfree(except, M_AST);
-	    }
-	    break;
-
-	case STMT_TRY_FINALLY:
-	    free_stmt(stmt->s.finally.body);
-	    free_stmt(stmt->s.finally.handler);
-	    break;
-
-	case STMT_BREAK:
-	case STMT_CONTINUE:
-	    break;		/* Nothing extra to free */
-
-	default:
-	    errlog("FREE_STMT: unknown Stmt_Kind: %d\n", stmt->kind);
-	    break;
-	}
-
-	myfree(stmt, M_AST);
-    }
+    release_ast();
 }
 
 

@@ -229,8 +229,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 		    || one->e.var.type != TYPE_INT
 		    || one->e.var.v.num != 1)
 		    panic("Not a literal one in DECOMPILE!");
-		else
-		    dealloc_node(one);
 		s = alloc_stmt(STMT_LIST);
 		s->s.list.id = id;
 		s->s.list.expr = list;
@@ -317,7 +315,7 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 	    break;
 	case OP_IMM:
 	    e = alloc_expr(EXPR_VAR);
-	    e->e.var = var_ref(READ_LITERAL());
+	    e->e.var = astpool_ref_var(READ_LITERAL());
 	    push_expr(HOT_OP(e));
 	    break;
 	case OP_G_PUSH:
@@ -413,7 +411,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 		    panic("Missing arglist for BI_FUNC_CALL in DECOMPILE!");
 		e = alloc_expr(EXPR_CALL);
 		e->e.call.args = a->e.list;
-		dealloc_node(a);
 		e->e.call.func = READ_BYTES(1);
 		push_expr(HOT_OP1(a, e));
 	    }
@@ -426,7 +423,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 		if (a->kind != EXPR_LIST)
 		    panic("Missing arglist for CALL_VERB in DECOMPILE!");
 		e = alloc_verb(pop_expr(), e2, a->e.list);
-		dealloc_node(a);
 		push_expr(HOT_OP3(e->e.verb.obj, a, e2, e));
 	    }
 	    break;
@@ -606,8 +602,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 				    || defallt->e.bin.lhs->e.id != sc->id)
 				    panic("Wrong variable in DECOMPILE!");
 				sc->expr = defallt->e.bin.rhs;
-				dealloc_node(defallt->e.bin.lhs);
-				dealloc_node(defallt);
 				is_hot = (is_hot || ptr == hot_byte);
 				if (*ptr++ != OP_POP)
 				    panic("Missing default POP in DECOMPILE!");
@@ -636,7 +630,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 			    || label_expr->e.var.type != TYPE_INT)
 			    panic("Not a catch label in DECOMPILE!");
 			label = label_expr->e.var.v.num;
-			dealloc_node(label_expr);
 			if (codes->kind == EXPR_LIST)
 			    a = codes->e.list;
 			else if (codes->kind == EXPR_VAR
@@ -645,7 +638,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 			    a = 0;
 			else
 			    panic("Not a codes expression in DECOMPILE!");
-			dealloc_node(codes);
 			DECOMPILE(bc, ptr, end, 0, 0);
 			is_hot = (is_hot || ptr++ == hot_byte);
 			if (*ptr++ != EOP_END_CATCH)
@@ -699,7 +691,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 				|| label_expr->e.var.type != TYPE_INT)
 				panic("Not an except label in DECOMPILE!");
 			    label = label_expr->e.var.v.num;
-			    dealloc_node(label_expr);
 			    e = pop_expr();
 			    if (e->kind == EXPR_LIST)
 				a = e->e.list;
@@ -709,7 +700,6 @@ decompile(Bytecodes bc, Byte * start, Byte * end, Stmt ** stmt_sink,
 				a = 0;
 			    else
 				panic("Not a codes expression in DECOMPILE!");
-			    dealloc_node(e);
 			    ex = alloc_except(-1, a, 0);
 			    ex->label = label;
 			    ex->next = s->s.catch.excepts;
