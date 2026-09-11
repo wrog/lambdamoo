@@ -1,0 +1,391 @@
+This file documents the representation used for suspended tasks in a LambdaMOO
+database. The representation describes language-level continuations and does
+not require an execution engine to use bytecode, instruction offsets, or a
+runtime stack.
+
+
+COMPATIBILITY GATES
+
+The database header contains a `DB_Version'. Portable suspended tasks begin
+at `DBV_ResumeKey'. Earlier database versions contain interpreter-specific
+state and are described under LEGACY INPUT below.
+
+The current database version writes VM format 1 and suspend format 1. Readers
+must reject unknown format or schema numbers. A format number describes
+record syntax; a schema number describes how semantic continuation keys and
+frame positions are assigned.
+
+
+VM FORMAT 1
+
+A suspended VM begins with:
+
+	portable vm 1 <top_activation> <max_stack_depth>
+
+`top_activation' is the zero-based index of the last activation. Therefore,
+the record contains `top_activation + 1' activations. `max_stack_depth' is
+the task's language-level call-depth limit.
+
+The root bytecode vector and the old `func_id' field are not written. The
+root code unit is recovered by resolving the root activation's ResumeKey.
+Every non-root activation must resolve to the main body of its saved program.
+
+
+ACTIVATION FORMAT
+
+Each activation begins with:
+
+	language version <version>
+  program first line <first_lineno>
+	<saved program source>
+	.
+
+The first-line field is required in schema 1; see PROGRAM SOURCE ORIGINS
+below. The saved program is followed by its runtime environment and the
+existing activation metadata containing the receiver, player, programmer, verb
+names, and debug flag, using the normal database encodings. These are
+followed by:
+
+	suspend format 1
+	resume <schema> <code_unit> <site>
+	frame <count> values
+	<value 1>
+	...
+	<value count>
+	builtin <continuation_version> <step>
+	<builtin_name>
+	[<payload>]
+
+The angle-bracketed values are descriptive placeholders, not literal text.
+Program values and strings use the ordinary database encodings.
+
+
+PROGRAM SOURCE ORIGINS
+
+Ordinary complete verb programs normally use 1. A relocated fork-body program
+uses its saved origin. This is language-level source metadata, not a ResumeKey
+component or execution destination.
+
+Readers must preserve this origin through execution and all subsequent native
+or interchange checkpoints. They may retain a program-level offset or add
+first_lineno - 1 to every source-bearing AST node, including nested bodies and
+handlers. Apply it exactly once. Do not change call-site, code-unit, or loop
+numbering. A writer using absolute AST lines must recover and write the origin
+when emitting source whose first language-level line is numbered 1 again.
+
+The existing first_lineno in a queued-fork record has the same meaning and
+needs no additional field. Its body becomes the loaded program's main unit;
+nested forks are numbered within that saved program. An already-suspended
+fork may instead retain the complete original verb with a nonzero code unit.
+The source origin belongs to the saved program, not the selected code unit.
+Always retain the saved running program version, never the object's edited
+current verb. Derive the resumed call's line from its program and ResumeKey,
+including when the wake value raises an error before another statement runs.
+
+Reject missing, nonpositive, or unrepresentable source origins in schema-1
+activations.
+
+
+RESUME SCHEMA 1
+
+The persistent continuation identity is `(schema, code_unit, site)':
+
+-- `schema' is 1 for the rules in this file.
+-- `code_unit' is 0 for the main program body. Fork bodies are numbered 1, 2,
+   and so on in fork-statement encounter preorder.
+-- `site' is the one-based call-site number within that code unit, assigned by
+   the canonical AST traversal below.
+
+Every key identifies the call boundary after its operands have been consumed
+and before its result has been delivered.
+
+The key contains no bytecode vector, bytecode offset, machine address, source
+line, source column, or engine-local continuation identifier. Recompiling the
+saved program creates a mapping from the key to the continuation understood by
+the current execution engine.
+
+The schema-1 traversal is a database compatibility contract. A compiler may
+optimize or lower the program in any way, but it must assign keys and frame
+layouts to the canonical AST before transformations that change this order.
+An incompatible language change requires a new schema and a reader for schema
+1.
+
+
+CANONICAL FRAME VALUES
+
+The frame record contains only language values. It never contains handler
+instruction offsets, catch markers, finally markers, native registers, or
+other engine bookkeeping.
+
+For a ResumeKey, the canonical frame layout is the sequence of live partial
+evaluation values at that call boundary, followed by the assignment temporary.
+Call operands are absent because the resume point is after operand consumption.
+Partial evaluation values are ordered from the oldest to the newest according
+to the canonical expression and statement evaluation order below. The
+assignment temporary is always the final position, even when its value is
+`none'.
+
+Exception-code values are language values and remain in the canonical frame.
+Handler destinations and catch/finally markers are execution-engine state and
+do not. An engine that needs such state recreates it from the resolved program
+and ResumeKey. The LambdaMOO bytecode interpreter does this using the
+`ResumePoint' reconstruction recipe generated with the program.
+
+`count' must exactly match the layout associated with the resolved ResumeKey.
+A mismatch rejects the activation. An engine with registers, SSA values, or
+another internal representation imports and exports the same positional
+language values through its own mapping for that key.
+
+
+PENDING FINALIZER VALUES
+
+Continuation layouts identify each active finalizer's pending reason and value
+slots. The reason precedes the value; both remain canonical language-value
+slots. The assignment temporary remains the final canonical frame slot.
+Conversion must use these slot roles, never guesses about the shape of arbitrary
+MOO data. Apply validation and conversion to every active finalizer, including
+outer finalizers when a nested finalizer suspends.
+
+The valid reasons are FIN_FALL_THRU (0), FIN_RAISE (1), FIN_UNCAUGHT (2),
+FIN_RETURN (3), and FIN_EXIT (5). Normal fallthrough carries zero; return carries
+the returned language value. FIN_ABORT (4) bypasses finalizers and is not a
+valid suspended finalizer reason. A return or new exception from a finalizer
+overrides its earlier pending reason in the usual way.
+
+PENDING LOOP EXITS
+
+For FIN_EXIT, the canonical value is an ordinary MOO list, shown here in literal
+notation:
+
+    {"loop-exit", code_unit, loop_ordinal, "break"}
+    {"loop-exit", code_unit, loop_ordinal, "continue"}
+
+The actual record uses normal database Var encoding, not literal source. The
+code unit is that of the containing activation. Loop ordinals follow the AST
+numbering rules below. "break" leaves the identified loop; "continue" performs
+its next iteration step, including the next while-condition evaluation or
+for-loop iteration. Named exits resolve to their target loop before export.
+This changes the interpretation of the existing value slot, not the frame size.
+
+Generate a loop-target table and finalizer-slot roles with each program's
+continuation layouts. Each loop target has semantic break and continue
+destinations. An interpreter may privately map these to instruction positions
+and stack depths; another engine may map them to structured continuations.
+Neither engine representation is serialized.
+
+On export, translate the annotated pending-exit value to exactly one semantic
+target using the loop-target table. Keep explicit semantic exit metadata during
+execution if optimization would otherwise make that mapping ambiguous.
+
+On import, validate the tag, arity, element types, action, code unit, ordinal,
+and whether the loop is a valid enclosing exit target for that finalizer.
+Reconstruct the destination and unwind depth from the saved program; never trust
+an imported engine offset. Reject unknown or ambiguous targets and the earlier
+development encoding {target_stack_depth, target_bytecode_pc}. Resolution must
+not re-evaluate loop expressions or already-executed statements.
+
+
+PENDING ERRORS
+
+For FIN_UNCAUGHT, the canonical value contains the complete existing five-element
+handle_uncaught_error argument list:
+
+    {error_code, error_message, error_value, traceback, formatted_traceback}
+
+The fourth element is the original six-field activation traceback, in its
+existing order. The fifth is the original list of formatted traceback lines.
+Do not regenerate either from the finalizer's current line or an edited verb.
+These are ordinary database Var records and add no canonical frame slots.
+Reject malformed payloads, including the earlier FIN_UNCAUGHT/zero encoding,
+whose missing diagnostics cannot be reconstructed safely.
+
+Retain these arguments as the runtime unwind value, or explicitly associate
+separate arguments with each pending finalizer for import and export. Multiple
+nested finalizers may carry different pending errors. FIN_UNCAUGHT bypasses
+exception handlers while running remaining finalizers, then invokes the
+uncaught-error handling path with the saved data.
+
+FIN_RAISE retains its existing four-element exception information list:
+
+    {error_code, error_message, error_value, traceback}
+
+
+BUILT-IN CONTINUATIONS
+
+The built-in envelope is present on every activation.
+
+When no built-in continuation is active, it is:
+
+	builtin 0 0
+	none
+
+and no payload follows.
+
+Otherwise, `step' is in the range 1 through 255. `builtin_name' names the
+registered built-in, `continuation_version' versions that built-in's payload,
+and one ordinary database Var follows as `payload'. Payloads must contain only
+portable language values. Unknown names, versions, invalid steps, or malformed
+payloads reject the activation.
+
+Built-ins registered without an importer and exporter may use version 1 with a
+`none' payload only when they have no private continuation data. Stateful
+built-ins must provide import and export callbacks. The built-ins `create',
+`recycle', `move', and `call_function' provide version-1 payloads;
+`call_function' recursively envelopes the continuation it wraps.
+
+A builtin envelope on a child activation describes the continuation returning
+from that child to its caller; it is not an ordinary verb activation. Engines
+that materialize synthetic builtin frames must not copy the caller's receiver,
+permissions, verb location, or local variables into them. In LambdaMOO's
+callers/traceback view, receiver, programmer, and verb location are #-1, the
+name identifies the builtin, and the sixth field is the builtin continuation
+step, not a source line or an engine-local callback index. Preserve the player
+associated with that invocation. Native execution and imported restoration
+must use the same convention.
+
+
+TASK WAKEUP RESTORATION
+
+Task-level pending resume values are independent of activation operands and
+must also survive a checkpoint. Once a manual resume is accepted, a racing
+timer must not replace its supplied value with zero. A checkpoint must see
+either the queued continuation with that committed value, or execution after
+delivery at a later checkpoint boundary, never a mixture. Verify this with
+both live wakeup and fresh-process restoration. Protected builtin dispatch
+must resume the already-selected callback without repeating protection checks
+or calling it again. These restoration requirements add no frame slots.
+
+
+LEGACY INPUT
+
+Database versions before `DBV_ResumeKey' use the historical VM header:
+
+	<top_activation> <root_vector> <func_id> [<max_stack_depth>]
+
+Their activations include the raw interpreter stack, assignment temporary, and:
+
+	<pc> <bi_func_pc> [<error_pc>]
+
+The LambdaMOO loader retains this interpreter-specific reader. It recompiles
+the saved program and maps an activation with `error_pc' by exact
+`(vector, pc, error_pc)' lookup. For older records without `error_pc', it uses
+the historical `error_pc = pc' rule and requires `pc' to identify exactly one
+resume point in the vector. Ambiguous or unmappable state is rejected.
+
+Legacy stack values, including raw handler PCs and catch/finally markers, are
+accepted only through this path. Legacy built-in private records are read by
+their historical readers. The next checkpoint writes VM format 1, suspend
+format 1, canonical frame values, and versioned built-in payloads.
+
+
+AST TRAVERSAL SPECIFICATION
+
+Schema 1 operates on the canonical LambdaMOO AST defined by `Expr_Kind' and
+`Stmt_Kind' in ast.h. `assign_resume_ids()' in ast.c is the canonical
+implementation. Lists of statements, arguments, conditional arms, except
+arms, and scatter elements are visited in their stored order.
+
+
+CODE UNIT ASSIGNMENT
+
+The main body is code unit 0 and its site counter begins at 1.
+
+For `STMT_FORK', visit the time expression in the enclosing code unit, assign
+the next sequential code unit to the fork body, and visit that body with a new
+site counter beginning at 1. Nested fork bodies are visited before later
+statements. Returning from a fork body resumes the enclosing site's counter.
+
+
+SITE ASSIGNMENT
+
+Every `EXPR_CALL' and `EXPR_VERB' receives the next site in its code unit.
+Assignment is post-child: visit the call's children first, then assign the site.
+
+
+LOOP ASSIGNMENT
+
+Each STMT_LIST, STMT_RANGE, and STMT_WHILE receives a one-based loop ordinal
+within its code unit. Assign the ordinal when the loop statement is encountered,
+before visiting its body, following the canonical statement traversal. Each
+fork code unit has its own counter beginning at 1; visiting a fork body does not
+consume ordinals in the enclosing unit. Loop names, source lines, and generated
+instruction positions are not identifiers. Loop numbering adds no ResumeKey
+field and does not change call-site or code-unit numbering.
+
+
+EXPRESSION ORDER
+
+-- `EXPR_VAR', `EXPR_ID', and `EXPR_LENGTH' have no children. `EXPR_LENGTH'
+   is the `$' expression, not a function call.
+-- `EXPR_PROP', `EXPR_INDEX', `EXPR_EQ', `EXPR_NE', `EXPR_LT', `EXPR_LE',
+   `EXPR_GT', `EXPR_GE', `EXPR_IN', `EXPR_PLUS', `EXPR_MINUS', `EXPR_TIMES',
+   `EXPR_DIVIDE', `EXPR_MOD', `EXPR_EXP', `EXPR_AND', `EXPR_OR',
+   `EXPR_BITOR', `EXPR_BITXOR', `EXPR_BITAND', `EXPR_SHL', `EXPR_SHR', and
+   `EXPR_LSHR' visit the left child and then the right child.
+-- `EXPR_RANGE' visits its base, from, and to expressions, in that order.
+-- An ordinary `EXPR_ASGN' visits its left and then right child. A scattering
+   assignment visits its right child first, followed by each present optional
+   default expression from left to right. `EXPR_SCATTER' is not otherwise
+   visited independently.
+-- `EXPR_CALL' visits its arguments and then assigns its site.
+-- `EXPR_VERB' visits its object, verb-name expression, and arguments, in that
+   order, and then assigns its site.
+-- `EXPR_NEGATE', `EXPR_NOT', and `EXPR_COMPLEMENT' visit their single child.
+-- `EXPR_LIST' visits its elements in order.
+-- `EXPR_COND' visits its condition, consequent, and alternate, in that order.
+-- `EXPR_CATCH' visits its guarded expression, codes, and optional fallback,
+   in that order.
+
+
+STATEMENT ORDER
+
+-- `STMT_COND' visits each arm's condition and body, in that order, followed by
+   the optional otherwise body.
+-- `STMT_LIST' visits its expression and then its body.
+-- `STMT_RANGE' visits its from expression, to expression, and body, in order.
+-- `STMT_WHILE' visits its condition and then its body.
+-- `STMT_FORK' follows the code-unit rules above.
+-- `STMT_EXPR' and `STMT_RETURN' visit their expression when present.
+-- `STMT_TRY_EXCEPT' visits the try body and then each except arm. Within an
+   arm, it visits the codes followed by the handler body.
+-- `STMT_TRY_FINALLY' visits its body and then its handler.
+-- `STMT_BREAK' and `STMT_CONTINUE' have no children.
+
+
+RULES FOR CHANGING THE FORMAT
+
+-- Append, never reorder, values in `DB_Version'.
+-- Preserve VM format 1 and suspend format 1 parsing, or introduce new format
+   numbers.
+-- Preserve schema-1 key and frame assignment, or introduce a new schema and
+   continue resolving schema 1.
+-- Never add engine PCs, stack markers, registers, or private C structures to
+   canonical frames or built-in payloads.
+-- Keep legacy raw-PC migration until support for those database versions is
+   deliberately removed.
+-- Test older-input migration and a fresh-process reload of the rewritten
+   checkpoint.
+
+
+REQUIRED VERIFICATION
+
+-- Suspend in finally while unwinding break and continue for while, list, and
+   range loops; include named exits targeting outer loops.
+-- Include nested finalizers with multiple pending exits and finalizers that
+   override earlier exits with return or an exception.
+-- Import using a different instruction layout, resume, suspend again,
+   checkpoint, and reload in a fresh process. Compare iteration state and side
+   effects against uninterrupted execution.
+-- Verify that legitimate MOO lists resembling exit encodings remain unchanged
+   unless their slots are annotated as pending FIN_EXIT values.
+-- Reject malformed tags, arities, types, actions, ordinals, cross-code-unit
+   exits, invalid lexical targets, raw-offset exits, and invalid finalizer
+   reasons. Inspect exported frames for private offsets or stack depths.
+-- Suspend in finally after an uncaught error in a deeper callee, checkpoint and
+   reload repeatedly, and verify the original traceback. Include nested pending
+   errors and overrides by return or a newly raised error.
+-- Test queued fork -> execution -> suspension -> checkpoint -> fresh-process
+   reload and already-suspended relocated programs, including nested bodies,
+   handlers, and errors delivered at the original suspension boundary.
+-- Verify builtin traceback metadata and protected callback restoration, and
+   preservation of accepted manual wakeup values in live and restored tasks.

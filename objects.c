@@ -184,6 +184,36 @@ bf_move_read(void)
     else
 	return 0;
 }
+
+static int
+bf_move_export(void *vdata, unsigned *version, Var *payload)
+{
+    struct bf_move_data *data = vdata;
+
+    *version = 1;
+    *payload = new_list(2);
+    payload->v.list[1].type = TYPE_OBJ;
+    payload->v.list[1].v.obj = data->what;
+    payload->v.list[2].type = TYPE_OBJ;
+    payload->v.list[2].v.obj = data->where;
+    return 1;
+}
+
+static void *
+bf_move_import(unsigned version, Var payload)
+{
+    struct bf_move_data *data;
+
+    if (version != 1 || payload.type != TYPE_LIST
+	|| payload.v.list[0].v.num != 2
+	|| payload.v.list[1].type != TYPE_OBJ
+	|| payload.v.list[2].type != TYPE_OBJ)
+	return 0;
+    data = alloc_data(sizeof(*data));
+    data->what = payload.v.list[1].v.obj;
+    data->where = payload.v.list[2].v.obj;
+    return data;
+}
 
 static package
 bf_toobj(Var arglist, Byte next UNUSED_, void *vdata UNUSED_, Objid progr UNUSED_)
@@ -309,6 +339,27 @@ bf_create_read(void)
 	return data;
     else
 	return 0;
+}
+
+static int
+bf_object_export(void *vdata, unsigned *version, Var *payload)
+{
+    *version = 1;
+    payload->type = TYPE_OBJ;
+    payload->v.obj = *((Objid *) vdata);
+    return 1;
+}
+
+static void *
+bf_object_import(unsigned version, Var payload)
+{
+    Objid *data;
+
+    if (version != 1 || payload.type != TYPE_OBJ)
+	return 0;
+    data = alloc_data(sizeof(*data));
+    *data = payload.v.obj;
+    return data;
 }
 
 static package
@@ -591,10 +642,12 @@ register_objects(void)
     register_function("toobj", 1, 1, bf_toobj, TYPE_ANY);
     register_function("typeof", 1, 1, bf_typeof, TYPE_ANY);
     register_function("create", 1, 2, bf_create, TYPE_OBJ, TYPE_OBJ),
-	register_function_dbio(bf_create_read, bf_create_write);
+	register_function_dbio(bf_create_read, bf_create_write),
+	register_function_state(bf_object_import, bf_object_export);
 
     register_function("recycle", 1, 1, bf_recycle, TYPE_OBJ),
-	register_function_dbio(bf_recycle_read, bf_recycle_write);
+	register_function_dbio(bf_recycle_read, bf_recycle_write),
+	register_function_state(bf_object_import, bf_object_export);
 
     register_function("object_bytes", 1, 1, bf_object_bytes, TYPE_OBJ);
     register_function("valid", 1, 1, bf_valid, TYPE_OBJ);
@@ -607,7 +660,8 @@ register_objects(void)
     register_function("set_player_flag", 2, 2, bf_set_player_flag,
 		      TYPE_OBJ, TYPE_ANY);
     register_function("move", 2, 2, bf_move, TYPE_OBJ, TYPE_OBJ),
-	register_function_dbio(bf_move_read, bf_move_write);
+	register_function_dbio(bf_move_read, bf_move_write),
+	register_function_state(bf_move_import, bf_move_export);
 }
 
 
