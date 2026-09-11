@@ -27,7 +27,7 @@ AS_CASE([[$moo_cv_make_is_gnumake]],[[no]],
 AC_DEFUN([MOO_CHECK_GNU_MAKE],
 [AC_REQUIRE([AC_PROG_MAKE_SET])
 AC_CACHE_CHECK([make having GNU features],[moo_cv_make_is_gnumake],[[
-if "][$][{MAKE-make}" a=b=c=d -f - <<'END' | grep axbxcxd >/dev/null 2>&1
+if { "][$][{MAKE-make}" a=b=c=d -f - <<'END' | grep axbxcxd; } >/dev/null 2>&1
 b=][$][{subst =,x,][$][{MAKEOVERRIDES}}
 .PHONY: t
 t:
