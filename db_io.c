@@ -222,7 +222,7 @@ dbio_read_integer(enum dbio_intrange range_id, intmax_t *ip)
 	return 0;
 
     *ip = dbio_string_to_integer(range_id, s, &p2);
-    if (!dbio_last_error && (isspace(*s) || p1 != p2))
+    if (!dbio_last_error && (isspace((unsigned char)*s) || p1 != p2))
 	dbio_last_error = "Did not read entire line";
 
     if (dbio_last_error) {
@@ -243,7 +243,7 @@ dbio_read_float(FlBox *fbp)
 
     FlNum d = strtoflnum(s, (char **)&p2);
     dbio_last_error =
-	((isspace(*s) || p1 != p2)
+	((isspace((unsigned char)*s) || p1 != p2)
 	 ? "Did not read entire line"
 	 : (!IS_REAL(d)
 	    ? "Magnitude too large or NaN"
@@ -433,7 +433,7 @@ dbio_scxnf(const char *format,...)
 	goto fail;
     }
     if (*fc == ' ') {
-	while (isspace(*lc) && ++lc < lend);
+	while (isspace((unsigned char)*lc) && ++lc < lend);
 	++fc;
 	goto state1;
     }
@@ -488,11 +488,11 @@ dbio_scxnf(const char *format,...)
 	if (*fc++ != 'd')
 	    panic("DBIO_SCXNF: %* can only be followed by s or d");
 	if (*lc == '-') ++lc;
-	if (!isdigit(*lc)) {
+	if (!isdigit((unsigned char)*lc)) {
 	    dbio_last_error = "expected an integer to skip";
 	    goto fail;
 	}
-	while (isdigit(*++lc));
+	while (isdigit((unsigned char)*++lc));
 	goto state1;
     }
     if (*fc == 'c') {		/* %c */

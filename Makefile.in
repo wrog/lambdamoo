@@ -154,7 +154,7 @@ keywords.c: keywords.gperf
 		--struct-type --omit-struct-type -c -l \
 		--initializer-suffix=,0,0,-1 \
 		--lookup-function-name=find_keyword \
-		--output-file="$@" $<
+		--output-file="$@" $(srcdir)/keywords.gperf
 
 bf_register.h bf_register.c: bf_register.lastrun ;
 bf_register.lastrun: bf_register.h.in bf_register.c.in bf_register.sh $(COMMON_CSRCS) $(XT_CSRCS) Makefile
