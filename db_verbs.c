@@ -152,7 +152,8 @@ db_match_prep(const char *prepname)
     int argc;
     char *ptr;
     char **argv;
-    char *s, *s1, first;
+    char *s, *s1;
+    unsigned char first;
 
     s = s1 = str_dup(prepname);
     first = s[0];
@@ -560,7 +561,7 @@ db_find_defined_verb(Objid oid, const char *vname, int allow_numbers)
 
     if (!allow_numbers ||
 	(num = strtol(vname, &p, 10),
-	 (isspace(*vname) || *p != '\0')))
+	 (isspace((unsigned char)*vname) || *p != '\0')))
 	num = -1;
 
     for (i = 0, v = o->verbdefs; v; v = v->next, i++)
