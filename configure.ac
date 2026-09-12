@@ -113,7 +113,8 @@ dnl
 AC_C_BIGENDIAN
 AM_ICONV
 AS_VAR_IF([am_func_iconv],[yes],[LIBS="$LIBICONV $LIBS"],
-  [AC_MSG_CHECKING([for iconv])AC_MSG_RESULT([$am_cv_func_iconv_summary])
+  [AC_MSG_CHECKING([for iconv])
+   AC_MSG_RESULT([$am_cv_func_iconv_summary])
    AC_MSG_ERROR([[need working iconv library]])])
 AC_CHECK_HEADERS([unistd.h sys/cdefs.h stdlib.h tiuser.h machine/endian.h])
 AC_CHECK_FUNCS([remove rename poll select strerror strftime strtoul matherr])

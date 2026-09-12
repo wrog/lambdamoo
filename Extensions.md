@@ -77,7 +77,7 @@ Here is a quick convenience command you can set up:
 $ mooval() {
   printf "%s\n" ";$1" 'abort' |
    ./moo -e -l /dev/null Minimal.db /dev/null |
-   sed -e '0,/^[*]/d;/^MOO.*Bye.*NOT saving/,$d;/^$/d'
+   sed -e '1,/^[*]/d;/^MOO.*Bye.*NOT saving/,$d;/^$/d'
  }
 ```
 
