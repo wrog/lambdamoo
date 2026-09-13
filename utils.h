@@ -37,7 +37,23 @@ extern int mystrncasecmp(const char *, const char *, int);
 
 extern int verbcasecmp(const char *verb, const char *word);
 
-extern unsigned str_hash(const char *);
+extern const char cmap[];
+
+static inline uint32_t
+str_hash(const char *s)
+{
+    /* FNV offset basis */
+    uint32_t hash = 2166136261u;
+
+    while (*s) {
+	/* case-folding */
+	hash ^= (unsigned char) cmap[(unsigned char) *s++];
+	/* FNV prime multiplication */
+	hash *= 16777619u;
+    }
+
+    return hash;
+}
 
 extern void complex_free_var(Var);
 extern Var complex_var_ref(Var);
