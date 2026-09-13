@@ -39,7 +39,7 @@ COMPILE.c = $(CC) $(CFLAGS) $(CPPFLAGS) -c
 GPERF = @GPERF@
 
 COMMON_CSRCS = \
-	ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
+	arena.c ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	db_tune.c db_verbs.c decompile.c disassemble.c eval_env.c \
 	eval_vm.c exceptions.c execute.c experiments.c functions.c \
 	list.c log.c match.c md5.c name_lookup.c network.c net_mplex.c \
@@ -58,7 +58,7 @@ OPT_NET_SRCS = net_single.c net_multi.c \
 
 YSRCS = parser.y
 
-COMMON_HDRS = ast.h code_gen.h config_epilog.h \
+COMMON_HDRS = arena.h ast.h code_gen.h config_epilog.h \
 	db.h db_io.h db_private.h decompile.h db_tune.h \
 	disassemble.h eval_env.h eval_vm.h exceptions.h \
 	execute.h experiments.h functions.h \
