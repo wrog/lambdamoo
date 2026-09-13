@@ -13,11 +13,19 @@
 #include "config.h"
 #include "options.h"
 
-#if HAVE_PCRE2
+#if USING_PCRE2
 #  define PCRE2_CODE_UNIT_WIDTH 8
-#  include <pcre2.h>
+#  if HAVE_PCRE_PCRE2_H
+#    include <pcre/pcre2.h>
+#  else
+#    include <pcre2.h>
+#  endif
 #else
-#  include <pcre.h>
+#  if HAVE_PCRE_PCRE_H
+#    include <pcre/pcre.h>
+#  else
+#    include <pcre.h>
+#  endif
 #endif
 
 #include "my-stdio.h"
@@ -36,7 +44,7 @@
 #define MATCH_LIMIT_RECURSION    5000
 
 typedef struct {
-#if HAVE_PCRE2
+#if USING_PCRE2
     pcre2_code *code;
     pcre2_match_context *match_context;
 #else
@@ -46,7 +54,7 @@ typedef struct {
 } regexp_t;
 
 typedef struct {
-#if HAVE_PCRE2
+#if USING_PCRE2
     PCRE2_SIZE ovec[MATCH_GROUP_LIMIT * 2];
 #else
     int ovec[MATCH_GROUP_LIMIT * 2];
@@ -251,7 +259,7 @@ const char *translate(const char *moopat)
     return reset_stream(s);
 }
 
-#if HAVE_PCRE2
+#if USING_PCRE2
 
 Pattern new_pattern(const char *pattern, int case_matters)
 {
@@ -579,17 +587,17 @@ void free_pattern(Pattern p)
     }
 }
 
-#endif    /* HAVE_PCRE2 */
+#endif    /* USING_PCRE2 */
 
 
 void
 pattern_version(const char **lib, Stream *s)
 {
-#if !HAVE_PCRE2
+#if !USING_PCRE2
     *lib = "pcre";
     stream_add_string(s, pcre_version());
 
-#else  /* HAVE_PCRE2 */
+#else  /* USING_PCRE2 */
     ssize_t sz = pcre2_config(PCRE2_CONFIG_VERSION, NULL);
 
     *lib = "pcre2";
@@ -605,5 +613,5 @@ pattern_version(const char **lib, Stream *s)
 	    stream_endfill(s, bsz - sz);
     }
 
-#endif  /* HAVE_PCRE2 */
+#endif  /* USING_PCRE2 */
 }
