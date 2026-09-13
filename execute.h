@@ -27,6 +27,7 @@
 #include "structures.h"
 #include "waif.h"
 
+#define ANY_RESUME_VECTOR (-2)
 
 typedef struct {
     Program *prog;
@@ -39,6 +40,7 @@ typedef struct {
     int rt_stack_size;		/* size of stack allocated */
     unsigned pc;
     unsigned error_pc;
+    ResumeKey resume_key;
     Byte bi_func_pc;		/* next == 0 means a normal activation, which just
 				   returns to the previous activation (caller verb).
 				   next == 1, 2, 3, ... means the returned value should be
@@ -63,7 +65,7 @@ typedef struct {
     const char *verbname;
     int debug;
 } activation;
-#define BQM_DESCRIBE_activation(B,F,V,X)   ((4 * F) + (14 * V) + X(WAIF_CORE, B(Var)))
+#define BQM_DESCRIBE_activation(B,F,V,X)   ((4 * F) + (17 * V) + X(WAIF_CORE, B(Var)))
 
 extern void free_activation(activation *, char data_too);
 
@@ -135,7 +137,7 @@ int read_rt_env(const char ***old_names, Var ** rt_env,
 		unsigned *old_size);
 Var *reorder_rt_env(Var * old_rt_env, const char **old_names,
 		    unsigned old_size, Program * prog);
-extern void write_activ(activation a);
+extern void write_activ(activation a, int which_vector);
 extern int read_activ(activation * a, int which_vector);
 
 #endif		/* !Execute_H */

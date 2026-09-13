@@ -82,6 +82,27 @@ static char *waif_indexset_verb;
 /* macros to ease indexing into activation stack */
 #define RUN_ACTIV     activ_stack[top_activ_stack]
 #define CALLER_ACTIV  activ_stack[top_activ_stack - 1]
+
+/* See SuspendResumeFormat.txt for the on-disk compatibility contract. */
+#define SUSPEND_FORMAT_RESUME_KEY 1
+
+static int
+current_activ_vector(void)
+{
+    return (top_activ_stack != 0 || root_activ_vector == MAIN_VECTOR
+	    ? MAIN_VECTOR
+	    : root_activ_vector);
+}
+
+static void
+set_activ_resume_key_for_location(activation * a, int which_vector)
+{
+    const ResumePoint *point =
+	resume_point_for_program_location(a->prog, which_vector, a->pc,
+					  a->error_pc);
+
+    a->resume_key = point ? point->key : invalid_resume_key();
+}
 
 /**** error handling ****/
 
@@ -228,6 +249,7 @@ suspend_task(package p)
 }
 
 static int raise_error(package p, enum outcome *outcome);
+static void save_handler_info(const char *, Var);
 static void abort_task(enum abort_reason reason);
 
 static int
@@ -305,6 +327,9 @@ unwind_stack(Finally_Reason why, Var value, enum outcome *outcome)
 	free_activation(a, 0);	/* 0 == don't free bi_func_data */
 
 	if (top_activ_stack == 0) {	/* done */
+	    /* Keep diagnostics in the unwind value until all finalizers finish. */
+	    if (why == FIN_UNCAUGHT)
+		save_handler_info("handle_uncaught_error", value);
 	    if (outcome)
 		*outcome = (why == FIN_RETURN
 			    ? OUTCOME_DONE
@@ -522,10 +547,6 @@ raise_error(package p, enum outcome *outcome)
 				      top_activ_stack, 1,
 				      root_activ_vector, 1);
 
-    if (why == FIN_UNCAUGHT) {
-	save_handler_info("handle_uncaught_error", value);
-	value = zero;
-    }
     return unwind_stack(why, value, outcome);
 }
 
@@ -680,6 +701,7 @@ call_verb2(Objid this, const char *vname
     alloc_rt_stack(&RUN_ACTIV, program->main_vector.max_stack);
     RUN_ACTIV.pc = 0;
     RUN_ACTIV.error_pc = 0;
+    RUN_ACTIV.resume_key = invalid_resume_key();
     RUN_ACTIV.bi_func_pc = 0;
     RUN_ACTIV.temp.type = TYPE_NONE;
 
@@ -851,6 +873,7 @@ do {  								\
 do {						\
     RUN_ACTIV.pc = bv - bc.vector;		\
     RUN_ACTIV.error_pc = error_bv - bc.vector;	\
+    set_activ_resume_key_for_location(&RUN_ACTIV, current_activ_vector()); \
     RUN_ACTIV.top_rt_stack = rts;		\
 } while (0)
 
@@ -2575,6 +2598,7 @@ do_task(Program * prog, int which_vector, Var * result, int is_fg, int do_db_tra
 
     RUN_ACTIV.pc = 0;
     RUN_ACTIV.error_pc = 0;
+    RUN_ACTIV.resume_key = invalid_resume_key();
     RUN_ACTIV.bi_func_pc = 0;
     RUN_ACTIV.temp.type = TYPE_NONE;
 
@@ -2748,6 +2772,7 @@ setup_activ_for_eval(Program * prog)
     alloc_rt_stack(&RUN_ACTIV, RUN_ACTIV.prog->main_vector.max_stack);
     RUN_ACTIV.pc = 0;
     RUN_ACTIV.error_pc = 0;
+    RUN_ACTIV.resume_key = invalid_resume_key();
     RUN_ACTIV.temp.type = TYPE_NONE;
 
     return 1;
@@ -2833,6 +2858,61 @@ bf_call_function_read(void)
 	free_data(s);
     }
     return 0;
+}
+
+static int
+bf_call_function_export(void *data, unsigned *version, Var *payload)
+{
+    struct cf_state *s = data;
+    unsigned nested_version;
+    Var nested_payload;
+
+    if (s->fnum > UCHAR_MAX
+	|| !export_bi_func_state(s->data, (Byte) s->fnum, &nested_version,
+				 &nested_payload))
+	return 0;
+#if NUM_MAX < UINT_MAX
+    if (nested_version > NUM_MAX) {
+	free_var(nested_payload);
+	return 0;
+    }
+#endif
+    *version = 1;
+    *payload = new_list(3);
+    payload->v.list[1].type = TYPE_STR;
+    payload->v.list[1].v.str = str_dup(name_func_by_num(s->fnum));
+    payload->v.list[2].type = TYPE_INT;
+    payload->v.list[2].v.num = nested_version;
+    payload->v.list[3] = nested_payload;
+    return 1;
+}
+
+static void *
+bf_call_function_import(unsigned version, Var payload)
+{
+    struct cf_state *s;
+    unsigned fnum;
+    Num nested_version;
+
+    if (version != 1 || payload.type != TYPE_LIST
+	|| payload.v.list[0].v.num != 3
+	|| payload.v.list[1].type != TYPE_STR
+	|| payload.v.list[2].type != TYPE_INT
+	|| payload.v.list[2].v.num < 0)
+	return 0;
+    fnum = number_func_by_name(payload.v.list[1].v.str);
+    nested_version = payload.v.list[2].v.num;
+    if (fnum == FUNC_NOT_FOUND || fnum > UCHAR_MAX)
+	return 0;
+
+    s = alloc_data(sizeof(*s));
+    s->fnum = fnum;
+    if (!import_bi_func_state((Byte) fnum, (unsigned) nested_version,
+			      payload.v.list[3], &s->data)) {
+	free_data(s);
+	return 0;
+    }
+    return s;
 }
 
 static package
@@ -3013,7 +3093,9 @@ register_execute(void)
 {
     register_function("call_function", 1, -1, bf_call_function, TYPE_STR),
 	register_function_dbio(bf_call_function_read, bf_call_function_write),
-	register_function_free(bf_call_function_free);
+	register_function_free(bf_call_function_free),
+	register_function_state(bf_call_function_import,
+				bf_call_function_export);
 
     register_function("raise", 1, 3, bf_raise, TYPE_ANY, TYPE_STR, TYPE_ANY);
     register_function("suspend", 0, 1, bf_suspend, TYPE_INT);
@@ -3157,32 +3239,219 @@ reorder_rt_env(Var * old_rt_env, const char **old_names,
     return rt_env;
 }
 
-void
-write_activ(activation a)
+/* Only annotated finalizer slots may contain engine-private exit values. */
+static const ResumeLoop *
+find_resume_loop(Program *prog, unsigned unit, unsigned ordinal)
 {
-    register Var *v;
+    unsigned i;
 
-    dbio_printf("language version %u\n", a.prog->version);
-    dbio_write_program(a.prog);
-    write_rt_env(a.prog->var_names, a.rt_env, a.prog->num_var_names);
+    for (i = 0; i < prog->num_resume_loops; i++)
+	if (prog->resume_loops[i].code_unit == unit
+	    && prog->resume_loops[i].ordinal == ordinal)
+	    return &prog->resume_loops[i];
+    return 0;
+}
+
+static int
+pending_error_valid(Var value, unsigned count)
+{
+    unsigned i;
+
+    if (value.type != TYPE_LIST || value.v.list[0].v.num != count
+	|| value.v.list[2].type != TYPE_STR
+	|| value.v.list[4].type != TYPE_LIST)
+	return 0;
+    for (i = 1; i <= value.v.list[4].v.list[0].v.num; i++) {
+	Var frame = value.v.list[4].v.list[i];
+
+	if (frame.type != TYPE_LIST || frame.v.list[0].v.num != 6
+	    || (frame.v.list[1].type != TYPE_OBJ
+		&& frame.v.list[1].type != TYPE_WAIF)
+	    || frame.v.list[2].type != TYPE_STR
+	    || frame.v.list[3].type != TYPE_OBJ
+	    || frame.v.list[4].type != TYPE_OBJ
+	    || frame.v.list[5].type != TYPE_OBJ
+	    || frame.v.list[6].type != TYPE_INT)
+	    return 0;
+    }
+    if (count == 5) {
+	Var lines = value.v.list[5];
+
+	if (lines.type != TYPE_LIST)
+	    return 0;
+	for (i = 1; i <= lines.v.list[0].v.num; i++)
+	    if (lines.v.list[i].type != TYPE_STR)
+		return 0;
+    }
+    return 1;
+}
+
+/* Convert in either direction, returning an owned value on success. */
+static int
+convert_pending_value(Program *prog, const ResumePoint *point, unsigned slot,
+		      Var reason, Var value, int importing, Var *result)
+{
+    unsigned ordinal = point->stack_slots[slot].data;
+    const ResumeLoop *target = 0, *loop;
+    int action = 0;
+
+    if (reason.type != TYPE_INT)
+	return 0;
+    switch (reason.v.num) {
+    case FIN_FALL_THRU:
+	if (value.type != TYPE_INT || value.v.num != 0)
+	    return 0;
+	break;
+    case FIN_RETURN:
+	break;
+    case FIN_RAISE:
+    case FIN_UNCAUGHT:
+	if (!pending_error_valid(value, reason.v.num == FIN_RAISE ? 4 : 5))
+	    return 0;
+	break;
+    case FIN_EXIT:
+	if (value.type != TYPE_LIST)
+	    return 0;
+	if (importing) {
+	    if (value.v.list[0].v.num != 4
+		|| value.v.list[1].type != TYPE_STR
+		|| strcmp(value.v.list[1].v.str, "loop-exit")
+		|| value.v.list[2].type != TYPE_INT
+		|| value.v.list[2].v.num != point->key.code_unit
+		|| value.v.list[3].type != TYPE_INT
+		|| value.v.list[3].v.num <= 0
+		|| value.v.list[4].type != TYPE_STR)
+		return 0;
+	    if (!strcmp(value.v.list[4].v.str, "continue"))
+		action = 1;
+	    else if (strcmp(value.v.list[4].v.str, "break"))
+		return 0;
+	} else if (value.v.list[0].v.num != 2
+		   || value.v.list[1].type != TYPE_INT
+		   || value.v.list[2].type != TYPE_INT)
+	    return 0;
+
+	while (ordinal) {
+	    loop = find_resume_loop(prog, point->key.code_unit, ordinal);
+	    if (!loop)
+		return 0;
+	    if (importing) {
+		if (value.v.list[3].v.num == loop->ordinal)
+		    target = loop;
+	    } else {
+		int k;
+
+		for (k = 0; k < 2; k++)
+		    if (value.v.list[1].v.num == (k ? loop->continue_stack
+						  : loop->break_stack)
+			&& value.v.list[2].v.num == (k ? loop->continue_pc
+						     : loop->break_pc)) {
+			if (target)
+			    return 0; /* Ambiguous private destination. */
+			target = loop;
+			action = k;
+		    }
+	    }
+	    ordinal = loop->parent;
+	}
+	if (!target)
+	    return 0;
+	*result = new_list(importing ? 2 : 4);
+	if (importing) {
+	    result->v.list[1].type = TYPE_INT;
+	    result->v.list[1].v.num = action ? target->continue_stack
+		: target->break_stack;
+	    result->v.list[2].type = TYPE_INT;
+	    result->v.list[2].v.num = action ? target->continue_pc
+		: target->break_pc;
+	} else {
+	    result->v.list[1].type = TYPE_STR;
+	    result->v.list[1].v.str = str_dup("loop-exit");
+	    result->v.list[2].type = TYPE_INT;
+	    result->v.list[2].v.num = point->key.code_unit;
+	    result->v.list[3].type = TYPE_INT;
+	    result->v.list[3].v.num = target->ordinal;
+	    result->v.list[4].type = TYPE_STR;
+	    result->v.list[4].v.str = str_dup(action ? "continue" : "break");
+	}
+	return 1;
+    default:
+	return 0;
+    }
+    *result = var_ref(value);
+    return 1;
+}
+
+void
+write_activ(activation a, int which_vector)
+{
+    unsigned i, frame_slots;
+    const ResumePoint *point = resume_point_for_key(a.prog, a.resume_key);
 
     if (a.top_rt_stack < a.base_rt_stack)
 	panic("rt_stack smash");
 
-    dbio_printf("%tu rt_stack slots in use\n",
-		a.top_rt_stack - a.base_rt_stack);
+    if (!point || point->vector != which_vector
+	|| point->pc != a.pc || point->error_pc != a.error_pc
+	|| point->stack_depth != (unsigned) (a.top_rt_stack - a.base_rt_stack))
+	panic("WRITE_ACTIV: Bad ResumeKey for suspended task.");
 
-    for (v = a.base_rt_stack; v != a.top_rt_stack; v++)
-	dbio_write_var(*v);
-
+    dbio_printf("language version %u\n", a.prog->version);
+    dbio_printf("program first line %u\n", a.prog->first_lineno);
+    dbio_write_program(a.prog);
+    write_rt_env(a.prog->var_names, a.rt_env, a.prog->num_var_names);
     write_activ_as_pi(a);
+
+    dbio_printf("suspend format %u\n", SUSPEND_FORMAT_RESUME_KEY);
+    dbio_printf("resume %u %u %u\n", RESUME_SCHEMA,
+		a.resume_key.code_unit, a.resume_key.site);
+
+    frame_slots = point->frame_slots;
+    dbio_printf("frame %u values\n", frame_slots);
+    for (i = 0; i < point->stack_depth; i++)
+	if (point->stack_slots[i].kind == RSS_VALUE
+	    || point->stack_slots[i].kind == RSS_PENDING_REASON)
+	    dbio_write_var(a.base_rt_stack[i]);
+	else if (point->stack_slots[i].kind == RSS_PENDING_VALUE) {
+	    Var value;
+
+	    if (!convert_pending_value(a.prog, point, i, a.base_rt_stack[i - 1],
+				       a.base_rt_stack[i], 0, &value))
+		panic("WRITE_ACTIV: Invalid pending finalizer value.");
+	    dbio_write_var(value);
+	    free_var(value);
+	}
     dbio_write_var(a.temp);
 
-    dbio_printf("%u %u %u\n", a.pc, a.bi_func_pc, a.error_pc);
     if (a.bi_func_pc != 0) {
+	unsigned version;
+	Var payload;
+
+	if (!export_bi_func_state(a.bi_func_data, a.bi_func_id, &version,
+				  &payload))
+	    panic("WRITE_ACTIV: Built-in state is not portable.");
+	dbio_printf("builtin %u %u\n", version, (unsigned) a.bi_func_pc);
 	dbio_write_string(name_func_by_num(a.bi_func_id));
-	write_bi_func_data(a.bi_func_id, a.bi_func_data);
+	dbio_write_var(payload);
+	free_var(payload);
+    } else {
+	dbio_printf("builtin 0 0\n");
+	dbio_write_string("none");
     }
+}
+
+static int
+set_bi_func_pc_from_db(activation * a, unsigned value)
+{
+    Byte narrowed = (Byte) value;
+
+    if ((unsigned) narrowed != value) {
+	errlog("READ_ACTIV: Built-in continuation PC %u is out of range.\n",
+	       value);
+	return 0;
+    }
+    a->bi_func_pc = narrowed;
+    return 1;
 }
 
 static int
@@ -3196,8 +3465,134 @@ check_pc_validity(Program * prog, int which_vector, unsigned pc)
      * move(), pass(), or suspend().
      */
     return (pc < bc->size
-	    && (bc->vector[pc - 1] == OP_CALL_VERB
-		|| bc->vector[pc - 2] == OP_BI_FUNC_CALL));
+	    && ((pc >= 1 && bc->vector[pc - 1] == OP_CALL_VERB)
+		|| (pc >= 2 && bc->vector[pc - 2] == OP_BI_FUNC_CALL)));
+}
+
+static int
+read_portable_activ(activation *a, int expected_vector)
+{
+    const ResumePoint *point;
+    unsigned format, schema, code_unit, site, frame_slots;
+    unsigned version, step, i;
+    const char *func_name;
+    int vector;
+
+    if (!read_activ_as_pi(a)) {
+	errlog("READ_ACTIV: Bad portable activation metadata.\n");
+	return 0;
+    }
+    if (!dbio_scxnf("suspend format %u", &format)
+	|| format != SUSPEND_FORMAT_RESUME_KEY) {
+	errlog("READ_ACTIV: Bad or unknown suspend format.\n");
+	return 0;
+    }
+    if (!dbio_scxnf("resume %u %u %u", &schema, &code_unit, &site)
+	|| schema != RESUME_SCHEMA) {
+	errlog("READ_ACTIV: Bad or unknown resume schema.\n");
+	return 0;
+    }
+    a->resume_key.code_unit = code_unit;
+    a->resume_key.site = site;
+    point = resume_point_for_key(a->prog, a->resume_key);
+    if (!point) {
+	errlog("READ_ACTIV: Bad ResumeKey for suspended task.\n");
+	return 0;
+    }
+    vector = point->vector;
+    if (expected_vector != ANY_RESUME_VECTOR
+	&& vector != expected_vector) {
+	errlog("READ_ACTIV: ResumeKey resolves to the wrong code unit.\n");
+	return 0;
+    }
+    a->pc = point->pc;
+    a->error_pc = point->error_pc;
+    alloc_rt_stack(a, vector == MAIN_VECTOR
+		   ? a->prog->main_vector.max_stack
+		   : a->prog->fork_vectors[vector].max_stack);
+    a->top_rt_stack = a->base_rt_stack;
+
+    if (!dbio_scxnf("frame %u values", &frame_slots)
+	|| frame_slots != point->frame_slots) {
+	errlog("READ_ACTIV: Resume frame size mismatch.\n");
+	return 0;
+    }
+    for (i = 0; i < point->stack_depth; i++) {
+	ResumeStackSlot slot = point->stack_slots[i];
+	Var value;
+
+	switch (slot.kind) {
+	case RSS_VALUE:
+	case RSS_PENDING_REASON:
+	case RSS_PENDING_VALUE:
+	    if (!dbio_read_var(&value))
+		return 0;
+	    if (slot.kind == RSS_PENDING_VALUE) {
+		Var restored;
+		int valid = convert_pending_value(a->prog, point, i,
+		    a->base_rt_stack[i - 1], value, 1, &restored);
+
+		free_var(value);
+		if (!valid) {
+		    errlog("READ_ACTIV: Invalid pending finalizer value.\n");
+		    return 0;
+		}
+		value = restored;
+	    }
+	    break;
+	case RSS_HANDLER_PC:
+	    value.type = TYPE_INT;
+	    value.v.num = slot.data;
+	    break;
+	case RSS_CATCH:
+	    value.type = TYPE_CATCH;
+	    value.v.num = slot.data;
+	    break;
+	case RSS_FINALLY:
+	    value.type = TYPE_FINALLY;
+	    value.v.num = slot.data;
+	    break;
+	default:
+	    return 0;
+	}
+	*a->top_rt_stack++ = value;
+    }
+    if (!dbio_read_var(&a->temp))
+	return 0;
+
+    if (!dbio_scxnf("builtin %u %u", &version, &step)
+	|| !dbio_read_string_intern(&func_name)) {
+	errlog("READ_ACTIV: Bad built-in continuation envelope.\n");
+	return 0;
+    }
+    if (!strcmp(func_name, "none")) {
+	free_str(func_name);
+	if (version != 0 || step != 0)
+	    return 0;
+	a->bi_func_pc = 0;
+	a->bi_func_id = 0;
+	a->bi_func_data = 0;
+    } else {
+	unsigned fnum = number_func_by_name(func_name);
+	Var payload;
+
+	free_str(func_name);
+	if (step == 0 || fnum == FUNC_NOT_FOUND || fnum > UCHAR_MAX
+	    || !set_bi_func_pc_from_db(a, step)
+	    || !dbio_read_var(&payload)) {
+	    errlog("READ_ACTIV: Bad built-in continuation.\n");
+	    return 0;
+	}
+	a->bi_func_id = (Byte) fnum;
+	if (!import_bi_func_state(a->bi_func_id, version, payload,
+				  &a->bi_func_data)) {
+	    free_var(payload);
+	    errlog("READ_ACTIV: Unsupported built-in continuation state.\n");
+	    return 0;
+	}
+	free_var(payload);
+    }
+    return check_pc_validity(a->prog, vector, a->pc);
 }
 
 int
@@ -3207,9 +3602,10 @@ read_activ(activation * a, int which_vector)
     unsigned int v;
     Var *old_rt_env;
     const char **old_names;
-    unsigned old_size, stack_in_use;
+    unsigned old_size, stack_in_use, first_lineno = 1;
     unsigned i;
     int max_stack;
+    const ResumePoint *resume_point;
 
     if (dbio_input_version < DBV_Float)
 	version = dbio_input_version;
@@ -3221,16 +3617,27 @@ read_activ(activation * a, int which_vector)
 	       version);
 	return 0;
     }
+    if (dbio_input_version >= DBV_ResumeKey
+	&& (!dbio_scxnf("program first line %u", &first_lineno)
+	    || first_lineno == 0)) {
+	errlog("READ_ACTIV: Invalid program source origin.\n");
+	return 0;
+    }
     if (!(a->prog = dbio_read_program(version,
 				      0, (void *) "suspended task"))) {
 	errlog("READ_ACTIV: Malformed program\n");
 	return 0;
     }
+    a->prog->first_lineno = first_lineno;
+    a->prog->cached_lineno = first_lineno;
     if (!read_rt_env(&old_names, &old_rt_env, &old_size)) {
 	errlog("READ_ACTIV: Malformed runtime environment\n");
 	return 0;
     }
     a->rt_env = reorder_rt_env(old_rt_env, old_names, old_size, a->prog);
+
+    if (dbio_input_version >= DBV_ResumeKey)
+	return read_portable_activ(a, which_vector);
 
     max_stack = (which_vector == MAIN_VECTOR
 		 ? a->prog->main_vector.max_stack
@@ -3253,15 +3660,38 @@ read_activ(activation * a, int which_vector)
     if (!dbio_read_var(&a->temp))
 	return 0;
 
+    {
+	int pcscan = dbio_scxnf("%u %u\v %u", &a->pc, &i, &a->error_pc);
 
-    int pcscan = dbio_scxnf("%u %u\v %u", &a->pc, &i, &a->error_pc);
-    if (!pcscan) {
-	errlog("READ_ACTIV: bad pc, next, error_pc. stack_in_use = %u\n", stack_in_use);
+	if (!pcscan) {
+	    errlog("READ_ACTIV: bad pc, next, error_pc. stack_in_use = %u\n",
+		   stack_in_use);
+	    return 0;
+	}
+	if (!set_bi_func_pc_from_db(a, i))
+	    return 0;
+	if (pcscan < 2) {
+	    a->error_pc = a->pc;
+	    resume_point = resume_point_for_program_pc(a->prog, which_vector,
+						       a->pc);
+	} else
+	    resume_point = resume_point_for_program_location(a->prog,
+						     which_vector, a->pc,
+						     a->error_pc);
+	if (!resume_point) {
+	    errlog("READ_ACTIV: Bad legacy PC for suspended task.\n");
+	    return 0;
+	}
+	a->resume_key = resume_point->key;
+	a->error_pc = resume_point->error_pc;
+    }
+
+    if (resume_point->stack_depth != stack_in_use) {
+	errlog("READ_ACTIV: ResumeKey stack depth mismatch: "
+	       "expected %u, got %u.\n",
+	       resume_point->stack_depth, stack_in_use);
 	return 0;
     }
-    a->bi_func_pc = i;
-    if (pcscan < 2)
-	a->error_pc = a->pc;
 
     if (!check_pc_validity(a->prog, which_vector, a->pc)) {
 	errlog("READ_ACTIV: Bad PC for suspended task.\n");

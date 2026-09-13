@@ -241,6 +241,224 @@ alloc_scatter(enum Scatter_Kind kind, int id, Expr * expr)
     return sc;
 }
 
+static void assign_expr_resume_ids(Expr *, unsigned *, unsigned *);
+
+static void
+assign_arg_list_resume_ids(Arg_List * args, unsigned *current_site,
+			   unsigned *next_code_unit)
+{
+    for (; args; args = args->next)
+	assign_expr_resume_ids(args->expr, current_site, next_code_unit);
+}
+
+static void
+assign_expr_resume_ids(Expr * expr, unsigned *current_site,
+		       unsigned *next_code_unit)
+{
+    if (!expr)
+	return;
+
+    switch (expr->kind) {
+    case EXPR_VAR:
+    case EXPR_ID:
+    case EXPR_LENGTH:
+	break;
+    case EXPR_PROP:
+    case EXPR_INDEX:
+    case EXPR_EQ:
+    case EXPR_NE:
+    case EXPR_LT:
+    case EXPR_LE:
+    case EXPR_GT:
+    case EXPR_GE:
+    case EXPR_IN:
+    case EXPR_PLUS:
+    case EXPR_MINUS:
+    case EXPR_TIMES:
+    case EXPR_DIVIDE:
+    case EXPR_MOD:
+    case EXPR_EXP:
+    case EXPR_AND:
+    case EXPR_OR:
+    case EXPR_BITOR:
+    case EXPR_BITXOR:
+    case EXPR_BITAND:
+    case EXPR_SHL:
+    case EXPR_SHR:
+    case EXPR_LSHR:
+	assign_expr_resume_ids(expr->e.bin.lhs, current_site,
+			       next_code_unit);
+	assign_expr_resume_ids(expr->e.bin.rhs, current_site,
+			       next_code_unit);
+	break;
+    case EXPR_RANGE:
+	assign_expr_resume_ids(expr->e.range.base, current_site,
+			       next_code_unit);
+	assign_expr_resume_ids(expr->e.range.from, current_site,
+			       next_code_unit);
+	assign_expr_resume_ids(expr->e.range.to, current_site,
+			       next_code_unit);
+	break;
+    case EXPR_ASGN:
+	if (expr->e.bin.lhs->kind == EXPR_SCATTER) {
+	    Scatter *sc;
+
+	    assign_expr_resume_ids(expr->e.bin.rhs, current_site,
+				   next_code_unit);
+	    for (sc = expr->e.bin.lhs->e.scatter; sc; sc = sc->next)
+		if (sc->expr)
+		    assign_expr_resume_ids(sc->expr, current_site,
+					   next_code_unit);
+	} else {
+	    assign_expr_resume_ids(expr->e.bin.lhs, current_site,
+				   next_code_unit);
+	    assign_expr_resume_ids(expr->e.bin.rhs, current_site,
+				   next_code_unit);
+	}
+	break;
+    case EXPR_CALL:
+	assign_arg_list_resume_ids(expr->e.call.args, current_site,
+				   next_code_unit);
+	expr->e.call.resume_site = (*current_site)++;
+	break;
+    case EXPR_VERB:
+	assign_expr_resume_ids(expr->e.verb.obj, current_site,
+			       next_code_unit);
+	assign_expr_resume_ids(expr->e.verb.verb, current_site,
+			       next_code_unit);
+	assign_arg_list_resume_ids(expr->e.verb.args, current_site,
+				   next_code_unit);
+	expr->e.verb.resume_site = (*current_site)++;
+	break;
+    case EXPR_NEGATE:
+    case EXPR_NOT:
+    case EXPR_COMPLEMENT:
+	assign_expr_resume_ids(expr->e.expr, current_site, next_code_unit);
+	break;
+    case EXPR_LIST:
+	assign_arg_list_resume_ids(expr->e.list, current_site, next_code_unit);
+	break;
+    case EXPR_COND:
+	assign_expr_resume_ids(expr->e.cond.condition, current_site,
+			       next_code_unit);
+	assign_expr_resume_ids(expr->e.cond.consequent, current_site,
+			       next_code_unit);
+	assign_expr_resume_ids(expr->e.cond.alternate, current_site,
+			       next_code_unit);
+	break;
+    case EXPR_CATCH:
+	assign_expr_resume_ids(expr->e.catch.try, current_site,
+			       next_code_unit);
+	assign_arg_list_resume_ids(expr->e.catch.codes, current_site,
+				   next_code_unit);
+	assign_expr_resume_ids(expr->e.catch.except, current_site,
+			       next_code_unit);
+	break;
+    case EXPR_SCATTER:
+	/* Handled as the left-hand side of EXPR_ASGN. */
+	break;
+    default:
+	panic("Unknown expression kind in ASSIGN_EXPR_RESUME_IDS()");
+    }
+}
+
+static void
+assign_stmt_resume_ids(Stmt * stmt, unsigned *current_site,
+		       unsigned *next_code_unit, unsigned *current_loop)
+{
+    for (; stmt; stmt = stmt->next) {
+	switch (stmt->kind) {
+	case STMT_COND:
+	    {
+		Cond_Arm *arm;
+
+		for (arm = stmt->s.cond.arms; arm; arm = arm->next) {
+		    assign_expr_resume_ids(arm->condition, current_site,
+					   next_code_unit);
+		    assign_stmt_resume_ids(arm->stmt, current_site,
+					   next_code_unit, current_loop);
+		}
+		assign_stmt_resume_ids(stmt->s.cond.otherwise, current_site,
+				       next_code_unit, current_loop);
+	    }
+	    break;
+	case STMT_LIST:
+	    stmt->loop_ordinal = (*current_loop)++;
+	    assign_expr_resume_ids(stmt->s.list.expr, current_site,
+				   next_code_unit);
+	    assign_stmt_resume_ids(stmt->s.list.body, current_site,
+				   next_code_unit, current_loop);
+	    break;
+	case STMT_RANGE:
+	    stmt->loop_ordinal = (*current_loop)++;
+	    assign_expr_resume_ids(stmt->s.range.from, current_site,
+				   next_code_unit);
+	    assign_expr_resume_ids(stmt->s.range.to, current_site,
+				   next_code_unit);
+	    assign_stmt_resume_ids(stmt->s.range.body, current_site,
+				   next_code_unit, current_loop);
+	    break;
+	case STMT_WHILE:
+	    stmt->loop_ordinal = (*current_loop)++;
+	    assign_expr_resume_ids(stmt->s.loop.condition, current_site,
+				   next_code_unit);
+	    assign_stmt_resume_ids(stmt->s.loop.body, current_site,
+				   next_code_unit, current_loop);
+	    break;
+	case STMT_FORK:
+	    {
+		unsigned fork_site = 1, fork_loop = 1;
+
+		assign_expr_resume_ids(stmt->s.fork.time, current_site,
+				       next_code_unit);
+		stmt->s.fork.code_unit = (*next_code_unit)++;
+		assign_stmt_resume_ids(stmt->s.fork.body, &fork_site,
+				       next_code_unit, &fork_loop);
+	    }
+	    break;
+	case STMT_EXPR:
+	case STMT_RETURN:
+	    assign_expr_resume_ids(stmt->s.expr, current_site,
+				   next_code_unit);
+	    break;
+	case STMT_TRY_EXCEPT:
+	    {
+		Except_Arm *except;
+
+		assign_stmt_resume_ids(stmt->s.catch.body, current_site,
+				       next_code_unit, current_loop);
+		for (except = stmt->s.catch.excepts; except;
+		     except = except->next) {
+		    assign_arg_list_resume_ids(except->codes, current_site,
+					       next_code_unit);
+		    assign_stmt_resume_ids(except->stmt, current_site,
+					   next_code_unit, current_loop);
+		}
+	    }
+	    break;
+	case STMT_TRY_FINALLY:
+	    assign_stmt_resume_ids(stmt->s.finally.body, current_site,
+				   next_code_unit, current_loop);
+	    assign_stmt_resume_ids(stmt->s.finally.handler, current_site,
+				   next_code_unit, current_loop);
+	    break;
+	case STMT_BREAK:
+	case STMT_CONTINUE:
+	    break;
+	default:
+	    panic("Unknown statement kind in ASSIGN_STMT_RESUME_IDS()");
+	}
+    }
+}
+
+void
+assign_resume_ids(Stmt * stmt)
+{
+    unsigned current_site = 1, next_code_unit = 1, current_loop = 1;
+
+    assign_stmt_resume_ids(stmt, &current_site, &next_code_unit, &current_loop);
+}
+
 static void free_expr(Expr *);
 
 static void

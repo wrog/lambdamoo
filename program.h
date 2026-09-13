@@ -23,6 +23,21 @@
 
 typedef uint8_t Byte;
 
+#define RESUME_SCHEMA 1
+
+/*
+ * ResumeKey is a serialized language-level continuation identifier.  The
+ * schema-1 assignment order is a database compatibility contract: code unit
+ * zero is the main body, fork bodies are numbered in fork-statement encounter
+ * preorder, and sites are numbered by the canonical AST traversal within each
+ * code unit.  Code-unit numbering is independent of fork-vector allocation
+ * order.
+ */
+typedef struct {
+    unsigned code_unit;
+    unsigned site;
+} ResumeKey;
+
 typedef struct {
     Byte numbytes_label, numbytes_literal, numbytes_fork, numbytes_var_name,
      numbytes_stack;
@@ -31,6 +46,48 @@ typedef struct {
     unsigned max_stack;
 } Bytecodes;
 #define BQM_DESCRIBE_Bytecodes(B,F,V,X)   ((4 * F) + V)
+
+typedef enum {
+    RP_CALL,
+    RP_BUILTIN
+} ResumePointKind;
+
+#define RESUME_PRESERVE_TEMP 1
+
+typedef enum {
+    RSS_VALUE,
+    RSS_PENDING_REASON,
+    RSS_PENDING_VALUE,	/* data: innermost enclosing loop ordinal, or zero */
+    RSS_HANDLER_PC,
+    RSS_CATCH,
+    RSS_FINALLY
+} ResumeStackSlotKind;
+
+typedef struct {
+    ResumeStackSlotKind kind;
+    unsigned data;
+} ResumeStackSlot;
+#define BQM_DESCRIBE_ResumeStackSlot(B,F,V,X)   (2 * V)
+
+typedef struct {
+    ResumeKey key;
+    int vector;
+    unsigned pc;
+    unsigned error_pc;
+    unsigned stack_depth;
+    unsigned flags;
+    ResumePointKind kind;
+    unsigned frame_slots;
+    ResumeStackSlot *stack_slots;
+} ResumePoint;
+#define BQM_DESCRIBE_ResumePoint(B,F,V,X)   ((9 * V) + F)
+
+/* Engine-private destinations, indexed by semantic code unit and ordinal. */
+typedef struct {
+    unsigned code_unit, ordinal, parent; /* parent is an ordinal, or zero */
+    unsigned break_pc, continue_pc, break_stack, continue_stack;
+} ResumeLoop;
+#define BQM_DESCRIBE_ResumeLoop(B,F,V,X)   (7 * V)
 
 typedef struct {
     DB_Version version;
@@ -51,14 +108,27 @@ typedef struct {
     unsigned cached_lineno;
     unsigned cached_lineno_pc;
     int cached_lineno_vec;
+
+    unsigned num_resume_points;
+    ResumePoint *resume_points;
+    unsigned num_resume_loops;
+    ResumeLoop *resume_loops;
 } Program;
-#define BQM_DESCRIBE_Program(B,F,V,X)   ((8 * F) + (9 * V))
+#define BQM_DESCRIBE_Program(B,F,V,X)   ((9 * F) + (12 * V))
 
 #define MAIN_VECTOR 	-1	/* As opposed to an index into fork_vectors */
 
 extern Program *new_program(void);
 extern Program *null_program(void);
 extern Program *program_ref(Program *);
+extern ResumeKey invalid_resume_key(void);
+extern int resume_key_is_valid(ResumeKey);
+extern const ResumePoint *resume_point_for_key(Program *, ResumeKey);
+extern const ResumePoint *resume_point_for_program_pc(Program *, int,
+						       unsigned);
+extern const ResumePoint *resume_point_for_program_location(Program *, int,
+						     unsigned, unsigned);
+extern int validate_program_resume_points(Program *);
 extern int program_bytes(Program *);
 extern void free_program(Program *);
 

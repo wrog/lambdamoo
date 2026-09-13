@@ -753,8 +753,12 @@ You may also wish to _back out_ of certain Unicode features if you can
 
 ## Database Format Issues
 
-The database format has not changed.  The database version number was
-not raised for the Codepoint server.  Therefore __database files do
+The suspended-activation continuation record and its compatibility rules are
+documented in [SuspendResumeFormat.txt](./SuspendResumeFormat.txt).
+
+For the Codepoint changes discussed in this section, the database format was
+not changed and the database version number was not raised. Therefore those
+__database files do
 not self-identify as to which server with which features enabled
 created them__.  This can be an issue if you run multiple versions of
 the server and thus have some chance of attempting to load a backup

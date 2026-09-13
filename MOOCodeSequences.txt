@@ -2,15 +2,12 @@ This file documents, in very terse fashion, the opcode sequences emitted by the
 MOO compiler and accepted by the MOO decompiler.  It is an invaluable reference
 while reading the code in either `code_gen.c' or `decompile.c'.
 
-NOTE: Since MOO database files contain suspended tasks, and since the file
-      representation of those tasks includes both source code and a current PC
-      for each frame on the stack, IT IS CRITICALLY IMPORTANT that these code
-      sequences not change between releases of the server.  Otherwise, when the
-      code for a frame was recompiled at server start-up, its associated saved
-      PC value might no longer be valid, leading to almost certain catastrophe.
-      If the database file format were at some point changed to contain the
-      bytecodes (and not the source code) for suspended task frames, then this
-      restriction could (at least one release later) be relaxed.
+NOTE: Legacy MOO database files contain suspended tasks represented by source
+      code and bytecode PCs.  Servers that accept those database versions must
+      keep these sequences compatible so that the saved PCs remain valid.
+      DBV_ResumeKey and newer activations instead persist a semantic ResumeKey
+      and resolve it to the newly compiled bytecode.  The schema-1 key-assignment
+      rules are now the compatibility boundary; see SuspendResumeFormat.txt.
 
 stmt:
 	  {[ELSE]IF ( expr ) stmts}+ [ELSE stmts] ENDIF

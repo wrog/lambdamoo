@@ -84,12 +84,12 @@ write_vm(vm the_vm)
 {
     unsigned i;
 
-    dbio_printf("%u %d %u %u\n",
-		the_vm->top_activ_stack, the_vm->root_activ_vector,
-		the_vm->func_id, the_vm->max_stack_size);
+    dbio_printf("portable vm 1 %u %u\n", the_vm->top_activ_stack,
+		the_vm->max_stack_size);
 
     for (i = 0; i <= the_vm->top_activ_stack; i++)
-	write_activ(the_vm->activ_stack[i]);
+	write_activ(the_vm->activ_stack[i],
+		    i == 0 ? the_vm->root_activ_vector : MAIN_VECTOR);
 }
 
 vm
@@ -99,7 +99,21 @@ read_vm(TaskID task_id)
     int vector;
     vm the_vm;
 
-    int scn = dbio_scxnf("%u %d %u\v %u", &top, &vector, &func_id, &max);
+    int scn;
+
+    if (dbio_input_version >= DBV_ResumeKey) {
+	unsigned format;
+
+	if (!dbio_scxnf("portable vm %u %u %u", &format, &top, &max)
+	    || format != 1) {
+	    errlog("READ_VM: Bad portable vm header\n");
+	    return 0;
+	}
+	vector = ANY_RESUME_VECTOR;
+	func_id = 0;
+	scn = 4;
+    } else
+	scn = dbio_scxnf("%u %d %u\v %u", &top, &vector, &func_id, &max);
     if (!scn) {
 	errlog("READ_VM: Bad vm header\n");
 	return 0;
@@ -119,6 +133,10 @@ read_vm(TaskID task_id)
 	    errlog("READ_VM: Bad activ number %d\n", i);
 	    return 0;
 	}
+    if (dbio_input_version >= DBV_ResumeKey)
+	the_vm->root_activ_vector =
+	    resume_point_for_key(the_vm->activ_stack[0].prog,
+				 the_vm->activ_stack[0].resume_key)->vector;
     return the_vm;
 }
 

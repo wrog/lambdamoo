@@ -57,6 +57,9 @@ typedef enum {
 				 * change exists solely to turn off special
 				 * bug handling in read_bi_func_data().
 				 */
+    DBV_ResumeKey,		/* Suspended activations use schema-versioned
+				 * semantic ResumeKey values.
+				 */
     Num_DB_Versions		/* Special: the current version is this - 1. */
 } DB_Version;
 
