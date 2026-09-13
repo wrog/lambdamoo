@@ -294,7 +294,11 @@
  * otherwise pattern_pcre.c uses the PCRE1 API.
  * (This has no effect on pattern_ylo.c)
  */
-#undef HAVE_PCRE2
+#undef USING_PCRE2
+
+/* Solaris is annoying, part 327... */
+#undef HAVE_PCRE_PCRE_H
+#undef HAVE_PCRE_PCRE2_H
 
 /*
  * --enable-unicode core implementation is present
