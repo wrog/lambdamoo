@@ -181,8 +181,10 @@ bf_move_read(void)
     if (dbio_scxnf("bf_move data: what = %"SCNdN", where = %"SCNdN,
 		   &data->what, &data->where))
 	return data;
-    else
-	return 0;
+    else {
+	free_data(data);
+	return NULL;
+    }
 }
 
 static package
@@ -307,8 +309,10 @@ bf_create_read(void)
 
     if (dbio_scxnf("bf_create data: oid = %"SCNdN, data))
 	return data;
-    else
-	return 0;
+    else {
+	free_data(data);
+	return NULL;
+    }
 }
 
 static package
@@ -513,8 +517,10 @@ bf_recycle_read(void)
 
     if (dbio_scxnf("bf_recycle data: oid = %"SCNdN", cont = %*d", data))
 	return data;
-    else
-	return 0;
+    else {
+	free_data(data);
+	return NULL;
+    }
 }
 
 
