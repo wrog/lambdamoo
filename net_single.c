@@ -204,6 +204,7 @@ network_process_io(int timeout)
 			   && memcpy(buffer, excess_utf, excess_utf_count)),
 		    count = read(0, buffer + excess_utf_count,
 				 sizeof(buffer) - excess_utf_count)) > 0) {
+		count += excess_utf_count;
 		got_some = 1;
 		if (binary) {
 		    stream_add_moobinary_from_raw_bytes(s, buffer, count);
