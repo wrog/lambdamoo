@@ -276,6 +276,7 @@ pull_input(nhandle * h)
     }
 
     if ((count = read(h->rfd, ptr, sizeof(buffer) - h->excess_utf_count)) > 0) {
+	count += h->excess_utf_count;
 	if (h->binary) {
 	    stream_add_moobinary_from_raw_bytes(s, buffer, count);
 	    server_receive_line(h->shandle, reset_stream(s));
