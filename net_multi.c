@@ -276,6 +276,11 @@ pull_input(nhandle * h)
     }
 
     if ((count = read(h->rfd, ptr, sizeof(buffer) - h->excess_utf_count)) > 0) {
+	/* The bytes of a character split across the last read, put back at the
+	 * start of the buffer above, are in it too: without them, the last
+	 * excess_utf_count bytes read were never seen (a line's CR LF lost, so
+	 * the line never ended; or bytes dropped from inside it). */
+	count += h->excess_utf_count;
 	if (h->binary) {
 	    stream_add_moobinary_from_raw_bytes(s, buffer, count);
 	    server_receive_line(h->shandle, reset_stream(s));
