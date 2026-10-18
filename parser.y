@@ -766,6 +766,18 @@ error(const char *s, const char *t)
     (*(client.error))(client_data, fmt_error(s, t));
 }
 
+/*  For non-user errors that Should Not Happen. */
+static void
+internal_error(const char *s)
+{
+    errlog("PARSER: internal error at line %d: %s\n", lineno, s);
+    error("INTERNAL ERROR(!): ", s);
+    /***FIX?:
+       Add more context to the log?
+       Option to make this *always* panic() rather than just on db load?
+     */
+}
+
 static void
 warning(const char *s, const char *t)
 {
@@ -905,7 +917,7 @@ start_over:
 	    return tOBJECT;
 	}
 	else if (pn.type != TYPE_ERR)
-	    panic("parse_number(#...) returned unexpected type");
+	    internal_error("parse_number(#...) returned unexpected type");
 	else if (pn.v.err == E_RANGE)
 	    yyerror("Object number outside of allowed range");
 	else
@@ -929,11 +941,11 @@ start_over:
 	    return tFLOAT;
 	}
 	else if (pn.type != TYPE_ERR)
-	    panic("parse_number returned unexpected type");
+	    internal_error("parse_number returned unexpected type");
 	else if (pn.v.err == E_NONE) {
 	    c = lex_getc();
 	    if (c == '.') goto normal_dot;
-	    else panic("parse_number ungot unexpected char.");
+	    else internal_error("parse_number ungot unexpected char");
 	}
 	else if (pn.v.err == E_RANGE)
 	    yyerror("INT literal outside of allowed range");
@@ -942,7 +954,7 @@ start_over:
 	else if (pn.v.err == E_INVARG)
 	    yyerror("Malformed numeric literal");
 	else
-	    panic("parse_number returned weird error code.");
+	    internal_error("parse_number returned weird error code");
 	return 0;
     }
 

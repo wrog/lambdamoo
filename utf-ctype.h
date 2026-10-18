@@ -13,7 +13,10 @@
 #include "my-ctype.h"
 
 #if !UNICODE_NUMBERS
-static inline int my_isdigit(uint32_t c)      { return isdigit(c); }
+/* With UNICODE_STRINGS, c is a full code point, whereas behavior
+ * of isdigit() is undefined outside unsigned-char-range/EOF.
+ */
+static inline int my_isdigit(uint32_t c)      { return c <= UINT8_MAX && isdigit(c); }
 static inline int my_digitval(uint32_t c)     { return c - '0';    }
 #else
 extern int my_isdigit(uint32_t);
@@ -21,8 +24,9 @@ extern int my_digitval(uint32_t);
 #endif
 
 #if !UNICODE_IDENTIFIERS
-static inline int my_is_xid_start(uint32_t c) { return isalpha(c); }
-static inline int my_is_xid_cont(uint32_t c)  { return isalnum(c); }
+/* See above re my_isdigit(). */
+static inline int my_is_xid_start(uint32_t c) { return c <= UINT8_MAX && isalpha(c); }
+static inline int my_is_xid_cont(uint32_t c)  { return c <= UINT8_MAX && isalnum(c); }
 #else
 extern int my_is_xid_start(uint32_t);
 extern int my_is_xid_cont(uint32_t);
