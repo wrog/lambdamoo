@@ -158,7 +158,7 @@ extern size_t clearance_utf(const uint8_t);
 
 static inline size_t
 char_size(const uint32_t c) {
-    return 1 + (c > 0x7f) + (c > 0x77f) + (c > 0xffff);
+    return 1 + (0x80 <= c) + (0x800 <= c) + (0x10000 <= c);
 }
 
 /* Use
