@@ -90,15 +90,15 @@ get_utf(const char **pp)
  * require each client to have an ungetc method.
  *
  */
-#define GET_CONT	      \
-    do {		      \
-	c = c_getch(c_data);  \
-	cc = c;		      \
-	c -= 0x80;	      \
-	if ( c > 0x3f )	      \
-	    goto bad_cont;    \
-	v = (v << 6) + c;     \
-    } while (0)
+#define GET_CONT			\
+    do {				\
+	c = c_getch(c_data);		\
+	cc = c;				\
+	if (!(0x80 <= c && c < 0xc0))	\
+	    goto bad_cont;		\
+	c -= 0x80;			\
+	v = (v << 6) + c;		\
+    } while (0)				\
 
 int32_t
 get_utf_call(int32_t (*c_getch) (void *), void *c_data, int32_t *state)
