@@ -222,12 +222,12 @@ extern void free_stmt(Stmt *);
 extern FlBox astpool_recv_float(FlBox);
 
 /* Shortcut negation constant-folding. */
-inline void flbox_negate_in_place(FlBox *fp) { **fp = -**fp; }
+static inline void flbox_negate_in_place(FlBox *fp) { **fp = -**fp; }
 
 #else /* !FLOATS_ARE_BOXED */
 
-inline FlBox astpool_recv_float(FlBox fp)    { return fp;  }
-inline void flbox_negate_in_place(FlBox *fp) { *fp = -*fp; }
+static inline FlBox astpool_recv_float(FlBox fp)    { return fp;  }
+static inline void flbox_negate_in_place(FlBox *fp) { *fp = -*fp; }
 
 #endif
 

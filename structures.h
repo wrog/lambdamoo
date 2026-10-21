@@ -182,13 +182,13 @@ typedef  double  FlNum;
 #if !FLOATS_ARE_BOXED
 
 typedef FlNum  FlBox;
-inline  FlNum  fl_unbox(FlBox p) { return p; }
-inline  FlBox  box_fl(  FlNum f) { return f; }
+static inline  FlNum  fl_unbox(FlBox p) { return p; }
+static inline  FlBox  box_fl(  FlNum f) { return f; }
 
 #else   /* FLOATS_ARE_BOXED */
 
 typedef FlNum *FlBox;
-inline  FlNum  fl_unbox(FlBox p) { return *p; }
+static inline  FlNum  fl_unbox(FlBox p) { return *p; }
 extern  FlBox  box_fl(  FlNum f);
 
 #endif	/* FLOATS_ARE_BOXED */
@@ -255,7 +255,7 @@ typedef  int32_t    TaskID;
 #  define TASK_MAX  INT32_MAX
 
 /* This is only used for searching */
-inline TaskID task_id_from_num(Num n) {
+static inline TaskID task_id_from_num(Num n) {
     return (TaskID)(n < 0 || n > INT32_MAX ? 0 : n);
 }
 
@@ -265,18 +265,18 @@ typedef   Num       TaskID;
 #  define SCNdT_    SCNdN_
 #  define TASK_MAX  NUM_MAX
 
-inline TaskID task_id_from_num(Num n) {
+static inline TaskID task_id_from_num(Num n) {
     return n < 0 ? 0 : n;
 }
 #endif
 
 #define SCNdT  SCNdT_"\b"
 
-inline Num num_from_task_id(TaskID t) { return t; }
+static inline Num num_from_task_id(TaskID t) { return t; }
 
 /* typedef struct task_id_ *TaskID;
-inline TaskID task_id_from_num(Num n) { return (TaskID)(void *)(uintmax_t)n; }
-inline Num num_from_task_id(TaskID t) { return (Num)(uintmax_t)(void *)t; }
+static inline TaskID task_id_from_num(Num n) { return (TaskID)(void *)(uintmax_t)n; }
+static inline Num num_from_task_id(TaskID t) { return (Num)(uintmax_t)(void *)t; }
  */
 
 

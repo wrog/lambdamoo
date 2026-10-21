@@ -103,7 +103,7 @@ extern int dbio_read_integer(enum dbio_intrange r, intmax_t *p);
 
 #   define DBIO_DO_(INTXX,intxx_t,intxx,_4)		\
 							\
-inline int dbio_read_##intxx(intxx_t *p) {		\
+static inline int dbio_read_##intxx(intxx_t *p) {		\
     intmax_t i = 0;					\
     int r = dbio_read_integer(DBIO_RANGE_##INTXX, &i);	\
     *p = (intxx_t)i;					\
