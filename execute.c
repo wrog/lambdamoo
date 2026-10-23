@@ -768,21 +768,25 @@ list_or_string(Var v)
     return v.type == TYPE_LIST || v.type == TYPE_STR;
 }
 
+/* see list.h re From-after APIs */
 static int
-rangeref_fails(Num length, Num from, Num after)
+rangeref_fails(UNum length, Num from, Num after)
 {
-    return !(from >= after
-	     || (1 <= from && after <= length + 1));
+    return
+	!((from >= after && after != NUM_MIN /* NUM_MAX+1 */)
+	  || (1 <= from && (UNum)after <= length + 1));
 }
 
 static enum error
 rangeset_error(UNum max, size_t blen, size_t ilen, Num from, Num after)
 {
-    if (!(1 <= after && (from <= 0 || ((UNum)from <= blen + 1))))
+    if (!((1 <= after || after == NUM_MIN /* NUM_MAX+1 */)
+	  && (from <= 0 || ((UNum)from <= blen + 1))))
 	return E_RANGE;
     if (max < (((from > 1) ? (size_t)(from - 1) : 0)
 	       + ilen
-	       + ((blen >= (size_t)after) ? (blen - (size_t)after) + 1 : 0)))
+	       + ((after != NUM_MIN && blen >= (size_t)after)
+		  ? (blen - (size_t)after) + 1 : 0)))
 	return E_QUOTA;
 
     return E_NONE;

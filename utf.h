@@ -59,6 +59,10 @@ put_utf(char **ppc, uint32_t c)
  *       byte index is ci
  *    for all ci > (# of chars in s)
  *       byte index is ci - (# of chars in s) + strlen(s)
+ *
+ * and all byte-indices outside the representable range of Num
+ * are mapped to NUM_MIN, which will have special meaning when
+ * used in an 'after' slot (see rules for subrange get/set in list.h)
  */
 static inline Num
 utf_byte_index(const char *s UNUSED_, Num ci) {
@@ -72,26 +76,31 @@ utf_byte_index(const char *s UNUSED_, Num ci) {
  *     cis[1] = utf_byte_index(s, cis[1]);
  * except that, in certain cases, we can do this **WAY** more efficiently.
  *
- * Note that, starting with a character range [ci0 .. ci1] (inclusive)
+ * Note that, starting with a character index range [ci0 .. ci1] (inclusive)
  * in a string s, the proper way to get the corresponding byte range
- * is actually:
+ * is actually (even if ci1+1 wraps to NUM_MIN):
+ *
  *     Num bi[2] = { ci0, ci1 + 1 };
  *     utf_byte_range(s, bi);
  *
- * and bi will similarly be 'start' and 'after' byte positions,
- * not 'start' and 'end'.
+ * bi thereafter being the corresponding 'start' and 'after' byte indices,
+ * (and not 'start' and 'end').
  */
 static inline void
 utf_byte_range(const char *s UNUSED_, Num cis[2] UNUSED_)
 { }
 
-/*  Given a 1-based byte index into s of a character start, return the
- *  corresponding 1-based character index.  Unlike with byte_index()
- *  and byte_range() the argument needs to be range-checked in advance
- *  to ensure
- *     bi <= strlen(s)+2
- *  (For bi < 1, we pretend s is preceded by arbitrarily many 1-byte
- *  chars so that the (fake) character index will be the same.)
+/*  Given a 1-based byte index bi into s of a character start,
+ *  return the corresponding 1-based character index.
+ *  (Character at bi is not actually referenced unless bi==1)
+ *  Unlike with byte_index() and byte_range() the argument needs to be
+ *  range-checked in advance to ensure
+ *     bi <= strlen(s)+2, and
+ *     bi != NUM_MIN (NUM_MAX+1) unless the string really is that long
+ *       (usually forbidden by MAX_STRING, but not for INT_TYPE_SIZE=16)
+ *
+ *  For NUM_MIN < bi < 1, we pretend s is preceded by arbitrarily
+ *  many 1-byte chars so that the (fake) character index will be the same.
  */
 static inline Num
 utf_char_index(const char *s UNUSED_, Num bi) {
