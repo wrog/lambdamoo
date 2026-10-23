@@ -197,7 +197,7 @@ utf_byte_index(const char *s0, Num ci)
 	--ci;
     } while (get_utf(&s) && ci > 1);
 
-    return s - s0 + ci;
+    return ci > NUM_MAX - (s - s0) ? NUM_MIN : s - s0 + ci;
 }
 
 void
@@ -211,30 +211,40 @@ utf_byte_range(const char *s0, Num cis[2])
     Num *cidone = cis + 1 + step; /*  cis+2 or  cis    */
     cis += 1 - step;		  /*  cis   or  cis+2  */
 
-    while (cis[o] <= 0) {
-	cis += step;
-	if (cis == cidone) return;
-    }
+#define _NEXT_CI   if (cidone == (cis += step)) return
+
+    while (cis[o] <= 0)
+	_NEXT_CI;
 
     Num cn = 1;
     do {/* s == start of char #cn
-	 * cn <= all remaining cis (cis[o] is smallest)
+	 * cis[o] == smallest remaining unresolved ci
+	 * cn <= all unresolved cis
 	 */
 	while (cis[o] == cn) {
 	    cis[o] = (s - s0) + 1;
-	    cis += step;
-	    if (cis == cidone) return;
+	    _NEXT_CI;
 	}
 	cn++;
     } while (get_utf(&s));
 
-    do {
-	cis[o] += (s - s0) - cn + 1;
-	cis += step;
-    } while (cis != cidone);
+    Num delta_c = (s - s0) + 1 - cn;
+    while (cis[o] <= NUM_MAX - delta_c) {
+	cis[o] += delta_c;
+	_NEXT_CI;
+    }
+    for (;;) {
+	cis[o] = NUM_MIN;
+	_NEXT_CI;
+    }
+
+#undef _NEXT_CI
 }
 
-/* requires bi <= strlen(s0)+2 (caller must check/know).
+
+/* requires bi <= strlen(s0)+2 (caller must check/know)
+   and bi != NUM_MIN unless the string really is that long
+   (can happen for INT_TYPE_SIZE=16)
    bi, as a 1-based byte index, is assumed to be a character start
    s0[bi] (meaning s0[bi-1] in C terms) is not checked if bi>1.
    bi<=1 is treated as if s0 is preceded by arbitrarily many
@@ -242,14 +252,14 @@ utf_byte_range(const char *s0, Num cis[2])
 Num
 utf_char_index(const char *s0, Num bi)
 {
-    if (bi <= 1)
+    if (bi <= 1 && bi != NUM_MIN)
 	return bi;
     if (is_utf8_cont_byte(s0[0]))
 	/* protect against backwards overruns. */
 	panic("UTF_CHAR_INDEX given malformed utf8");
 
     Num ci = 1;
-    const char *s = s0 + bi - 1;
+    const char *s = s0 + (UNum)bi - 1;
     while (s > s0) {
 	/* s is at the start of a character;
 	   ci + number of chars before s
