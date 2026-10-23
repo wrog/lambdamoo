@@ -73,8 +73,8 @@ extern int equality(Var lhs, Var rhs, int case_matters);
 extern int is_true(Var v);
 
 extern void stream_add_strsub(Stream *, const char *, const char *, const char *, int);
-extern int strindex(const char *, const char *, int);
-extern int strrindex(const char *, const char *, int);
+extern Num strindex(const char *, const char *, int);
+extern Num strrindex(const char *, const char *, int);
 
 extern Var get_system_property(const char *);
 extern Objid get_system_object(const char *);
