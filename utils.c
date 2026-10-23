@@ -325,47 +325,54 @@ equality(Var lhs, Var rhs, int case_matters)
 void
 stream_add_strsub(Stream *str, const char *source, const char *what, const char *with, int case_counts)
 {
-    int lwhat = strlen(what);
+    size_t lwhat = memo_strlen(what);
 
     while (*source) {
-	if (!(case_counts ? strncmp(source, what, lwhat)
-	      : mystrncasecmp(source, what, lwhat))) {
+	if (0 == (case_counts ? strncmp(source, what, lwhat)
+		  : mystrncasecmp(source, what, lwhat))) {
 	    stream_add_string(str, with);
 	    source += lwhat;
-	} else
+	}
+	else
 	    stream_add_char(str, *source++);
     }
 }
 
-int
+Num
 strindex(const char *source, const char *what, int case_counts)
 {
-    const char *s, *e;
-    int lwhat = strlen(what);
-    int ind = 0;
+    size_t lwhat = memo_strlen(what);
+    size_t lsource = memo_strlen(source);
 
-    for (s = source, e = source + strlen(source) - lwhat; s <= e; get_utf(&s), ind++) {
-	if (!(case_counts ? strncmp(s, what, lwhat)
-	      : mystrncasecmp(s, what, lwhat))) {
-	    return ind + 1;
-	}
+    if (lwhat <= lsource) {
+	size_t ind = 0;
+	const char *s, *e;
+	for (s = source, e = source + (lsource - lwhat);
+	     s <= e;
+	     get_utf(&s), ind++)
+	    if (0 == (case_counts ? strncmp(s, what, lwhat)
+		      : mystrncasecmp(s, what, lwhat)))
+		return ind + 1;
     }
     return 0;
 }
 
-int
+Num
 strrindex(const char *source, const char *what, int case_counts)
 {
-    const char *s;
-    int lwhat = memo_strlen(what);
+    size_t lwhat = memo_strlen(what);
+    size_t lsource = memo_strlen(source);
 
-    for (s = source + memo_strlen(source) - lwhat; s >= source; s--) {
-	if (is_utf8_cont_byte(*s))
-	    continue;
-	if (!(case_counts ? strncmp(s, what, lwhat)
-	      : mystrncasecmp(s, what, lwhat))) {
-	    return utf_char_index(source, s - source + 1);
-	}
+    if (lwhat <= lsource) {
+	const char *s = source + (lsource - lwhat);
+	do {
+	    if (is_utf8_cont_byte(*s))
+		continue;
+	    if (0 == (case_counts ? strncmp(s, what, lwhat)
+		      : mystrncasecmp(s, what, lwhat))) {
+		return utf_char_index(source, (Num)((size_t)(s - source) + 1));
+	    }
+	} while (s-- != source);
     }
     return 0;
 }
