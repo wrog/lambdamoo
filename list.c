@@ -185,14 +185,10 @@ listconcat(Var first, Var second)
     return new;
 }
 
+
 Var
 listrangeset(Var base, Num from, Num after, Var value)
 {
-    /* from and after are 1-based byte-indices
-     * base and value are to be free'd
-     * range checking has already been done so we know
-     *   1 <= after && from <= base_len + 1
-     */
     size_t val_len = value.v.list[0].v.num;
     size_t base_len = base.v.list[0].v.num;
     size_t lenleft = (from > 1) ? from - 1 : 0;
@@ -201,15 +197,18 @@ listrangeset(Var base, Num from, Num after, Var value)
 
     /* be kind to your memory manager */
     size_t index;
-    for (index = after; index <= base_len; index++)
-	(void)var_ref(base.v.list[index]);
+    Var ans = new_list(newsize);
+
     for (index = 1; index <= lenleft; index++)
 	(void)var_ref(base.v.list[index]);
 
-    Var ans = new_list(newsize);
+    if (lenright) {
+	for (index = after; index <= base_len; index++)
+	    (void)var_ref(base.v.list[index]);
+	memcpy(ans.v.list + 1 + lenleft + val_len, base.v.list + after,
+	       lenright * sizeof(Var));
+    }
     memcpy(ans.v.list + 1, base.v.list + 1, lenleft * sizeof(Var));
-    memcpy(ans.v.list + 1 + lenleft + val_len, base.v.list + after,
-	   lenright * sizeof(Var));
 
     memcpy(ans.v.list + 1 + lenleft, value.v.list + 1,
 	   val_len * sizeof(Var));
@@ -224,11 +223,14 @@ listrangeset(Var base, Num from, Num after, Var value)
 Var
 sublist(Var list, Num first, Num after)
 {
-    size_t length = after > first ? after - first : 0;
+    size_t length =
+	after > first || after == NUM_MIN /* NUM_MAX+1 */
+	? (UNum)after - first : 0;
+
     Var r = new_list(length);
     if (length) {
-	int i;
-	for (i = first; i < after; i++)
+	UNum i;
+	for (i = first; i < (UNum)after; ++i)
 	    (void)var_ref(list.v.list[i]);
 	memcpy(r.v.list + 1, list.v.list + first,
 	       length * sizeof(Var));
@@ -349,11 +351,6 @@ unparse_value(Stream * s, Var v)
 Var
 strrangeset(Var base, Num from, Num after, Var value)
 {
-    /* from and after are 1-based byte-indices
-     * base and value are to be free'd
-     * range checking has already been done so we know
-     *   1 <= after && from <= base_len + 1
-     */
     size_t val_len  = memo_strlen(value.v.str);
     size_t base_len = memo_strlen(base.v.str);
     size_t lenleft  = (from > 1) ? from - 1 : 0;
@@ -361,7 +358,8 @@ strrangeset(Var base, Num from, Num after, Var value)
     size_t newlen   = lenleft + val_len + lenright;
 
     char *s = mymalloc(sizeof(char) * (newlen + 1), M_STRING);
-    memcpy(s + lenleft + val_len, base.v.str + after - 1, lenright);
+    if (lenright)
+	memcpy(s + lenleft + val_len, base.v.str + after - 1, lenright);
     s[newlen] = '\0';
 
     memcpy(s, base.v.str, lenleft);
@@ -379,14 +377,12 @@ strrangeset(Var base, Num from, Num after, Var value)
 Var
 substr(Var str, Num first, Num after)
 {
-    /* first and after are byte-indices. */
-    /* str is free'd. */
-    Num len = after - first;
     char *s;
 
-    if (len <= 0)
+    if (after <= first && after != NUM_MIN /* NUM_MAX+1 */)
 	s = str_dup("");
     else {
+	UNum len = (UNum)after - first;
 	s = mymalloc(len + 1, M_STRING);
 	memcpy(s, str.v.str + first - 1, len);
 	s[len] = '\0';
