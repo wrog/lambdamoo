@@ -271,20 +271,4 @@ memo_strlen_utf(const char *s)
     return i;
 }
 
-size_t
-clearance_utf(const uint8_t c)
-{
-    if (c <= 0x7f)
-        return 1;
-    if (c <= 0xbf)
-        return 1;
-    if (c <= 0xdf)
-        return 2;
-    if (c <= 0xef)
-        return 3;
-    if (c <= 0xf7)
-        return 4;
-    return 1;
-}
-
 #endif /* UNICODE_STRINGS */
