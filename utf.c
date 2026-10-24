@@ -13,12 +13,48 @@
 
 #if UNICODE_STRINGS
 
+/* assuming that GET_CONT assigns next byte into c
+ * and will jump somewhere upon malformedness, assign
+ * v = next utf8 char.
+ */
+#define GET_UTF8_CHAR(v,c,GET_CONT)			\
+do {							\
+    if (c < 0x80)					\
+	v = c;						\
+    else if (c < 0xc0)					\
+	v = INVALID_RUNE;				\
+    else if (c < 0xe0) {				\
+	v =  c & 0x1f;					\
+	GET_CONT;					\
+	if (v < 0x80)					\
+	    v = INVALID_RUNE;				\
+    }							\
+    else if (c < 0xf0) {				\
+	v =  c & 0x0f;					\
+	GET_CONT;					\
+	GET_CONT;					\
+	if (v < 0x800 || (0xd800 <= v && v < 0xe000))	\
+	    v = INVALID_RUNE;				\
+    }							\
+    else if (c < 0xf8) {				\
+	v =  c & 0x07;					\
+	GET_CONT;					\
+	GET_CONT;					\
+	GET_CONT;					\
+	if (!(0x10000 <= v && v < 0x110000))		\
+	    v = INVALID_RUNE;				\
+    }							\
+    else						\
+	v = INVALID_RUNE;				\
+} while (0)						\
+
+
 /*
  * get_utf():
  *
  * Gets a single UTF-8 character from a string.
  */
-#define GET_CONT	      \
+#define GET_CONT_1	      \
     do {		      \
 	c = *p;		      \
 	c -= 0x80;	      \
@@ -36,32 +72,7 @@ get_utf(const char **pp)
     uint32_t v;
 
     c = *p++;
-
-    if (c <= 0x7f) {
-	v = c;
-    } else if (c <= 0xbf) {
-	v = INVALID_RUNE;
-    } else if (c <= 0xdf) {
-	v = c & 0x1f;
-	GET_CONT;
-	if (v <= 0x7f)
-	    v = INVALID_RUNE;
-    } else if (c <= 0xef) {
-	v = c & 0x0f;
-	GET_CONT;
-	GET_CONT;
-	if (v <= 0x7ff || (v >= 0xd800 && v <= 0xdfff))
-	    v = INVALID_RUNE;
-    } else if (c <= 0xf7) {
-	v = c & 0x07;
-	GET_CONT;
-	GET_CONT;
-	GET_CONT;
-	if (v <= 0xffff || v > 0x10ffff)
-	    v = INVALID_RUNE;
-    } else {
-	v = INVALID_RUNE;
-    }
+    GET_UTF8_CHAR(v,c,GET_CONT_1);
 
   done:
     *pp = p;
@@ -72,7 +83,7 @@ get_utf(const char **pp)
     goto done;
 }
 
-#undef GET_CONT
+#undef GET_CONT_1
 
 /*
  * get_utf_call():
@@ -90,7 +101,7 @@ get_utf(const char **pp)
  * require each client to have an ungetc method.
  *
  */
-#define GET_CONT			\
+#define GET_CONT_WITH_STATE		\
     do {				\
 	c = c_getch(c_data);		\
 	cc = c;				\
@@ -110,38 +121,13 @@ get_utf_call(int32_t (*c_getch) (void *), void *c_data, int32_t *state)
     if (cc != -1) {
 	c = cc;
 	cc = -1;
-    } else {
+    }
+    else {
 	c = c_getch(c_data);
 	if (c == EOF)
 	  return EOF;
     }
-
-    if (c <= 0x7f) {
-	v = c;
-    } else if (c <= 0xbf) {
-	v = INVALID_RUNE;
-    } else if (c <= 0xdf) {
-	v = c & 0x1f;
-	GET_CONT;
-	if (v <= 0x7f)
-	    v = INVALID_RUNE;
-    } else if (c <= 0xef) {
-	v = c & 0x0f;
-	GET_CONT;
-	GET_CONT;
-	if (v <= 0x7ff || (v >= 0xd800 && v <= 0xdfff))
-	    v = INVALID_RUNE;
-    } else if (c <= 0xf7) {
-	v = c & 0x07;
-	GET_CONT;
-	GET_CONT;
-	GET_CONT;
-	if (v <= 0xffff || v > 0x10ffff)
-	    v = INVALID_RUNE;
-    } else {
-	v = INVALID_RUNE;
-    }
-
+    GET_UTF8_CHAR(v,c,GET_CONT_WITH_STATE);
     *state = -1;
 
   done:
@@ -153,30 +139,35 @@ get_utf_call(int32_t (*c_getch) (void *), void *c_data, int32_t *state)
     goto done;
 }
 
+#undef GET_CONT_WITH_STATE
+
+
 int
 put_utf(char **pp, uint32_t v)
 {
     char *p = *pp;
 
-    if (v <= 0x7f) {
+    if (v < 0x80)
 	*p++ = v;
-    } else if (v <= 0x7ff) {
+    else if (v < 0x800) {
 	*p++ = 0xc0 | (v >> 6);
 	*p++ = 0x80 | (v & 0x3f);
-    } else if (v <= 0xffff) {
-	if ((v - 0xd800) <= (0xdfff-0xd800))
+    }
+    else if (v < 0x10000) {
+	if ((v - 0xd800) < (0xe000-0xd800))
 	    return -1;		/* Invalid UCS (surrogate) */
 	*p++ = 0xe0 | (v >> 12);
 	*p++ = 0x80 | ((v >> 6) & 0x3f);
 	*p++ = 0x80 | (v & 0x3f);
-    } else if (v <= 0x10ffff) {
+    }
+    else if (v < 0x110000) {
 	*p++ = 0xf0 | (v >> 18);
 	*p++ = 0x80 | ((v >> 12) & 0x3f);
 	*p++ = 0x80 | ((v >> 6) & 0x3f);
 	*p++ = 0x80 | (v & 0x3f);
-    } else {
-	return -1;		/* Invalid UCS (out of range) */
     }
+    else
+	return -1;		/* Invalid UCS (out of range) */
 
     *pp = p;
 
@@ -274,9 +265,9 @@ size_t
 memo_strlen_utf(const char *s)
 {
     size_t i = 0;
-    while (get_utf(&s)) {
+    while (get_utf(&s))
         i++;
-    }
+
     return i;
 }
 
