@@ -154,7 +154,21 @@ extern void utf_byte_range(const char *, Num [2]);
 extern Num  utf_char_index(const char *, Num);
 
 extern size_t memo_strlen_utf(const char *);
-extern size_t clearance_utf(const uint8_t);
+
+static inline size_t
+clearance_utf(const uint8_t b)
+{
+    switch (b >> 3) {
+    default:
+	return 1;
+    case 0x18: case 0x19: case 0x1a: case 0x1b:
+	return 2;
+    case 0x1c: case 0x1d:
+	return 3;
+    case 0x1e:
+	return 4;
+    }
+}
 
 static inline size_t
 char_size(const uint32_t c) {
