@@ -356,7 +356,13 @@ parse_xml(const char *string, int keep_order)
     else {
 	Var r;
 	r.type = TYPE_INT;
-	r.v.num = XML_GetCurrentByteIndex(parser);
+	r.v.num =
+#if EXPAT_XML_INT64
+	    XML_GetCurrentByteIndex64
+#else
+	    XML_GetCurrentByteIndex
+#endif
+	    (parser);
 	result = make_raise_pack(E_INVARG,
 				 XML_ErrorString(XML_GetErrorCode(parser)),
 				 r);

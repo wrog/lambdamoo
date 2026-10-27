@@ -114,7 +114,11 @@ END
 #      %ac AC_SEARCH_LIBS([[xmlParseDocument]], [[xml2]], [%USE%])
 
     %lib expat EXPAT_XML
-      %ac AC_SEARCH_LIBS([[XML_Parse]], [[expat]], [%USE%])
+      %ac <<END
+AC_SEARCH_LIBS([[XML_GetCurrentByteIndex64]], [[expat]], [%USE%
+  AC_DEFINE([EXPAT_XML_INT64])],
+  [AC_SEARCH_LIBS([[XML_Parse]], [[expat]], [%USE%])])
+END
       %build
         --with- expatpath = DIR
           %?  use this expat build
