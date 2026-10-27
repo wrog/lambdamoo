@@ -315,10 +315,16 @@
  * are we using the Expat XML library?
  */
 #undef EXPAT_XML
+
 /* ... the ancient expat 1.2 build the
  *  extension was originally built with
  */
 #undef EXPAT_XML_1_2_OR_BEFORE
+
+/* expat 2.9.0 changed XML_Size/Index to be explicitly (u)int64_t
+ * and deprecated XML_GetCurrentByteIndex[non-64]...)
+ */
+#undef EXPAT_XML_INT64
 
 /*
  * --enable-waifs core implementation is present
