@@ -49,7 +49,9 @@
 #  define  WAIF_INDEXSET_VERB	":_set_index"
 #endif
 
-typedef struct Waif         Waif;
+#if __STDC_VERSION__ >= 202311L     /* allow repeated typedef */
+typedef struct Waif         Waif;   /* from structures.h */
+#endif
 typedef struct WaifPropdefs WaifPropdefs;
 
 
