@@ -44,7 +44,11 @@ refcount_overhead(Memory_Type type)
 	return MAX(sizeof(int), sizeof(FlNum));
     case M_STRING:
 #ifdef MEMO_STRLEN
-	return sizeof(int) + sizeof(int);
+	/* yes, we depend on unsigned and int being the
+	 * same size; this will need to be Different if
+	 * we ever want to use size_t here (we probably won't)
+	 */
+	return sizeof(unsigned) + sizeof(int);
 #else
 	return sizeof(int);
 #endif /* MEMO_STRLEN */
@@ -86,7 +90,7 @@ mymalloc(unsigned size, Memory_Type type)
 	((int *) memptr)[-1] = 1;
 #ifdef MEMO_STRLEN
 	if (type == M_STRING)
-	    ((int *) memptr)[-2] = size - 1;
+	    ((unsigned *) memptr)[-2] = size - 1;
 #endif /* MEMO_STRLEN */
     }
     return memptr;

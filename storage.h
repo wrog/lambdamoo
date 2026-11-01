@@ -63,7 +63,7 @@ free_str(const char *s)
  * Using the same mechanism as ref_count.h uses to hide Value ref counts,
  * keep a memozied strlen in the storage with the string.
  */
-#define memo_strlen(X)		((void)0, (((int *)(X))[-2]))
+#define memo_strlen(X)		((void)0, (((unsigned *)(X))[-2]))
 #else
 #define memo_strlen(X)		strlen(X)
 
