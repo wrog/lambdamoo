@@ -96,10 +96,11 @@ parse_number(unsigned flags, int32_t c_first,
 #define F_XSIGN    0x8     /*<CE> forbid '-' and '+'            */
 #define F_DIGIT   0x10     /* <E> saw digit; number is viable   */
 #define F_EXP     0x20     /*     saw 'E'/'e'; parsing exponent */
+#define F_IPLUS   0x80     /*<C>  allow '+' unless F_XSIGN      */
 
-    unsigned state = (flags & (F_LOAT|F_XSIGN));
+    unsigned state = (flags & (F_LOAT|F_XSIGN|F_IPLUS));
 
-#if !(F_LOAT == PN_FLOAT_OK && F_XSIGN == PN_NONNEG)
+#if !(F_LOAT == PN_FLOAT_OK && F_XSIGN == PN_NONNEG && F_IPLUS == PN_PLUS)
 #  error fix these so that they match
 #endif
 
@@ -125,7 +126,7 @@ parse_number(unsigned flags, int32_t c_first,
     for (;;) {
 	switch (c) {
 	case '+':
-	    if ((state & (F_EXP|F_XSIGN)) != F_EXP)
+	    if ((state & (F_IPLUS|F_XSIGN)) != F_IPLUS)
 		goto badchar;
 	    state |= F_XSIGN;
 	    break;
@@ -201,7 +202,7 @@ parse_number(unsigned flags, int32_t c_first,
 	    if ((state & (F_DIGIT|F_EXP|F_LOAT)) != (F_DIGIT|F_LOAT))
 		goto badchar;
 	    ret.type = TYPE_FLOAT;
-	    state |= F_EXP;
+	    state |= F_IPLUS|F_EXP;
 	    state &= ~(F_DIGIT|F_XSIGN);
 	    break;
 	default:
@@ -254,6 +255,7 @@ parse_number(unsigned flags, int32_t c_first,
     ret.v.err = E_NONE;
     goto return_error;
 
+#undef F_IPLUS
 #undef F_EXP
 #undef F_DIGIT
 #undef F_XSIGN

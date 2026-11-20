@@ -60,6 +60,7 @@ extern Var do_power(Var, Var);
 #define PN_LDSPACE     0x10   /* allow leading whitespace     */
 #define PN_OCTOTHORPE  0x20   /* allow '#'                    */
 #define PN_OCTOSPACE   0x40   /*   allow whitespace after '#' */
+#define PN_PLUS        0x80   /* allow leading (mantissa) '+' */
 #define PN_TRSPACE    0x100   /* allow trailing whitespace    */
 #define PN_MUST_EOF   0x200   /* must use all of the input    */
 #define PN_SPACE     (PN_LDSPACE|PN_TRSPACE|PN_OCTOSPACE)
