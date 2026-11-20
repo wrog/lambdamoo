@@ -545,21 +545,21 @@ db_verb_handle
 db_find_defined_verb(Objid oid, const char *vname, int allow_numbers)
 {
     Object *o = dbpriv_find_object(oid);
-    Verbdef *v;
-    char *p;
-    int num, i;
-    static handle h;
-    db_verb_handle vh;
 
+    Var pnum;
     if (!allow_numbers ||
-	(num = strtol(vname, &p, 10),
-	 (isspace((unsigned char)*vname) || *p != '\0')))
-	num = -1;
+	(pnum = parse_number_from_string(vname, PN_PLUS),
+	 pnum.type != TYPE_INT))
+	pnum = (Var){ .type = TYPE_INT, .v.num = -1 };
 
+    Num i;
+    Verbdef *v;
     for (i = 0, v = o->verbdefs; v; v = v->next, i++)
-	if (i == num || verbcasecmp(v->name, vname))
+	if (i == pnum.v.num || verbcasecmp(v->name, vname))
 	    break;
 
+    static handle h;
+    db_verb_handle vh;
     if (v) {
 	h.definer = o->id;
 	h.verbdef = v;
