@@ -79,44 +79,37 @@ parse_number(unsigned flags, int32_t c_first,
 {
     int32_t c = c_first;
     Stream *ns = new_stream(30);
-
-    Var ret = zero;
-    /* ret.type = TYPE_INT minus compiler
-       warnings about uninitialized .num */
+    Var ret = zero;	  /* .type = TYPE_INT minus uninit warnings */
 
 #if UNICODE_NUMBERS
-    uint32_t dfamily = 0;
+    uint32_t dfamily = 0;    /* digit family = zero digit codepoint */
 #endif
 
-    /* state flags */
+    /* Internal parse state:
+     *   The <C> bits are copied from 'flags'.
+     *   Most bits are sticky; once set, they stay on, but
+     *   the <E> bits are reset when parsing an exponent.
+     */
+#define F_LOAT     0x1     /*<C>  parse floats (allow '.'/expt) */
+#define F_MINUS    0x2     /*     saw leading '-'               */
+#define F_DOT      0x4     /*     saw '.'                       */
+#define F_XSIGN    0x8     /*<CE> forbid '-' and '+'            */
+#define F_DIGIT   0x10     /* <E> saw digit; number is viable   */
+#define F_EXP     0x20     /*     saw 'E'/'e'; parsing exponent */
 
-/* sticky flags; they stay on, once set:           */
-#   define F_INT    0x01     /* integer-only mode  */
-#   define F_MINUS  0x02     /* '-' seen at all    */
-#   define F_DOT    0x04     /* '.' seen at all    */
-#   define F_EXP    0x08     /* we are in exponent */
+    unsigned state = (flags & (F_LOAT|F_XSIGN));
 
-/* these get reset when 'E'|'e' shows up:          */
-#   define F_DIGIT  0x10     /* number is viable   */
-#   define F_XSIGN  0x20     /* forbid '-' and '+' */
+#if !(F_LOAT == PN_FLOAT_OK && F_XSIGN == PN_NONNEG)
+#  error fix these so that they match
+#endif
 
-    unsigned state = F_INT*(!(flags & PN_FLOAT_OK));
-
-    if (flags & PN_NONNEG) {
-	state |= F_XSIGN;
+    if (flags & PN_NONNEG)
+	/* Yes, we are being tricky.  See Very Long Comment below. */
 	stream_add_char(ns, '-');
-	/* Yes, we are being tricky.
-	   See Very Long Comment below. */
-    }
+
+#define NEXTC()  do if (EOF == (c = getch())) goto at_eof; while (0)
 
     if (EOF == c) goto at_eof;
-
-#   define NEXTC()				\
-        do {					\
-	   if (EOF == (c = getch())) {		\
-	       goto at_eof;			\
-	   }					\
-	} while (0)				\
 
     if (flags & PN_LDSPACE)
 	while (my_isspace(c))
@@ -142,7 +135,7 @@ parse_number(unsigned flags, int32_t c_first,
 	    state |= F_MINUS|F_XSIGN;
 	    break;
 	case '.':
-	    if (state & (F_DOT|F_EXP|F_INT))
+	    if ((state & (F_DOT|F_EXP|F_LOAT)) != F_LOAT)
 		goto badchar;
 	    if (ungetch) {
 		/* we can do lookahead to decide whether this
@@ -205,7 +198,7 @@ parse_number(unsigned flags, int32_t c_first,
 	    break;
 	case 'e':
 	case 'E':
-	    if ((state & (F_DIGIT|F_EXP|F_INT)) != F_DIGIT)
+	    if ((state & (F_DIGIT|F_EXP|F_LOAT)) != (F_DIGIT|F_LOAT))
 		goto badchar;
 	    ret.type = TYPE_FLOAT;
 	    state |= F_EXP;
@@ -215,20 +208,18 @@ parse_number(unsigned flags, int32_t c_first,
 #if UNICODE_NUMBERS
 	    if (!my_isdigit(c)) {
 #endif
-		if (flags & PN_TRSPACE) {
+		if (flags & PN_TRSPACE)
 		    while (my_isspace(c))
 			NEXTC();
-		}
 		goto badchar;
 #if UNICODE_NUMBERS
 	    }
 	    int dval = my_digitval(c);
-	    if (!dfamily) {
+	    if (!dfamily)
 		dfamily = c - dval;
-	    }
-	    else if (dfamily + dval != (uint32_t)c) {
+	    else if (dfamily + dval != (uint32_t)c)
 		goto badchar;
-	    }
+
 	    c = '0' + dval;
 #else /* !UNICODE_NUMBERS */
 	case '0': case '1': case '2': case '3': case '4':
@@ -240,7 +231,7 @@ parse_number(unsigned flags, int32_t c_first,
 	stream_add_char(ns, c);
 	NEXTC();
     }
-#   undef NEXTC
+#undef NEXTC
 
  badchar:
     if (flags & PN_MUST_EOF)
@@ -263,12 +254,12 @@ parse_number(unsigned flags, int32_t c_first,
     ret.v.err = E_NONE;
     goto return_error;
 
-#   undef F_INT
-#   undef F_MINUS
-#   undef F_DOT
-#   undef F_EXP
-#   undef F_DIGIT
-#   undef F_XSIGN
+#undef F_EXP
+#undef F_DIGIT
+#undef F_XSIGN
+#undef F_DOT
+#undef F_MINUS
+#undef F_LOAT
 
  have_digits: ;
     char *p;
