@@ -29,6 +29,7 @@
 #include "db_tune.h"
 #include "list.h"
 #include "log.h"
+#include "numbers.h"
 #include "parse_cmd.h"
 #include "program.h"
 #include "storage.h"
@@ -148,31 +149,33 @@ db_find_prep(int argc, char *argv[], int *first, int *last)
 db_prep_spec
 db_match_prep(const char *prepname)
 {
+
+    Var vp = parse_number_from_string(prepname,
+				      PN_NONNEG|PN_OCTOTHORPE);
     db_prep_spec prep;
-    int argc;
-    char *ptr;
-    char **argv;
-    char *s, *s1;
-    unsigned char first;
+    switch (vp.type) {
+    default:
+	errlog("db_match_prep(%s) attempted", prepname);
+	panic("db_match_prep: unexpected parse_number result");
 
-    s = s1 = str_dup(prepname);
-    first = s[0];
-    if (first == '#')
-        first = (++s1)[0];
-    prep = strtol(s1, &ptr, 10);
-    if (*ptr == '\0') {
-	free_str(s);
-	if (!isdigit(first) || prep >= NPREPS)
+    case TYPE_INT:
+	return (vp.v.num >= NPREPS ? PREP_NONE : vp.v.num);
+
+    case TYPE_ERR:
+	if (vp.v.err == E_RANGE)
 	    return PREP_NONE;
-	else
-	    return prep;
-    }
-    if (NULL != (ptr = strchr(s, '/')))
-	*ptr = '\0';
 
-    argv = parse_into_words(s, &argc);
-    prep = db_find_prep(argc, argv, 0, 0);
-    free_str(s);
+	char *s = str_dup(prepname);
+	char *ptr = strchr(s, '/');
+	if (ptr)
+	    *ptr = '\0';
+
+	int argc;
+	char **argv = parse_into_words(s, &argc);
+	prep = db_find_prep(argc, argv, 0, 0);
+	free_str(s);
+	break;
+    }
     return prep;
 }
 
