@@ -56,12 +56,12 @@ extern Var do_power(Var, Var);
 	   *  to NUM_MIN -- what the yacc parser needs.
            *  See Very Long Comment in numbers.c for details. */
 
-/* The following should only be used when ungetch == NULL     */
-#define PN_OCTOTHORPE  0x10   /* a leading # is allowed       */
-#define PN_LDSPACE     0x20   /* allow leading whitespace     */
-#define PN_TRSPACE     0x40   /* allow trailing whitespace    */
-#define PN_OCTOSPACE   0x80   /* allow whitespace after #     */
-#define PN_MUST_EOF   0x100   /* must use all of the input    */
+/* The following can only be used when ungetch == NULL:       */
+#define PN_LDSPACE     0x10   /* allow leading whitespace     */
+#define PN_OCTOTHORPE  0x20   /* allow '#'                    */
+#define PN_OCTOSPACE   0x40   /*   allow whitespace after '#' */
+#define PN_TRSPACE    0x100   /* allow trailing whitespace    */
+#define PN_MUST_EOF   0x200   /* must use all of the input    */
 #define PN_SPACE     (PN_LDSPACE|PN_TRSPACE|PN_OCTOSPACE)
 /*
  * The return value will be a Var with .type =
